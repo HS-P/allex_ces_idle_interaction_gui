@@ -1,1 +1,0 @@
-/home/dgx_allex_one/allex2head/src/OrbbecSDK_ROS2/orbbec_camera/examples/multi_camera_synced_verification_tool/multicamera_sync/Python/script/config_frameMatch.py

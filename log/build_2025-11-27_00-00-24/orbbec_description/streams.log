@@ -1,6 +1,0 @@
-[0.166s] Invoking command in '/home/dgx_allex_one/allex2head/build/orbbec_description': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy CONDA_PROMPT_MODIFIER=(allex_camera) DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/dgx_allex_one/allex2head/src/OrbbecSDK_ROS2/orbbec_description -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/dgx_allex_one/allex2head/install/orbbec_description
-[0.177s] -- Found ament_cmake: 2.5.4 (/opt/ros/jazzy/share/ament_cmake/cmake)
-[0.291s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
-[0.343s] -- Configuring done (0.2s)
-[0.346s] -- Generating done (0.0s)
-[0.347s] -- Build files have been written to: /home/dgx_allex_one/allex2head/build/orbbec_description
