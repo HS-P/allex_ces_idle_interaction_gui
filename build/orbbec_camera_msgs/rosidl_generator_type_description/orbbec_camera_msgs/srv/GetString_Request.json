@@ -1,0 +1,26 @@
+{
+  "type_description_msg": {
+    "type_description": {
+      "type_name": "orbbec_camera_msgs/srv/GetString_Request",
+      "fields": [
+        {
+          "name": "structure_needs_at_least_one_member",
+          "type": {
+            "type_id": 3,
+            "capacity": 0,
+            "string_capacity": 0,
+            "nested_type_name": ""
+          },
+          "default_value": ""
+        }
+      ]
+    },
+    "referenced_type_descriptions": []
+  },
+  "type_hashes": [
+    {
+      "type_name": "orbbec_camera_msgs/srv/GetString_Request",
+      "hash_string": "RIHS01_453b627e084733609f227b24e5366a8fd49a8559c6c67ffec36df3525b703b5f"
+    }
+  ]
+}

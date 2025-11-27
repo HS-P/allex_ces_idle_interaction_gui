@@ -1,0 +1,9 @@
+/home/dgx_allex_one/allex2head/install/orbbec_camera/lib//libOrbbecSDK.so
+/home/dgx_allex_one/allex2head/install/orbbec_camera/lib//extensions/firmwareupdater/libfirmwareupdater.so
+/home/dgx_allex_one/allex2head/install/orbbec_camera/lib//extensions/filters/libFilterProcessor.so
+/home/dgx_allex_one/allex2head/install/orbbec_camera/lib//extensions/filters/libob_priv_filter.so
+/home/dgx_allex_one/allex2head/install/orbbec_camera/lib//extensions/depthengine/libdepthengine.so
+/home/dgx_allex_one/allex2head/install/orbbec_camera/lib//extensions/depthengine/libdepthengine.so.2.0
+/home/dgx_allex_one/allex2head/install/orbbec_camera/lib//extensions/frameprocessor/libob_frame_processor.so
+/home/dgx_allex_one/allex2head/install/orbbec_camera/lib//libOrbbecSDK.so.2
+/home/dgx_allex_one/allex2head/install/orbbec_camera/lib//libOrbbecSDK.so.2.4.11

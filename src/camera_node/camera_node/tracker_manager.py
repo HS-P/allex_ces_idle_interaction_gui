@@ -337,7 +337,50 @@ class TrackerManager:
         if self.last_neck_yaw_rad is None:
             self.last_neck_yaw_rad = current_neck_yaw_rad
             self.neck_stable_start_time = None
-            self.neck_stable_reference_yaw_rad = None75
+            self.neck_stable_reference_yaw_rad = None
+            return
+        
+        # 목 각도 변화량 계산 (도 단위) - 이전 프레임과의 변화
+        angle_change_deg = abs(math.degrees(current_neck_yaw_rad - self.last_neck_yaw_rad))
+        
+        # 기준 각도가 없으면 현재 각도를 기준으로 설정
+        if self.neck_stable_reference_yaw_rad is None:
+            self.neck_stable_reference_yaw_rad = current_neck_yaw_rad
+        
+        # 기준 각도로부터의 변화량 계산 (도 단위)
+        reference_change_deg = abs(math.degrees(current_neck_yaw_rad - self.neck_stable_reference_yaw_rad))
+        
+        # 목 각도가 기준 각도 주변에서 임계값(5도) 이내로 안정되어 있는지 확인
+        # AND 이전 프레임과의 변화도 작아야 함 (연속적인 안정성)
+        if reference_change_deg <= self.neck_stable_threshold_deg and angle_change_deg <= self.neck_stable_threshold_deg:
+            # 안정적이면 시간 추적 시작/계속
+            if self.neck_stable_start_time is None:
+                self.neck_stable_start_time = current_time
+                self.neck_stable_reference_yaw_rad = current_neck_yaw_rad  # 기준 각도 설정
+            
+            # 일정 시간 이상 안정되면 WAIST_FOLLOWER로 전이
+            elapsed_time = current_time - self.neck_stable_start_time
+            if elapsed_time >= self.neck_stable_duration:
+                self.state = TrackingState.WAIST_FOLLOWER
+                self.neck_stable_start_time = None  # 리셋
+                self.last_neck_yaw_rad = None  # 리셋
+                self.neck_stable_reference_yaw_rad = None  # 리셋
+        else:
+            # 각도 변화가 크면 시간과 기준 각도 리셋
+            self.neck_stable_start_time = None
+            self.neck_stable_reference_yaw_rad = None  # 기준 각도 리셋
+        
+        # 현재 각도를 이전 각도로 저장
+        self.last_neck_yaw_rad = current_neck_yaw_rad
+    
+    def get_center_zone_elapsed_time(self) -> Optional[float]:
+        """
+        목 각도 안정성 경과 시간 반환 (WAIST_FOLLOWER 전이용)
+        
+        Returns:
+            경과 시간 (초) 또는 None (목 각도가 안정되지 않았거나 시간 추적이 시작되지 않은 경우)
+        """
+        if self.neck_stable_start_time is None:
             return None
         
         current_time = time.monotonic()
@@ -491,7 +534,7 @@ class TrackerManager:
                     # 타겟을 잃으면 즉시 새 타겟 선택 (LOST/SEARCHING 없음)
                     if self.target_track_id is None or not target_exists:
                         # 타겟이 없거나 잃었으면 새 타겟 선택
-                        closest_id = self._find_cl75osest_person(all_objects, frame.shape, current_time)
+                        closest_id = self._find_closest_person(all_objects, frame.shape, current_time)
                         if closest_id is not None:
                             self.target_track_id = closest_id
                             self.target_explicitly_set = False  # 자동 선택

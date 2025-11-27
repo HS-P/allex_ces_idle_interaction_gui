@@ -1,0 +1,9 @@
+PyQt5
+filterpy
+huggingface_hub
+lap
+numpy
+pyyaml
+scipy
+setuptools
+ultralytics

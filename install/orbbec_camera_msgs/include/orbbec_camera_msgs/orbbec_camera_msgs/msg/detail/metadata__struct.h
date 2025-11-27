@@ -1,0 +1,1 @@
+/home/dgx_allex_one/allex2head/build/orbbec_camera_msgs/rosidl_generator_c/orbbec_camera_msgs/msg/detail/metadata__struct.h

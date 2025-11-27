@@ -1,0 +1,169 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-65ffe7583598149189eb.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.15"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9,
+						10,
+						11,
+						12
+					]
+				}
+			],
+			"name" : "",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "orbbec_camera",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9,
+						10,
+						11,
+						12
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "frame_latency::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-frame_latency-9dcbefe18352427c4230.json",
+					"name" : "frame_latency",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "frame_latency_node::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-frame_latency_node-9ca5d04c2deb4db046df.json",
+					"name" : "frame_latency_node",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "list_depth_work_mode_node::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-list_depth_work_mode_node-c38f5d37f64c75f10932.json",
+					"name" : "list_depth_work_mode_node",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "multi_save_rgbir::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-multi_save_rgbir-cfc7cb784be85fb1e933.json",
+					"name" : "multi_save_rgbir",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "multi_save_rgbir_node::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-multi_save_rgbir_node-1b80dcdda3ca2596cb67.json",
+					"name" : "multi_save_rgbir_node",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ob_benchmark_node::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ob_benchmark_node-f221b9d9cbb2a44f344e.json",
+					"name" : "ob_benchmark_node",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "orbbec_camera::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-orbbec_camera-e4c93be3416e0a0e0875.json",
+					"name" : "orbbec_camera",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "orbbec_camera_node::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-orbbec_camera_node-638c8b6b0992b36586f9.json",
+					"name" : "orbbec_camera_node",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "orbbec_camera_uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-orbbec_camera_uninstall-982ad21c7fe218997f0a.json",
+					"name" : "orbbec_camera_uninstall",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "start_benchmark::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-start_benchmark-ed29824ecd9445a806e3.json",
+					"name" : "start_benchmark",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "start_benchmark_node::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-start_benchmark_node-ef0b8f1456563b35bc93.json",
+					"name" : "start_benchmark_node",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "topic_statistics_node::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-topic_statistics_node-f92b8d13ac8d86a1480b.json",
+					"name" : "topic_statistics_node",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-uninstall-6da2b1d1cd28941a96a3.json",
+					"name" : "uninstall",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/dgx_allex_one/allex2head/build/orbbec_camera",
+		"source" : "/home/dgx_allex_one/allex2head/src/OrbbecSDK_ROS2/orbbec_camera"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 6
+	}
+}
