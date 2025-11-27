@@ -1,0 +1,21 @@
+[0.516s] Invoking command in '/home/dgx_allex_one/allex2head/build/camera_node': CONDA_PROMPT_MODIFIER=(base) DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/dgx_allex_one/allex2head/build/camera_node/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/dgx_allex_one/allex2head/install/camera_node/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/dgx_allex_one/allex2head/build/camera_node/build --no-deps symlink_data
+[0.725s] running develop
+[0.803s] running egg_info
+[0.810s] writing camera_node.egg-info/PKG-INFO
+[0.810s] writing dependency_links to camera_node.egg-info/dependency_links.txt
+[0.810s] writing entry points to camera_node.egg-info/entry_points.txt
+[0.810s] writing requirements to camera_node.egg-info/requires.txt
+[0.810s] writing top-level names to camera_node.egg-info/top_level.txt
+[0.827s] reading manifest file 'camera_node.egg-info/SOURCES.txt'
+[0.827s] writing manifest file 'camera_node.egg-info/SOURCES.txt'
+[0.841s] running build_ext
+[0.841s] Creating /home/dgx_allex_one/allex2head/install/camera_node/lib/python3.12/site-packages/camera-node.egg-link (link to .)
+[0.841s] Installing camera_publisher script to /home/dgx_allex_one/allex2head/install/camera_node/lib/camera_node
+[0.841s] Installing gui_node script to /home/dgx_allex_one/allex2head/install/camera_node/lib/camera_node
+[0.842s] Installing image_publisher script to /home/dgx_allex_one/allex2head/install/camera_node/lib/camera_node
+[0.842s] Installing video_publisher script to /home/dgx_allex_one/allex2head/install/camera_node/lib/camera_node
+[0.842s] Installing zed_publisher script to /home/dgx_allex_one/allex2head/install/camera_node/lib/camera_node
+[0.842s] 
+[0.842s] Installed /home/dgx_allex_one/allex2head/build/camera_node
+[0.842s] running symlink_data
+[0.864s] Invoked command in '/home/dgx_allex_one/allex2head/build/camera_node' returned '0': CONDA_PROMPT_MODIFIER=(base) DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/dgx_allex_one/allex2head/build/camera_node/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/dgx_allex_one/allex2head/install/camera_node/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/dgx_allex_one/allex2head/build/camera_node/build --no-deps symlink_data

@@ -1,0 +1,40 @@
+In file included from [01m[K/home/dgx_allex_one/allex2head/src/OrbbecSDK_ROS2/orbbec_camera/src/ob_camera_node.cpp:17[m[K:
+[01m[K/home/dgx_allex_one/allex2head/src/OrbbecSDK_ROS2/orbbec_camera/include/orbbec_camera/ob_camera_node.h:19:10:[m[K [01;31m[Kfatal error: [m[Knlohmann/json.hpp: No such file or directory
+   19 | #include [01;31m[K<nlohmann/json.hpp>[m[K
+      |          [01;31m[K^~~~~~~~~~~~~~~~~~~[m[K
+compilation terminated.
+gmake[2]: *** [CMakeFiles/orbbec_camera.dir/build.make:132: CMakeFiles/orbbec_camera.dir/src/ob_camera_node.cpp.o] Error 1
+gmake[2]: *** Waiting for unfinished jobs....
+In file included from [01m[K/home/dgx_allex_one/allex2head/src/OrbbecSDK_ROS2/orbbec_camera/src/ros_service.cpp:17[m[K:
+[01m[K/home/dgx_allex_one/allex2head/src/OrbbecSDK_ROS2/orbbec_camera/include/orbbec_camera/ob_camera_node.h:19:10:[m[K [01;31m[Kfatal error: [m[Knlohmann/json.hpp: No such file or directory
+   19 | #include [01;31m[K<nlohmann/json.hpp>[m[K
+      |          [01;31m[K^~~~~~~~~~~~~~~~~~~[m[K
+compilation terminated.
+gmake[2]: *** [CMakeFiles/orbbec_camera.dir/build.make:160: CMakeFiles/orbbec_camera.dir/src/ros_service.cpp.o] Error 1
+In file included from [01m[K/home/dgx_allex_one/allex2head/src/OrbbecSDK_ROS2/orbbec_camera/include/orbbec_camera/ob_camera_node_driver.h:22[m[K,
+                 from [01m[K/home/dgx_allex_one/allex2head/src/OrbbecSDK_ROS2/orbbec_camera/src/ob_camera_node_driver.cpp:17[m[K:
+[01m[K/home/dgx_allex_one/allex2head/src/OrbbecSDK_ROS2/orbbec_camera/include/orbbec_camera/ob_camera_node.h:19:10:[m[K [01;31m[Kfatal error: [m[Knlohmann/json.hpp: No such file or directory
+   19 | #include [01;31m[K<nlohmann/json.hpp>[m[K
+      |          [01;31m[K^~~~~~~~~~~~~~~~~~~[m[K
+compilation terminated.
+gmake[2]: *** [CMakeFiles/orbbec_camera.dir/build.make:118: CMakeFiles/orbbec_camera.dir/src/ob_camera_node_driver.cpp.o] Error 1
+In file included from [01m[K/home/dgx_allex_one/allex2head/src/OrbbecSDK_ROS2/orbbec_camera/include/orbbec_camera/ob_camera_node_driver.h:22[m[K,
+                 from [01m[K/home/dgx_allex_one/allex2head/src/OrbbecSDK_ROS2/orbbec_camera/tools/start_benchmark.cpp:3[m[K:
+[01m[K/home/dgx_allex_one/allex2head/src/OrbbecSDK_ROS2/orbbec_camera/include/orbbec_camera/ob_camera_node.h:19:10:[m[K [01;31m[Kfatal error: [m[Knlohmann/json.hpp: No such file or directory
+   19 | #include [01;31m[K<nlohmann/json.hpp>[m[K
+      |          [01;31m[K^~~~~~~~~~~~~~~~~~~[m[K
+compilation terminated.
+gmake[2]: *** [CMakeFiles/start_benchmark.dir/build.make:76: CMakeFiles/start_benchmark.dir/tools/start_benchmark.cpp.o] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:339: CMakeFiles/start_benchmark.dir/all] Error 2
+gmake[1]: *** Waiting for unfinished jobs....
+In file included from [01m[K/home/dgx_allex_one/allex2head/src/OrbbecSDK_ROS2/orbbec_camera/include/orbbec_camera/ob_camera_node_driver.h:22[m[K,
+                 from [01m[K/home/dgx_allex_one/allex2head/src/OrbbecSDK_ROS2/orbbec_camera/tools/multi_save_rgbir.cpp:4[m[K:
+[01m[K/home/dgx_allex_one/allex2head/src/OrbbecSDK_ROS2/orbbec_camera/include/orbbec_camera/ob_camera_node.h:19:10:[m[K [01;31m[Kfatal error: [m[Knlohmann/json.hpp: No such file or directory
+   19 | #include [01;31m[K<nlohmann/json.hpp>[m[K
+      |          [01;31m[K^~~~~~~~~~~~~~~~~~~[m[K
+compilation terminated.
+gmake[2]: *** [CMakeFiles/multi_save_rgbir.dir/build.make:76: CMakeFiles/multi_save_rgbir.dir/tools/multi_save_rgbir.cpp.o] Error 1
+gmake[2]: *** Waiting for unfinished jobs....
+gmake[1]: *** [CMakeFiles/Makefile2:391: CMakeFiles/multi_save_rgbir.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:157: CMakeFiles/orbbec_camera.dir/all] Error 2
+gmake: *** [Makefile:146: all] Error 2

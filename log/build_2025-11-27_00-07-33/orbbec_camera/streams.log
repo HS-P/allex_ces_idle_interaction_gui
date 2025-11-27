@@ -1,0 +1,299 @@
+[0.008s] Invoking command in '/home/dgx_allex_one/allex2head/build/orbbec_camera': AMENT_PREFIX_PATH=/home/dgx_allex_one/allex2head/install/orbbec_camera_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/dgx_allex_one/allex2head/install/orbbec_camera_msgs:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy CONDA_PROMPT_MODIFIER=(allex_camera) DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/dgx_allex_one/allex2head/install/orbbec_camera_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/dgx_allex_one/allex2head/install/orbbec_camera_msgs/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/cmake --build /home/dgx_allex_one/allex2head/build/orbbec_camera -- -j20 -l20
+[0.046s] [  3%] [32mBuilding CXX object CMakeFiles/start_benchmark.dir/tools/start_benchmark.cpp.o[0m
+[0.048s] [  9%] Built target multi_save_rgbir_node
+[0.050s] [ 15%] Built target start_benchmark_node
+[0.055s] [ 21%] [32mBuilding CXX object CMakeFiles/multi_save_rgbir.dir/tools/multi_save_rgbir.cpp.o[0m
+[0.055s] [ 25%] Built target frame_latency_node
+[0.057s] [ 31%] Built target frame_latency
+[0.057s] [ 37%] Built target orbbec_camera_node
+[0.073s] [ 40%] [32mBuilding CXX object CMakeFiles/orbbec_camera.dir/src/ros_service.cpp.o[0m
+[0.075s] [ 43%] [32mBuilding CXX object CMakeFiles/orbbec_camera.dir/src/ob_camera_node_driver.cpp.o[0m
+[0.076s] [ 46%] [32mBuilding CXX object CMakeFiles/orbbec_camera.dir/src/ob_camera_node.cpp.o[0m
+[12.979s] [ 50%] [32m[1mLinking CXX shared library libstart_benchmark.so[0m
+[13.116s] [ 50%] Built target start_benchmark
+[14.251s] [ 53%] [32m[1mLinking CXX shared library libmulti_save_rgbir.so[0m
+[14.434s] [ 56%] Built target multi_save_rgbir
+[25.478s] [ 59%] [32m[1mLinking CXX shared library liborbbec_camera.so[0m
+[25.711s] [ 81%] Built target orbbec_camera
+[25.728s] [ 87%] [32mBuilding CXX object CMakeFiles/list_depth_work_mode_node.dir/tools/list_depth_work_mode.cpp.o[0m
+[25.728s] [ 87%] [32mBuilding CXX object CMakeFiles/ob_benchmark_node.dir/tools/ob_benchmark.cpp.o[0m
+[25.730s] [ 90%] [32mBuilding CXX object CMakeFiles/topic_statistics_node.dir/tools/topic_statistics.cpp.o[0m
+[31.232s] [ 93%] [32m[1mLinking CXX executable list_depth_work_mode_node[0m
+[31.310s] [ 96%] [32m[1mLinking CXX executable topic_statistics_node[0m
+[31.329s] [ 96%] Built target list_depth_work_mode_node
+[31.445s] [ 96%] Built target topic_statistics_node
+[32.934s] [100%] [32m[1mLinking CXX executable ob_benchmark_node[0m
+[33.032s] [100%] Built target ob_benchmark_node
+[33.046s] Invoked command in '/home/dgx_allex_one/allex2head/build/orbbec_camera' returned '0': AMENT_PREFIX_PATH=/home/dgx_allex_one/allex2head/install/orbbec_camera_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/dgx_allex_one/allex2head/install/orbbec_camera_msgs:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy CONDA_PROMPT_MODIFIER=(allex_camera) DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/dgx_allex_one/allex2head/install/orbbec_camera_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/dgx_allex_one/allex2head/install/orbbec_camera_msgs/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/cmake --build /home/dgx_allex_one/allex2head/build/orbbec_camera -- -j20 -l20
+[33.047s] Invoking command in '/home/dgx_allex_one/allex2head/build/orbbec_camera': AMENT_PREFIX_PATH=/home/dgx_allex_one/allex2head/install/orbbec_camera_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/dgx_allex_one/allex2head/install/orbbec_camera_msgs:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy CONDA_PROMPT_MODIFIER=(allex_camera) DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/dgx_allex_one/allex2head/install/orbbec_camera_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/dgx_allex_one/allex2head/install/orbbec_camera_msgs/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/cmake --install /home/dgx_allex_one/allex2head/build/orbbec_camera
+[33.053s] -- Install configuration: ""
+[33.054s] -- Execute custom install script
+[33.054s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib/orbbec_camera/orbbec_camera_node
+[33.063s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib/orbbec_camera/frame_latency_node
+[33.068s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib/orbbec_camera/start_benchmark_node
+[33.072s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib/orbbec_camera/multi_save_rgbir_node
+[33.077s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib/liborbbec_camera.so
+[33.085s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib/libframe_latency.so
+[33.091s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib/libstart_benchmark.so
+[33.096s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib/libmulti_save_rgbir.so
+[33.101s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/magic_enum/magic_enum.hpp
+[33.106s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/orbbec_camera/constants.h
+[33.111s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/orbbec_camera/d2c_viewer.h
+[33.116s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/orbbec_camera/dynamic_params.h
+[33.120s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/orbbec_camera/fps_counter.hpp
+[33.125s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/orbbec_camera/image_publisher.h
+[33.130s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/orbbec_camera/jetson_nv_decoder.h
+[33.136s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/orbbec_camera/jpeg_decoder.h
+[33.141s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/orbbec_camera/ob_camera_node.h
+[33.146s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/orbbec_camera/ob_camera_node_driver.h
+[33.150s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/orbbec_camera/rk_mpp_decoder.h
+[33.155s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/orbbec_camera/ros_param_backend.h
+[33.159s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/orbbec_camera/synced_imu_publisher.h
+[33.164s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/orbbec_camera/utils.h
+[33.169s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//launch/astra2.launch.py
+[33.173s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//launch/dabai_a.launch.py
+[33.178s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//launch/dabai_al.launch.py
+[33.182s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//launch/femto.launch.py
+[33.187s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//launch/femto_bolt.launch.py
+[33.192s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//launch/femto_mega.launch.py
+[33.196s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//launch/gemini2.launch.py
+[33.201s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//launch/gemini210.launch.py
+[33.205s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//launch/gemini2L.launch.py
+[33.213s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//launch/gemini435_le.launch.py
+[33.218s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//launch/gemini_330_series.launch.py
+[33.222s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//launch/gemini_intra_process_demo_launch.py
+[33.227s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//launch/multi_camera.launch.py
+[33.231s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//launch/multi_camera_synced.launch.py
+[33.239s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//launch/orbbec_camera.launch.py
+[33.243s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//launch/orbbec_multicamera.launch.py
+[33.251s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//launch/utils_yaml.py
+[33.256s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//config/.gitkeep
+[33.261s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//config/OrbbecSDKConfig_v2.0.xml
+[33.268s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//config/astra2.yaml
+[33.272s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//config/camera_params.yaml
+[33.277s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//config/camera_secondary_params.yaml
+[33.282s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//config/common.yaml
+[33.288s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//config/depthfilter/Gemini2_v1.7.json
+[33.293s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//config/depthfilter/Openni_device.json
+[33.300s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//config/femto.yaml
+[33.304s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//config/femto_bolt.yaml
+[33.309s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//config/femto_mega.yaml
+[33.316s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//config/gemini2.yaml
+[33.320s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//config/gemini2L.yaml
+[33.325s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//config/gemini330Lg_series.yaml
+[33.330s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//config/gemini330_series.yaml
+[33.337s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//config/tools/multisavergbir/multi_save_rgbir_params.json
+[33.341s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//config/tools/startbenchmark/start_benchmark_params.json
+[33.349s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/README.MD
+[33.354s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/align_depth_color/README.MD
+[33.359s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/align_depth_color/image/image3.png
+[33.364s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/align_depth_color/image/image4.jpg
+[33.369s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/benchmark/README.MD
+[33.373s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/benchmark/gemini_330_series_benchmark.launch.py
+[33.379s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/benchmark/ob_benchmark_0.launch.py
+[33.383s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/benchmark/ob_benchmark_1.launch.py
+[33.388s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/disparity_search_offset/README.MD
+[33.392s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/disparity_search_offset/image/search_offset0.png
+[33.397s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/gmsl_camera/README.MD
+[33.401s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/gmsl_camera/gemini_330_gmsl.launch.py
+[33.405s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/gmsl_camera/multi_gmsl_camera.launch.py
+[33.411s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/gmsl_camera/multi_gmsl_camera_synced.launch.py
+[33.415s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/interleave_ae_mode/README.MD
+[33.422s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/interleave_ae_mode/image/interleave_ae0.jpeg
+[33.426s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/interleave_ae_mode/image/interleave_ae1.jpeg
+[33.431s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/lower_cpu_usage/README.MD
+[33.436s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/lower_cpu_usage/gemini_330_series_lower_cpu_usage.launch.py
+[33.440s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/lower_cpu_usage/multi_camera_lower_cpu_usage.launch.py
+[33.447s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera/README.MD
+[33.452s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced/README.MD
+[33.456s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced/image/multi_camera_synced1.png
+[33.462s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced/image/multi_camera_synced2.png
+[33.468s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/README.MD
+[33.472s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/gemini_330_series_synced_verify.launch.py
+[33.477s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/gemini_synced_verify.launch.py
+[33.481s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multi_camera_synced_verify.launch.py
+[33.486s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/Python/Analysis_script.md
+[33.490s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/Python/Config.ini
+[33.495s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/Python/SyncFramesMain.py
+[33.500s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/Python/script/config_frameMatch-Astra2_new.py
+[33.504s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/Python/script/config_frameMatch-systemTimestamp.py
+[33.508s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/Python/script/config_frameMatch.py
+[33.516s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/Python/script/config_frameMatch_Gemini2VL.py
+[33.523s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/Python/script/config_frameMatch_g330.py
+[33.530s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/DevicesInfo.txt
+[33.537s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/StreamProfileInfo.txt
+[33.544s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1E5420006D_Index0/color_SNCP1E5420006D_Index0_g1739874543227_f0_s1739874543327_e50_d16_.jpg
+[33.551s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1E5420006D_Index0/color_SNCP1E5420006D_Index0_g1739874543260_f1_s1739874543351_e50_d16_.jpg
+[33.558s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1E5420006D_Index0/color_SNCP1E5420006D_Index0_g1739874543294_f2_s1739874543359_e50_d16_.jpg
+[33.565s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1E5420006D_Index0/color_SNCP1E5420006D_Index0_g1739874543327_f3_s1739874543441_e50_d16_.jpg
+[33.572s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1E5420006D_Index0/color_SNCP1E5420006D_Index0_g1739874543360_f4_s1739874543442_e50_d16_.jpg
+[33.579s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1E5420006D_Index0/color_SNCP1E5420006D_Index0_g1739874543394_f5_s1739874543506_e50_d16_.jpg
+[33.585s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1E5420006D_Index0/color_SNCP1E5420006D_Index0_g1739874543427_f6_s1739874543518_e50_d16_.jpg
+[33.592s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1E5420006D_Index0/color_SNCP1E5420006D_Index0_g1739874543461_f7_s1739874543520_e50_d16_.jpg
+[33.599s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1E5420006D_Index0/color_SNCP1E5420006D_Index0_g1739874543494_f8_s1739874543548_e50_d16_.jpg
+[33.606s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1E5420006D_Index0/color_SNCP1E5420006D_Index0_g1739874543527_f9_s1739874543603_e50_d16_.jpg
+[33.613s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1E5420006D_Index0/color_SNCP1E5420006D_Index0_g1739874543561_f10_s1739874543648_e50_d16_.jpg
+[33.619s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1E5420006D_Index0/ir#left_SNCP1E5420006D_Index0_g1739874543227_f0_s1739874543250_e5000_d16_.jpg
+[33.626s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1E5420006D_Index0/ir#left_SNCP1E5420006D_Index0_g1739874543260_f1_s1739874543310_e5000_d16_.jpg
+[33.633s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1E5420006D_Index0/ir#left_SNCP1E5420006D_Index0_g1739874543294_f2_s1739874543329_e5000_d16_.jpg
+[33.640s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1E5420006D_Index0/ir#left_SNCP1E5420006D_Index0_g1739874543327_f3_s1739874543393_e5000_d16_.jpg
+[33.647s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1E5420006D_Index0/ir#left_SNCP1E5420006D_Index0_g1739874543361_f4_s1739874543405_e5000_d16_.jpg
+[33.654s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1E5420006D_Index0/ir#left_SNCP1E5420006D_Index0_g1739874543394_f5_s1739874543473_e5000_d16_.jpg
+[33.661s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1E5420006D_Index0/ir#left_SNCP1E5420006D_Index0_g1739874543427_f6_s1739874543474_e5000_d16_.jpg
+[33.668s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1E5420006D_Index0/ir#left_SNCP1E5420006D_Index0_g1739874543461_f7_s1739874543493_e5000_d16_.jpg
+[33.674s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1E5420006D_Index0/ir#left_SNCP1E5420006D_Index0_g1739874543494_f8_s1739874543528_e5000_d16_.jpg
+[33.682s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1E5420006D_Index0/ir#left_SNCP1E5420006D_Index0_g1739874543527_f9_s1739874543627_e5000_d16_.jpg
+[33.688s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1E5420006D_Index0/ir#left_SNCP1E5420006D_Index0_g1739874543561_f10_s1739874543628_e5000_d16_.jpg
+[33.695s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1L44P00051_Index1/color_SNCP1L44P00051_Index1_g1739874543227_f0_s1739874543304_e50_d16_.jpg
+[33.702s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1L44P00051_Index1/color_SNCP1L44P00051_Index1_g1739874543260_f1_s1739874543345_e50_d16_.jpg
+[33.709s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1L44P00051_Index1/color_SNCP1L44P00051_Index1_g1739874543293_f2_s1739874543446_e50_d16_.jpg
+[33.716s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1L44P00051_Index1/color_SNCP1L44P00051_Index1_g1739874543327_f3_s1739874543458_e50_d16_.jpg
+[33.723s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1L44P00051_Index1/color_SNCP1L44P00051_Index1_g1739874543360_f4_s1739874543468_e50_d16_.jpg
+[33.729s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1L44P00051_Index1/color_SNCP1L44P00051_Index1_g1739874543393_f5_s1739874543470_e50_d16_.jpg
+[33.736s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1L44P00051_Index1/color_SNCP1L44P00051_Index1_g1739874543427_f6_s1739874543485_e50_d16_.jpg
+[33.743s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1L44P00051_Index1/color_SNCP1L44P00051_Index1_g1739874543460_f7_s1739874543505_e50_d16_.jpg
+[33.750s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1L44P00051_Index1/color_SNCP1L44P00051_Index1_g1739874543494_f8_s1739874543540_e50_d16_.jpg
+[33.757s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1L44P00051_Index1/color_SNCP1L44P00051_Index1_g1739874543527_f9_s1739874543616_e50_d16_.jpg
+[33.764s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1L44P00051_Index1/color_SNCP1L44P00051_Index1_g1739874543560_f10_s1739874543618_e50_d16_.jpg
+[33.771s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1L44P00051_Index1/ir#left_SNCP1L44P00051_Index1_g1739874543227_f0_s1739874543250_e5000_d16_.jpg
+[33.777s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1L44P00051_Index1/ir#left_SNCP1L44P00051_Index1_g1739874543260_f1_s1739874543294_e5000_d16_.jpg
+[33.784s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1L44P00051_Index1/ir#left_SNCP1L44P00051_Index1_g1739874543294_f2_s1739874543319_e5000_d16_.jpg
+[33.791s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1L44P00051_Index1/ir#left_SNCP1L44P00051_Index1_g1739874543327_f3_s1739874543460_e5000_d16_.jpg
+[33.798s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1L44P00051_Index1/ir#left_SNCP1L44P00051_Index1_g1739874543360_f4_s1739874543460_e5000_d16_.jpg
+[33.805s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1L44P00051_Index1/ir#left_SNCP1L44P00051_Index1_g1739874543394_f5_s1739874543661_e5000_d16_.jpg
+[33.812s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1L44P00051_Index1/ir#left_SNCP1L44P00051_Index1_g1739874543427_f6_s1739874543684_e5000_d16_.jpg
+[33.819s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1L44P00051_Index1/ir#left_SNCP1L44P00051_Index1_g1739874543460_f7_s1739874543685_e5000_d16_.jpg
+[33.825s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1L44P00051_Index1/ir#left_SNCP1L44P00051_Index1_g1739874543494_f8_s1739874543687_e5000_d16_.jpg
+[33.832s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1L44P00051_Index1/ir#left_SNCP1L44P00051_Index1_g1739874543527_f10_s1739874543687_e5000_d16_.jpg
+[33.839s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/TotalModeFrames/SNCP1L44P00051_Index1/ir#left_SNCP1L44P00051_Index1_g1739874543560_f11_s1739874543687_e5000_d16_.jpg
+[33.846s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/frameMatchLog.txt
+[33.853s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/0_color_SNCP1E5420006D_Index0_1739874543527_[0].jpg
+[33.860s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/0_color_SNCP1L44P00051_Index1_1739874543527_[0].jpg
+[33.867s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/0_ir_left_SNCP1E5420006D_Index0_1739874543527_[0].jpg
+[33.873s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/0_ir_left_SNCP1L44P00051_Index1_1739874543527_[0].jpg
+[33.880s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/10_color_SNCP1E5420006D_Index0_1739874543227_[0].jpg
+[33.887s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/10_color_SNCP1L44P00051_Index1_1739874543227_[0].jpg
+[33.894s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/10_ir_left_SNCP1E5420006D_Index0_1739874543227_[0].jpg
+[33.901s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/10_ir_left_SNCP1L44P00051_Index1_1739874543227_[0].jpg
+[33.908s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/1_color_SNCP1E5420006D_Index0_1739874543494_[0].jpg
+[33.915s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/1_color_SNCP1L44P00051_Index1_1739874543494_[0].jpg
+[33.922s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/1_ir_left_SNCP1E5420006D_Index0_1739874543494_[0].jpg
+[33.929s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/1_ir_left_SNCP1L44P00051_Index1_1739874543494_[0].jpg
+[33.935s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/2_color_SNCP1E5420006D_Index0_1739874543461_[1].jpg
+[33.942s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/2_color_SNCP1L44P00051_Index1_1739874543460_[0].jpg
+[33.949s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/2_ir_left_SNCP1E5420006D_Index0_1739874543461_[1].jpg
+[33.956s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/2_ir_left_SNCP1L44P00051_Index1_1739874543460_[0].jpg
+[33.963s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/3_color_SNCP1E5420006D_Index0_1739874543260_[0].jpg
+[33.970s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/3_color_SNCP1L44P00051_Index1_1739874543260_[0].jpg
+[33.977s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/3_ir_left_SNCP1E5420006D_Index0_1739874543260_[0].jpg
+[33.984s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/3_ir_left_SNCP1L44P00051_Index1_1739874543260_[0].jpg
+[33.991s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/4_color_SNCP1E5420006D_Index0_1739874543360_[0].jpg
+[33.997s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/4_color_SNCP1L44P00051_Index1_1739874543360_[0].jpg
+[34.004s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/4_ir_left_SNCP1E5420006D_Index0_1739874543361_[1].jpg
+[34.011s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/4_ir_left_SNCP1L44P00051_Index1_1739874543360_[0].jpg
+[34.018s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/5_color_SNCP1E5420006D_Index0_1739874543327_[0].jpg
+[34.025s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/5_color_SNCP1L44P00051_Index1_1739874543327_[0].jpg
+[34.032s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/5_ir_left_SNCP1E5420006D_Index0_1739874543327_[0].jpg
+[34.039s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/5_ir_left_SNCP1L44P00051_Index1_1739874543327_[0].jpg
+[34.045s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/6_color_SNCP1E5420006D_Index0_1739874543561_[1].jpg
+[34.052s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/6_color_SNCP1L44P00051_Index1_1739874543560_[0].jpg
+[34.059s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/6_ir_left_SNCP1E5420006D_Index0_1739874543561_[1].jpg
+[34.066s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/6_ir_left_SNCP1L44P00051_Index1_1739874543560_[0].jpg
+[34.073s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/7_color_SNCP1E5420006D_Index0_1739874543427_[0].jpg
+[34.080s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/7_color_SNCP1L44P00051_Index1_1739874543427_[0].jpg
+[34.087s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/7_ir_left_SNCP1E5420006D_Index0_1739874543427_[0].jpg
+[34.093s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/7_ir_left_SNCP1L44P00051_Index1_1739874543427_[0].jpg
+[34.100s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/8_color_SNCP1E5420006D_Index0_1739874543294_[1].jpg
+[34.107s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/8_color_SNCP1L44P00051_Index1_1739874543293_[0].jpg
+[34.114s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/8_ir_left_SNCP1E5420006D_Index0_1739874543294_[1].jpg
+[34.121s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/8_ir_left_SNCP1L44P00051_Index1_1739874543294_[1].jpg
+[34.128s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/9_color_SNCP1E5420006D_Index0_1739874543394_[1].jpg
+[34.135s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/9_color_SNCP1L44P00051_Index1_1739874543393_[0].jpg
+[34.141s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/9_ir_left_SNCP1E5420006D_Index0_1739874543394_[1].jpg
+[34.148s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/multi_camera_synced_verification_tool/multicamera_sync/output/20250218102900/results-2025-02-25_163648/matchFrames/9_ir_left_SNCP1L44P00051_Index1_1739874543394_[1].jpg
+[34.155s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/net_camera/README.MD
+[34.162s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/net_camera/multi_net_camera.launch.py
+[34.169s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/point_cloud/README.MD
+[34.176s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/point_cloud/image/image5.jpg
+[34.183s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/point_cloud/image/image6.jpg
+[34.190s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/start_camera_node/README.MD
+[34.197s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/start_camera_node/image/image1.jpg
+[34.204s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera//examples/start_camera_node/image/image2.jpg
+[34.211s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/ObSensor.h
+[34.218s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/ObSensor.hpp
+[34.223s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/h/Advanced.h
+[34.227s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/h/Context.h
+[34.232s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/h/Device.h
+[34.237s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/h/Error.h
+[34.241s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/h/Export.h
+[34.246s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/h/Filter.h
+[34.251s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/h/Frame.h
+[34.256s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/h/MultipleDevices.h
+[34.261s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/h/ObTypes.h
+[34.266s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/h/Pipeline.h
+[34.271s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/h/Property.h
+[34.276s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/h/RecordPlayback.h
+[34.281s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/h/Sensor.h
+[34.286s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/h/StreamProfile.h
+[34.291s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/h/TypeHelper.h
+[34.296s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/h/Utils.h
+[34.301s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/h/Version.h
+[34.306s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/hpp/Context.hpp
+[34.311s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/hpp/Device.hpp
+[34.315s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/hpp/Error.hpp
+[34.320s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/hpp/Filter.hpp
+[34.325s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/hpp/Frame.hpp
+[34.330s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/hpp/Pipeline.hpp
+[34.335s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/hpp/RecordPlayback.hpp
+[34.340s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/hpp/Sensor.hpp
+[34.345s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/hpp/StreamProfile.hpp
+[34.349s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/hpp/TypeHelper.hpp
+[34.354s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/hpp/Types.hpp
+[34.359s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/hpp/Utils.hpp
+[34.364s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/include/libobsensor/hpp/Version.hpp
+[34.369s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib/extensions//libdepthengine.so
+[34.374s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib/extensions//libdepthengine.so.2.0
+[34.379s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib/extensions//libFilterProcessor.so
+[34.384s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib/extensions//libob_priv_filter.so
+[34.388s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib/extensions//libfirmwareupdater.so
+[34.393s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib/extensions//libob_frame_processor.so
+[34.398s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib/orbbec_camera//list_depth_work_mode_node
+[34.403s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib/orbbec_camera//topic_statistics_node
+[34.408s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib/orbbec_camera//ob_benchmark_node
+[34.413s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera/environment/library_path.sh
+[34.418s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera/environment/library_path.dsv
+[34.423s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/ament_index/resource_index/package_run_dependencies/orbbec_camera
+[34.428s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/ament_index/resource_index/parent_prefix_path/orbbec_camera
+[34.433s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera/environment/ament_prefix_path.sh
+[34.438s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera/environment/ament_prefix_path.dsv
+[34.443s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera/environment/path.sh
+[34.447s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera/environment/path.dsv
+[34.453s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera/local_setup.bash
+[34.457s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera/local_setup.sh
+[34.463s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera/local_setup.zsh
+[34.468s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera/local_setup.dsv
+[34.473s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera/package.dsv
+[34.478s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/ament_index/resource_index/packages/orbbec_camera
+[34.483s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/ament_index/resource_index/rclcpp_components/orbbec_camera
+[34.488s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera/cmake/ament_cmake_export_include_directories-extras.cmake
+[34.492s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera/cmake/ament_cmake_export_libraries-extras.cmake
+[34.497s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera/cmake/ament_cmake_export_dependencies-extras.cmake
+[34.502s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera/cmake/orbbec_cameraConfig.cmake
+[34.507s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera/cmake/orbbec_cameraConfig-version.cmake
+[34.512s] -- Symlinking: /home/dgx_allex_one/allex2head/install/orbbec_camera/share/orbbec_camera/package.xml
+[34.517s] -- Up-to-date: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib/
+[34.517s] -- Installing: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib//libOrbbecSDK.so
+[34.517s] -- Up-to-date: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib//extensions
+[34.517s] -- Installing: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib//extensions/firmwareupdater
+[34.517s] -- Installing: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib//extensions/firmwareupdater/libfirmwareupdater.so
+[34.518s] -- Installing: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib//extensions/filters
+[34.518s] -- Installing: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib//extensions/filters/libFilterProcessor.so
+[34.518s] -- Installing: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib//extensions/filters/libob_priv_filter.so
+[34.519s] -- Installing: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib//extensions/depthengine
+[34.519s] -- Installing: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib//extensions/depthengine/libdepthengine.so
+[34.519s] -- Installing: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib//extensions/depthengine/libdepthengine.so.2.0
+[34.519s] -- Installing: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib//extensions/frameprocessor
+[34.519s] -- Installing: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib//extensions/frameprocessor/libob_frame_processor.so
+[34.519s] -- Installing: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib//libOrbbecSDK.so.2
+[34.519s] -- Installing: /home/dgx_allex_one/allex2head/install/orbbec_camera/lib//libOrbbecSDK.so.2.4.11
+[34.530s] Invoked command in '/home/dgx_allex_one/allex2head/build/orbbec_camera' returned '0': AMENT_PREFIX_PATH=/home/dgx_allex_one/allex2head/install/orbbec_camera_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/dgx_allex_one/allex2head/install/orbbec_camera_msgs:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy CONDA_PROMPT_MODIFIER=(allex_camera) DEBUGINFOD_URLS=https://debuginfod.ubuntu.com LD_LIBRARY_PATH=/home/dgx_allex_one/allex2head/install/orbbec_camera_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/dgx_allex_one/allex2head/install/orbbec_camera_msgs/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/cmake --install /home/dgx_allex_one/allex2head/build/orbbec_camera

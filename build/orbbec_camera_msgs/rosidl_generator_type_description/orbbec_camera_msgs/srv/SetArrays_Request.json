@@ -1,0 +1,36 @@
+{
+  "type_description_msg": {
+    "type_description": {
+      "type_name": "orbbec_camera_msgs/srv/SetArrays_Request",
+      "fields": [
+        {
+          "name": "enable",
+          "type": {
+            "type_id": 15,
+            "capacity": 0,
+            "string_capacity": 0,
+            "nested_type_name": ""
+          },
+          "default_value": ""
+        },
+        {
+          "name": "data_param",
+          "type": {
+            "type_id": 154,
+            "capacity": 0,
+            "string_capacity": 0,
+            "nested_type_name": ""
+          },
+          "default_value": ""
+        }
+      ]
+    },
+    "referenced_type_descriptions": []
+  },
+  "type_hashes": [
+    {
+      "type_name": "orbbec_camera_msgs/srv/SetArrays_Request",
+      "hash_string": "RIHS01_977fdae86f176d879f4ef3a8ae83fa7c278705f00da3cb8ea48f1e5fe1e6966f"
+    }
+  ]
+}

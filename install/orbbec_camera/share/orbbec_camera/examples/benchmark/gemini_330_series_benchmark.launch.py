@@ -1,0 +1,1 @@
+/home/dgx_allex_one/allex2head/src/OrbbecSDK_ROS2/orbbec_camera/examples/benchmark/gemini_330_series_benchmark.launch.py

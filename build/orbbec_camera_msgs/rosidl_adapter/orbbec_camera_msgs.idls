@@ -1,0 +1,14 @@
+/home/dgx_allex_one/allex2head/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:msg/DeviceInfo.idl
+/home/dgx_allex_one/allex2head/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:msg/Extrinsics.idl
+/home/dgx_allex_one/allex2head/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:msg/Metadata.idl
+/home/dgx_allex_one/allex2head/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:msg/IMUInfo.idl
+/home/dgx_allex_one/allex2head/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:msg/RGBD.idl
+/home/dgx_allex_one/allex2head/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:srv/GetBool.idl
+/home/dgx_allex_one/allex2head/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:srv/GetDeviceInfo.idl
+/home/dgx_allex_one/allex2head/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:srv/GetCameraInfo.idl
+/home/dgx_allex_one/allex2head/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:srv/GetInt32.idl
+/home/dgx_allex_one/allex2head/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:srv/GetString.idl
+/home/dgx_allex_one/allex2head/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:srv/SetFilter.idl
+/home/dgx_allex_one/allex2head/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:srv/SetInt32.idl
+/home/dgx_allex_one/allex2head/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:srv/SetString.idl
+/home/dgx_allex_one/allex2head/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:srv/SetArrays.idl

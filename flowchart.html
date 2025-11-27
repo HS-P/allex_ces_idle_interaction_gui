@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사람 추적 시스템 플로우차트</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+    </script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #555;
+            margin-top: 40px;
+            border-left: 5px solid #4CAF50;
+            padding-left: 15px;
+        }
+        .mermaid {
+            background-color: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin-bottom: 50px;
+        }
+    </style>
+</head>
+<body>
+    <h1>사람 추적 시스템 플로우차트</h1>
+
+    <div class="section">
+        <h2>1. 전체 시스템 구조</h2>
+        <div class="mermaid">
+graph TB
+    Start([시작]) --> Init[CameraPublisher 초기화]
+    Init --> Sub[이미지 토픽 구독 설정]
+    Sub --> TrackerInit[TrackerManager 초기화]
+    TrackerInit --> YOLOLoad[YOLO 모델 로드]
+    YOLOLoad --> GPUWarmup{GPU 사용 가능?}
+    GPUWarmup -->|Yes| GPUWarm[GPU 워밍업]
+    GPUWarmup -->|No| CPUReady[CPU 준비 완료]
+    GPUWarm --> Ready[시스템 준비 완료]
+    CPUReady --> Ready
+    Ready --> DisplayThread[화면 표시 스레드 시작]
+    DisplayThread --> Spin[ROS2 Spin 시작]
+    Spin --> Callback[이미지 콜백 대기]
+    Callback --> End([종료])
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>2. 이미지 콜백 처리 흐름</h2>
+        <div class="mermaid">
+graph TB
+    Start([이미지 수신]) --> Decode[이미지 디코딩]
+    Decode --> CheckFrame{프레임 유효?}
+    CheckFrame -->|No| Return[반환]
+    CheckFrame -->|Yes| Process[TrackerManager.process 호출]
+    Process --> TrackResult[추적 결과 받기]
+    TrackResult --> LogCheck{5초 경과?}
+    LogCheck -->|Yes| Log[로그 출력]
+    LogCheck -->|No| SkipLog[로그 스킵]
+    Log --> Visualize
+    SkipLog --> Visualize[시각화 준비]
+    Visualize --> QueueCheck{큐 가득참?}
+    QueueCheck -->|Yes| SkipViz[시각화 스킵]
+    QueueCheck -->|No| Draw[프레임에 그리기]
+    Draw --> PutQueue[큐에 추가]
+    PutQueue --> End([완료])
+    SkipViz --> End
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>3. TrackerManager.process 흐름 (Bot-SORT 기반)</h2>
+        <div class="mermaid">
+graph TB
+    Start([프레임 입력]) --> YOLOTrack[YOLO + Bot-SORT track 실행<br/>persist=True로 상태 유지]
+    YOLOTrack --> Sync[GPU 동기화]
+    Sync --> CheckResults{결과 존재?}
+    
+    CheckResults -->|없음| NoResults[감지 없음 처리]
+    CheckResults -->|있음| CheckBoxes{박스 정보 있음?}
+    
+    CheckBoxes -->|없음| NoBoxes[박스 없음 처리]
+    CheckBoxes -->|있음| ExtractData[ID, 좌표, 신뢰도 추출]
+    
+    ExtractData --> CreateObjects[모든 추적 객체 생성]
+    CreateObjects --> StateMachine[상태 머신 처리]
+    
+    NoResults --> StateUpdate1[상태 업데이트]
+    NoBoxes --> StateUpdate2[상태 업데이트]
+    StateUpdate1 --> ReturnEmpty1[빈 리스트 반환]
+    StateUpdate2 --> ReturnEmpty2[빈 리스트 반환]
+    
+    StateMachine --> AssignState[상태에 따라 객체 상태 할당]
+    AssignState --> CheckTarget{추적 대상?}
+    CheckTarget -->|Yes| SetTarget[state='target'<br/>붉은색 표시]
+    CheckTarget -->|No| SetSystem[state=시스템 상태]
+    
+    SetTarget --> ReturnResult[추적 결과 반환]
+    SetSystem --> ReturnResult
+    ReturnEmpty1 --> End([완료])
+    ReturnEmpty2 --> End
+    ReturnResult --> End
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>4. Bot-SORT 추적 알고리즘 (내부 처리)</h2>
+        <div class="mermaid">
+graph TB
+    Start([YOLO 감지 결과]) --> BotSort[Bot-SORT Tracker]
+    
+    BotSort --> Kalman[Kalman Filter<br/>위치 및 속도 예측]
+    BotSort --> Hungarian[Hungarian Algorithm<br/>최적 매칭]
+    BotSort --> GMC[Global Motion Compensation<br/>카메라 움직임 보정]
+    
+    Kalman --> Match[감지-트랙 매칭]
+    Hungarian --> Match
+    GMC --> Match
+    
+    Match --> UpdateTracks[트랙 업데이트]
+    Match --> CreateTracks[새 트랙 생성]
+    Match --> RemoveTracks[오래된 트랙 제거]
+    
+    UpdateTracks --> AssignID[Track ID 할당]
+    CreateTracks --> AssignID
+    RemoveTracks --> AssignID
+    
+    AssignID --> Return[추적 결과 반환]
+    
+    note right of BotSort
+        Bot-SORT는 내부적으로
+        Kalman Filter와 Hungarian
+        알고리즘을 사용하여
+        프레임 간 객체 매칭 수행
+    end note
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>5. 화면 표시 스레드 흐름</h2>
+        <div class="mermaid">
+graph TB
+    Start([스레드 시작]) --> CreateWindow[창 생성]
+    CreateWindow --> Loop[무한 루프]
+    Loop --> CheckRunning{실행 중?}
+    CheckRunning -->|No| DestroyWindow[창 닫기]
+    CheckRunning -->|Yes| GetQueue[큐에서 프레임 가져오기]
+    GetQueue --> QueueEmpty{큐 비어있음?}
+    QueueEmpty -->|Yes| Wait[대기]
+    QueueEmpty -->|No| ShowFrame[화면에 표시]
+    Wait --> Loop
+    ShowFrame --> CheckKey[키 입력 확인]
+    CheckKey --> KeyQ{ESC 또는 'q'?}
+    KeyQ -->|Yes| StopRunning[실행 중지]
+    KeyQ -->|No| Loop
+    StopRunning --> DestroyWindow
+    DestroyWindow --> End([종료])
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>6. 데이터 구조</h2>
+        <div class="mermaid">
+classDiagram
+    class TrackedObject {
+        +int track_id
+        +tuple bbox
+        +tuple centroid
+        +str state
+        +float confidence
+        +int age
+    }
+    
+    class TrackingState {
+        <<enumeration>>
+        IDLE
+        TRACKING
+        LOST
+        SEARCHING
+    }
+    
+    class TrackerManager {
+        -YOLO yolo_model
+        -str tracker_cfg
+        -TrackingState state
+        -int target_track_id
+        -int lost_frames
+        -int max_lost_frames
+        +process(frame) List[TrackedObject]
+        -_find_closest_person(objects, frame_shape) int
+    }
+    
+    class CameraPublisher {
+        -TrackerManager tracker_manager
+        -Queue display_queue
+        -Thread display_thread
+        -int frame_count
+        +image_callback(msg)
+        -_display_worker()
+    }
+    
+    TrackerManager --> TrackedObject : 생성
+    TrackerManager --> TrackingState : 사용
+    CameraPublisher --> TrackerManager : 사용
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>7. Bot-SORT 매칭 알고리즘 (내부 처리)</h2>
+        <div class="mermaid">
+graph TB
+    A[감지 결과] --> B[Kalman Filter 예측]
+    A --> C[IOU 계산]
+    A --> D[ReID 특징 비교]
+    
+    B --> E[예측 위치와<br/>실제 위치 거리]
+    C --> F[바운딩 박스<br/>겹침 정도]
+    D --> G[외관 유사도]
+    
+    E --> H[비용 행렬 생성]
+    F --> H
+    G --> H
+    
+    H --> I[Hungarian Algorithm<br/>최적 매칭]
+    I --> J{매칭 성공?}
+    
+    J -->|Yes| K[트랙 업데이트<br/>ID 유지]
+    J -->|No| L[새 트랙 생성<br/>새 ID 할당]
+    
+    note right of H
+        Bot-SORT는 IOU, 거리,
+        ReID 특징을 종합하여
+        비용 행렬을 생성하고
+        Hungarian 알고리즘으로
+        최적 매칭 수행
+    end note
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>8. 상태 머신 기반 추적 대상 관리 알고리즘</h2>
+        <div class="mermaid">
+stateDiagram-v2
+    [*] --> IDLE: 초기화
+    
+    IDLE --> TRACKING: 가장 가까운 사람 선택
+    IDLE --> IDLE: 사람 없음
+    
+    TRACKING --> LOST: 추적 대상 사라짐
+    TRACKING --> TRACKING: 추적 대상 유지
+    
+    LOST --> TRACKING: 대상 다시 발견
+    LOST --> SEARCHING: 30프레임 이상 놓침
+    
+    SEARCHING --> TRACKING: 새 대상 선택
+    SEARCHING --> SEARCHING: 사람 없음
+    
+    note right of IDLE
+        초기 상태
+        프레임 중심에 가장
+        가까운 사람 선택
+    end note
+    
+    note right of TRACKING
+        추적 중
+        대상 ID 유지
+        붉은색 표시
+    end note
+    
+    note right of LOST
+        놓침 상태
+        최대 30프레임 대기
+        대상 재발견 시도
+    end note
+    
+    note right of SEARCHING
+        탐색 상태
+        주변에서 가장
+        가까운 사람 재선택
+    end note
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>9. 상태 머신 상세 처리 흐름</h2>
+        <div class="mermaid">
+graph TB
+    Start([프레임 입력]) --> YOLO[YOLO + Bot-SORT 추적]
+    YOLO --> CheckDetect{감지 결과 있음?}
+    
+    CheckDetect -->|없음| NoDetect[감지 없음 처리]
+    CheckDetect -->|있음| CreateObjects[모든 추적 객체 생성]
+    
+    NoDetect --> StateCheck1{현재 상태}
+    StateCheck1 -->|TRACKING| ToLost1[LOST 상태로 전이]
+    StateCheck1 -->|LOST| IncLost1[lost_frames 증가]
+    IncLost1 --> CheckMax1{30프레임 이상?}
+    CheckMax1 -->|Yes| ToSearch1[SEARCHING 상태로 전이]
+    CheckMax1 -->|No| KeepLost1[LOST 유지]
+    
+    CreateObjects --> StateCheck2{현재 상태}
+    
+    StateCheck2 -->|IDLE| FindClosest1[가장 가까운 사람 찾기]
+    FindClosest1 --> CheckFound1{찾음?}
+    CheckFound1 -->|Yes| SetTarget1[target_track_id 설정]
+    SetTarget1 --> ToTracking1[TRACKING 상태로 전이]
+    CheckFound1 -->|No| StayIdle[IDLE 유지]
+    
+    StateCheck2 -->|TRACKING| CheckTarget1{추적 대상 존재?}
+    CheckTarget1 -->|Yes| StayTracking[TRACKING 유지]
+    CheckTarget1 -->|No| ToLost2[LOST 상태로 전이]
+    
+    StateCheck2 -->|LOST| CheckTarget2{추적 대상 재발견?}
+    CheckTarget2 -->|Yes| ToTracking2[TRACKING 상태로 전이]
+    CheckTarget2 -->|No| IncLost2[lost_frames 증가]
+    IncLost2 --> CheckMax2{30프레임 이상?}
+    CheckMax2 -->|Yes| ToSearch2[SEARCHING 상태로 전이]
+    CheckMax2 -->|No| KeepLost2[LOST 유지]
+    
+    StateCheck2 -->|SEARCHING| FindClosest2[가장 가까운 사람 찾기]
+    FindClosest2 --> CheckFound2{찾음?}
+    CheckFound2 -->|Yes| SetTarget2[target_track_id 설정]
+    SetTarget2 --> ToTracking3[TRACKING 상태로 전이]
+    CheckFound2 -->|No| StaySearching[SEARCHING 유지]
+    
+    ToLost1 --> AssignState
+    ToSearch1 --> AssignState
+    ToTracking1 --> AssignState
+    StayIdle --> AssignState
+    StayTracking --> AssignState
+    ToLost2 --> AssignState
+    ToTracking2 --> AssignState
+    KeepLost1 --> AssignState
+    KeepLost2 --> AssignState
+    ToSearch2 --> AssignState
+    ToTracking3 --> AssignState
+    StaySearching --> AssignState
+    
+    AssignState[상태에 따라 객체 상태 할당] --> CheckTarget3{추적 대상?}
+    CheckTarget3 -->|Yes| SetTargetState[state = 'target'<br/>붉은색 표시]
+    CheckTarget3 -->|No| SetSystemState[state = 시스템 상태]
+    
+    SetTargetState --> Return[결과 반환]
+    SetSystemState --> Return
+    Return --> End([완료])
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>10. 가장 가까운 사람 선택 알고리즘</h2>
+        <div class="mermaid">
+graph TB
+    Start([추적 객체 리스트 입력]) --> CheckEmpty{리스트 비어있음?}
+    CheckEmpty -->|Yes| ReturnNone[None 반환]
+    CheckEmpty -->|No| CalcCenter[프레임 중심점 계산<br/>center_x = width/2<br/>center_y = height/2]
+    
+    CalcCenter --> InitMin[최소 거리 = 무한대]
+    InitMin --> LoopStart[각 객체 순회]
+    
+    LoopStart --> GetCentroid[객체 중심점 가져오기<br/>cx, cy]
+    GetCentroid --> CalcDist[유클리드 거리 계산<br/>√(cx-center_x)² + (cy-center_y)²]
+    
+    CalcDist --> CompareDist{거리 < 최소 거리?}
+    CompareDist -->|Yes| UpdateMin[최소 거리 업데이트<br/>가장 가까운 ID 저장]
+    CompareDist -->|No| NextObj[다음 객체]
+    
+    UpdateMin --> NextObj
+    NextObj --> MoreObj{더 많은 객체?}
+    MoreObj -->|Yes| LoopStart
+    MoreObj -->|No| ReturnClosest[가장 가까운 ID 반환]
+    
+    ReturnNone --> End([완료])
+    ReturnClosest --> End
+    
+    style CalcCenter fill:#e1f5ff
+    style CalcDist fill:#fff4e1
+    style ReturnClosest fill:#e8f5e9
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>11. 상태별 시각화 색상</h2>
+        <div class="mermaid">
+graph LR
+    A[상태] --> B[target<br/>붉은색<br/>0,0,255]
+    A --> C[tracking<br/>초록색<br/>0,255,0]
+    A --> D[idle<br/>회색<br/>128,128,128]
+    A --> E[lost<br/>주황색<br/>0,165,255]
+    A --> F[searching<br/>노란색<br/>255,255,0]
+    
+    style B fill:#ff0000,color:#fff
+    style C fill:#00ff00
+    style D fill:#808080,color:#fff
+    style E fill:#ffa500
+    style F fill:#ffff00
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>12. 성능 최적화 포인트</h2>
+        <div class="mermaid">
+graph TB
+    A[최적화 전략] --> B[GPU 사용]
+    A --> C[프레임 리사이즈]
+    A --> D[비동기 처리]
+    A --> E[큐 관리]
+    
+    B --> B1[FP16 반정밀도]
+    B --> B2[CUDA 동기화]
+    
+    C --> C1[1920x1080 제한]
+    
+    D --> D1[별도 스레드 시각화]
+    D --> D2[논블로킹 큐]
+    
+    E --> E1[최대 2개 프레임만 유지]
+    E --> E2[가득 차면 스킵]
+        </div>
+    </div>
+
+</body>
+</html>
+

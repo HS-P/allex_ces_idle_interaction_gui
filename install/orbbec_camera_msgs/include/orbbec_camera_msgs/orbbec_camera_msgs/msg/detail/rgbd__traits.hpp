@@ -1,0 +1,1 @@
+/home/dgx_allex_one/allex2head/build/orbbec_camera_msgs/rosidl_generator_cpp/orbbec_camera_msgs/msg/detail/rgbd__traits.hpp

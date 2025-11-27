@@ -1,0 +1,1 @@
+ament_cmake_symlink_install_targets("TARGET_FILES" "/home/dgx_allex_one/allex2head/build/orbbec_camera_msgs/rosidl_generator_py/orbbec_camera_msgs/orbbec_camera_msgs_s__rosidl_typesupport_fastrtps_c.so" "TARGETS" "orbbec_camera_msgs_s__rosidl_typesupport_fastrtps_c" "DESTINATION" "lib/python3.10/site-packages/orbbec_camera_msgs")
