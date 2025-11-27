@@ -151,7 +151,7 @@ class GuiNode(Node, QMainWindow):
         self.fps = 0.0
         self.process_time_ms = 0.0
         self.center_zone_elapsed_time = None
-        self.center_zone_duration = 2.0
+        self.center_zone_duration = 5.0
         
         # GUI 모드 관리
         self.interaction_mode = False  # True: Interaction Mode, False: IDLE Mode
@@ -287,7 +287,7 @@ class GuiNode(Node, QMainWindow):
             # Center Zone 정보 저장
             center_zone_data = data.get('center_zone', {})
             self.center_zone_elapsed_time = center_zone_data.get('elapsed_time')
-            self.center_zone_duration = center_zone_data.get('duration', 2.0)
+            self.center_zone_duration = center_zone_data.get('duration', 5.0)
             
             # 타겟 버튼 즉시 업데이트 (데이터 수신 직후) - Qt 시그널로 처리
             # 버튼이 초기화된 경우에만 시그널 발생

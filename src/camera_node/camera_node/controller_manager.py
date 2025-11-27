@@ -622,7 +622,7 @@ class ControllerManager:
                 # 목표: 목 = 0도, 허리 = X도
                 # 이동 중: 목 목표 = 초기 목 각도 - 현재 허리 각도
                 # 주의: 목 명령은 상대 각도로 전송, 허리 명령은 절대 각도로 전송
-                target_neck_yaw = self.waist_follower_initial_neck_yaw - self.current_waist_yaw_rad
+                target_neck_yaw = 0.0
                 target_neck_pitch = self.current_pitch_rad
                 
                 # WAIST_FOLLOWER용 게인으로 PID 제어 (상대 각도 계산)

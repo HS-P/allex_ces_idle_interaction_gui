@@ -34,7 +34,7 @@ class TrackingState(Enum):
     TRACKING = "tracking"   # 추적 중
     LOST = "lost"          # 추적 대상 놓침 (잠시 대기)
     SEARCHING = "searching" # 주변 두리번대기 (대상 선택)
-    WAIST_FOLLOWER = "waist_follower" # 허리 따라가기
+    WAIST_FOLLOWER = "waist_follower"   # 허리 따라가기 (0도 유지)
     INTERACTION = "interaction" # 인터렉션
 
 class TrackerManager:
@@ -144,10 +144,11 @@ class TrackerManager:
         self.neck_stable_threshold_deg = 3.0  # 목 각도 안정성 임계값 (도) - 5도 이내 변화면 안정으로 간주
         self.last_neck_yaw_rad: Optional[float] = None  # 이전 목 각도 (라디안)
         self.neck_stable_reference_yaw_rad: Optional[float] = None  # 안정성 기준 목 각도 (라디안)
+        self.pending_face_check: bool = False  # 얼굴 검출 대기 플래그
         
         # 기존 중앙 영역 방식 (사용 안 함, 호환성을 위해 유지)
         self.center_zone_start_time: Optional[float] = None  # 중앙 영역에 머물기 시작한 시간
-        self.center_zone_duration = 2.0  # 중앙 영역에 머물러야 하는 최소 시간 (초)
+        self.center_zone_duration = 5.0  # 중앙 영역에 머물러야 하는 최소 시간 (초)
         self.center_zone_radius_ratio = 0.15  # 프레임 크기 대비 중앙 영역 반경 비율 (예: 0.15 = 15%)
 
         # 모델 디바이스 확인 및 GPU 워밍업
@@ -270,6 +271,8 @@ class TrackerManager:
             enabled: True면 Interaction 모드 (타겟 자동 선택 활성화), False면 IDLE 모드
         """
         self.interaction_mode = enabled
+        self.reset_timers()  # 모드 전환 시 타이머 초기화
+        
         if enabled:
             # Interaction 모드 시작 시 INTERACTION 상태로 전환
             self.state = TrackingState.INTERACTION
@@ -281,6 +284,15 @@ class TrackerManager:
             self.target_track_id = None
             self.target_explicitly_set = False
     
+    def reset_timers(self) -> None:
+        """모든 타이머 및 안정성 관련 변수 초기화 (STOP 시 호출)"""
+        self.neck_stable_start_time = None
+        self.last_neck_yaw_rad = None
+        self.neck_stable_reference_yaw_rad = None
+        self.center_zone_start_time = None
+        self.lost_frames = 0
+        self.pending_face_check = False
+    
     def set_state(self, state: TrackingState, target_track_id: Optional[int] = None) -> None:
         """
         Manual 모드에서 상태를 수동으로 설정
@@ -289,6 +301,10 @@ class TrackerManager:
             state: 설정할 상태
             target_track_id: 타겟 track_id (TRACKING 상태일 때 필요)
         """
+        # IDLE 상태로 전환 시 타이머 초기화 (Manual 모드와 상관없이)
+        if state == TrackingState.IDLE:
+            self.reset_timers()
+        
         if not self.manual_mode:
             return  # Manual 모드가 아니면 무시
         
@@ -317,6 +333,38 @@ class TrackerManager:
         self.lost_frames = 0
         self.target_explicitly_set = True  # Auto 모드에서도 상태 머신이 덮어쓰지 않도록
     
+    def is_facing_me(self, frame: np.ndarray, bbox: tuple) -> bool:
+        """
+        타겟이 나를 보고 있는지 확인 (얼굴 검출)
+        
+        Args:
+            frame: 원본 프레임 (numpy array)
+            bbox: 바운딩 박스 (x1, y1, x2, y2)
+            
+        Returns:
+            얼굴이 검출되면 True
+        """
+        x1, y1, x2, y2 = map(int, bbox)
+        
+        # bbox 영역 슬라이싱 (O(1) - NumPy view)
+        h, w = frame.shape[:2]
+        x1, y1 = max(0, x1), max(0, y1)
+        x2, y2 = min(w, x2), min(h, y2)
+        
+        if x2 <= x1 or y2 <= y1:
+            return False
+        
+        crop = frame[y1:y2, x1:x2]
+        
+        # 얼굴 검출
+        results = self.face_model.predict(crop, conf=0.5, verbose=False)
+        
+        # 얼굴이 1개 이상 검출되면 True
+        if results and len(results[0].boxes) > 0:
+            print(f"얼굴이 검출되었습니다. {results[0].boxes}")
+            return True
+        return False
+
     def update_neck_angle(self, current_neck_yaw_rad: float) -> None:
         """
         목 각도를 업데이트하고 안정성을 확인하여 WAIST_FOLLOWER 상태로 전이
@@ -358,13 +406,11 @@ class TrackerManager:
                 self.neck_stable_start_time = current_time
                 self.neck_stable_reference_yaw_rad = current_neck_yaw_rad  # 기준 각도 설정
             
-            # 일정 시간 이상 안정되면 WAIST_FOLLOWER로 전이
+            # 일정 시간 이상 안정되면 얼굴 검출 대기 플래그 설정
             elapsed_time = current_time - self.neck_stable_start_time
             if elapsed_time >= self.neck_stable_duration:
-                self.state = TrackingState.WAIST_FOLLOWER
-                self.neck_stable_start_time = None  # 리셋
-                self.last_neck_yaw_rad = None  # 리셋
-                self.neck_stable_reference_yaw_rad = None  # 리셋
+                # process()에서 얼굴 검출을 수행하도록 플래그 설정
+                self.pending_face_check = True
         else:
             # 각도 변화가 크면 시간과 기준 각도 리셋
             self.neck_stable_start_time = None
@@ -543,10 +589,23 @@ class TrackerManager:
                 case TrackingState.TRACKING:
                     # 추적 대상이 있는지 확인
                     if target_exists:
-                        # 목 각도 안정성 확인 (목 각도가 5도 이내로 안정되면 WAIST_FOLLOWER로 전이)
-                        # 목 각도는 ControllerManager에서 업데이트됨 (update_neck_angle 메서드 호출)
-                        # 여기서는 목 각도 안정성만 확인
-                        pass  # 목 각도 안정성은 update_neck_angle에서 확인
+                        # 얼굴 검출 대기 플래그가 설정되어 있으면 얼굴 검출 수행
+                        if self.pending_face_check:
+                            # 타겟의 bbox 찾기
+                            target_obj = next((obj for obj in all_objects if obj.track_id == self.target_track_id), None)
+                            if target_obj is not None:
+                                if self.is_facing_me(frame, target_obj.bbox):
+                                    # 얼굴이 보이면 WAIST_FOLLOWER로 전이
+                                    self.state = TrackingState.WAIST_FOLLOWER
+                                    self.neck_stable_start_time = None
+                                    self.last_neck_yaw_rad = None
+                                    self.neck_stable_reference_yaw_rad = None
+                                else:
+                                    # 얼굴이 안 보이면 TRACKING 유지, 타이머 리셋
+                                    self.neck_stable_start_time = None
+                                    self.last_neck_yaw_rad = None
+                                    self.neck_stable_reference_yaw_rad = None
+                            self.pending_face_check = False
                     
                     # 타겟이 명시적으로 설정된 경우에는 타겟을 변경하지 않음
                     if not target_exists and self.target_track_id is not None and not self.target_explicitly_set:
@@ -556,6 +615,7 @@ class TrackerManager:
                         self.neck_stable_start_time = None  # 리셋
                         self.last_neck_yaw_rad = None  # 리셋
                         self.neck_stable_reference_yaw_rad = None  # 리셋
+                        self.pending_face_check = False  # 리셋
                 
                 case TrackingState.LOST:
                     # WAIST_FOLLOWER 상태가 아니면만 처리
@@ -578,10 +638,15 @@ class TrackerManager:
                                     self.state = TrackingState.SEARCHING
                 
                 case TrackingState.SEARCHING:
-                    # SEARCHING 상태는 IDLE Mode에서만 사용 (Interaction은 INTERACTION 상태 유지)
-                    # IDLE Mode에서는 SEARCHING 후 IDLE로 돌아감 (타겟 선택 없음)
-                    # 일정 시간 후 IDLE로 전환
-                    pass
+                    # SEARCHING 상태: 사람을 찾으면 TRACKING으로 전환
+                    if all_objects:
+                        # 가장 가까운 사람 자동 선택
+                        closest_id = self._find_closest_person(all_objects, frame.shape, current_time)
+                        if closest_id is not None:
+                            self.target_track_id = closest_id
+                            self.state = TrackingState.TRACKING
+                            self.lost_frames = 0
+                            self.target_explicitly_set = False  # 자동 선택
                 
                 case TrackingState.WAIST_FOLLOWER:
                     # WAIST_FOLLOWER 상태에서는 타겟을 잃어도 상관없음
