@@ -1,0 +1,17 @@
+[0.415s] Invoking command in '/home/dgx_allex_one/allex2head/build/insta360_simple_camera': CONDA_PROMPT_MODIFIER=(base) DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/dgx_allex_one/allex2head/build/insta360_simple_camera/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/dgx_allex_one/allex2head/install/insta360_simple_camera/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/dgx_allex_one/allex2head/build/insta360_simple_camera/build --no-deps symlink_data
+[0.573s] running develop
+[0.652s] running egg_info
+[0.660s] writing insta360_simple_camera.egg-info/PKG-INFO
+[0.660s] writing dependency_links to insta360_simple_camera.egg-info/dependency_links.txt
+[0.660s] writing entry points to insta360_simple_camera.egg-info/entry_points.txt
+[0.660s] writing requirements to insta360_simple_camera.egg-info/requires.txt
+[0.660s] writing top-level names to insta360_simple_camera.egg-info/top_level.txt
+[0.677s] reading manifest file 'insta360_simple_camera.egg-info/SOURCES.txt'
+[0.677s] writing manifest file 'insta360_simple_camera.egg-info/SOURCES.txt'
+[0.691s] running build_ext
+[0.691s] Creating /home/dgx_allex_one/allex2head/install/insta360_simple_camera/lib/python3.12/site-packages/insta360-simple-camera.egg-link (link to .)
+[0.691s] Installing steram_node script to /home/dgx_allex_one/allex2head/install/insta360_simple_camera/lib/insta360_simple_camera
+[0.691s] 
+[0.691s] Installed /home/dgx_allex_one/allex2head/build/insta360_simple_camera
+[0.691s] running symlink_data
+[0.713s] Invoked command in '/home/dgx_allex_one/allex2head/build/insta360_simple_camera' returned '0': CONDA_PROMPT_MODIFIER=(base) DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/dgx_allex_one/allex2head/build/insta360_simple_camera/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/dgx_allex_one/allex2head/install/insta360_simple_camera/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/dgx_allex_one/allex2head/build/insta360_simple_camera/build --no-deps symlink_data

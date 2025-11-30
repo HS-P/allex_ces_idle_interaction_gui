@@ -4,10 +4,10 @@
 
 #include <string.h>
 
-#include "orbbec_camera_msgs/srv/detail/set_int32__type_support.h"
+#include "orbbec_camera_msgs/srv/detail/set_int32__struct.h"
 #include "orbbec_camera_msgs/srv/detail/set_int32__functions.h"
 #include "rosidl_typesupport_interface/macros.h"
-#include "orbbec_camera_msgs/srv/detail/set_int32__struct.h"
+#include "orbbec_camera_msgs/srv/detail/set_int32__type_support.h"
 
 #ifdef __cplusplus
 extern "C"

@@ -1,0 +1,13 @@
+package.xml
+setup.cfg
+setup.py
+insta360_simple_camera/__init__.py
+insta360_simple_camera/steram_node.py
+insta360_simple_camera.egg-info/PKG-INFO
+insta360_simple_camera.egg-info/SOURCES.txt
+insta360_simple_camera.egg-info/dependency_links.txt
+insta360_simple_camera.egg-info/entry_points.txt
+insta360_simple_camera.egg-info/requires.txt
+insta360_simple_camera.egg-info/top_level.txt
+insta360_simple_camera.egg-info/zip-safe
+resource/insta360_simple_camera

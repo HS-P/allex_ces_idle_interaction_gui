@@ -41,6 +41,9 @@ CMakeFiles/orbbec_camera_msgs__rosidl_generator_c.dir/rosidl_generator_c/orbbec_
  /opt/ros/jazzy/include/rcutils/rcutils/visibility_control_macros.h \
  /opt/ros/jazzy/include/rcutils/rcutils/sha256.h \
  /opt/ros/jazzy/include/rosidl_runtime_c/rosidl_runtime_c/visibility_control.h \
+ /home/dgx_allex_one/allex2head/build/orbbec_camera_msgs/rosidl_generator_c/orbbec_camera_msgs/msg/detail/imu_info__struct.h \
+ /opt/ros/jazzy/include/std_msgs/std_msgs/msg/detail/header__struct.h \
+ /opt/ros/jazzy/include/builtin_interfaces/builtin_interfaces/msg/detail/time__struct.h \
  /home/dgx_allex_one/allex2head/build/orbbec_camera_msgs/rosidl_generator_c/orbbec_camera_msgs/msg/detail/imu_info__functions.h \
  /usr/include/stdlib.h /usr/include/aarch64-linux-gnu/bits/waitflags.h \
  /usr/include/aarch64-linux-gnu/bits/waitstatus.h \
@@ -69,7 +72,4 @@ CMakeFiles/orbbec_camera_msgs__rosidl_generator_c.dir/rosidl_generator_c/orbbec_
  /usr/include/aarch64-linux-gnu/bits/struct_rwlock.h \
  /usr/include/alloca.h /usr/include/aarch64-linux-gnu/bits/stdlib-float.h \
  /opt/ros/jazzy/include/rosidl_runtime_c/rosidl_runtime_c/action_type_support_struct.h \
- /opt/ros/jazzy/include/rosidl_runtime_c/rosidl_runtime_c/service_type_support_struct.h \
- /home/dgx_allex_one/allex2head/build/orbbec_camera_msgs/rosidl_generator_c/orbbec_camera_msgs/msg/detail/imu_info__struct.h \
- /opt/ros/jazzy/include/std_msgs/std_msgs/msg/detail/header__struct.h \
- /opt/ros/jazzy/include/builtin_interfaces/builtin_interfaces/msg/detail/time__struct.h
+ /opt/ros/jazzy/include/rosidl_runtime_c/rosidl_runtime_c/service_type_support_struct.h
