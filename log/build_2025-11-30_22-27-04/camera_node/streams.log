@@ -1,0 +1,32 @@
+[0.465s] Invoking command in '/home/yeah2/allex_ces_idle_interaction_gui/build/camera_node': CONDA_PROMPT_MODIFIER=(base) PYTHONPATH=/home/yeah2/allex_ces_idle_interaction_gui/build/camera_node/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/yeah2/allex_ces_idle_interaction_gui/install/camera_node/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/yeah2/allex_ces_idle_interaction_gui/build/camera_node/build --no-deps symlink_data
+[0.609s] running develop
+[0.698s] running egg_info
+[0.698s] creating camera_node.egg-info
+[0.698s] writing camera_node.egg-info/PKG-INFO
+[0.698s] writing dependency_links to camera_node.egg-info/dependency_links.txt
+[0.698s] writing entry points to camera_node.egg-info/entry_points.txt
+[0.698s] writing requirements to camera_node.egg-info/requires.txt
+[0.698s] writing top-level names to camera_node.egg-info/top_level.txt
+[0.698s] writing manifest file 'camera_node.egg-info/SOURCES.txt'
+[0.699s] reading manifest file 'camera_node.egg-info/SOURCES.txt'
+[0.700s] writing manifest file 'camera_node.egg-info/SOURCES.txt'
+[0.701s] running build_ext
+[0.701s] Creating /home/yeah2/allex_ces_idle_interaction_gui/install/camera_node/lib/python3.10/site-packages/camera-node.egg-link (link to .)
+[0.701s] Installing camera_publisher script to /home/yeah2/allex_ces_idle_interaction_gui/install/camera_node/lib/camera_node
+[0.701s] Installing face_detection_test script to /home/yeah2/allex_ces_idle_interaction_gui/install/camera_node/lib/camera_node
+[0.701s] Installing gui_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/camera_node/lib/camera_node
+[0.701s] Installing image_publisher script to /home/yeah2/allex_ces_idle_interaction_gui/install/camera_node/lib/camera_node
+[0.701s] Installing video_publisher script to /home/yeah2/allex_ces_idle_interaction_gui/install/camera_node/lib/camera_node
+[0.701s] Installing zed_publisher script to /home/yeah2/allex_ces_idle_interaction_gui/install/camera_node/lib/camera_node
+[0.701s] 
+[0.701s] Installed /home/yeah2/allex_ces_idle_interaction_gui/build/camera_node
+[0.701s] running symlink_data
+[0.702s] creating /home/yeah2/allex_ces_idle_interaction_gui/install/camera_node/share/ament_index
+[0.702s] creating /home/yeah2/allex_ces_idle_interaction_gui/install/camera_node/share/ament_index/resource_index
+[0.702s] creating /home/yeah2/allex_ces_idle_interaction_gui/install/camera_node/share/ament_index/resource_index/packages
+[0.702s] symbolically linking /home/yeah2/allex_ces_idle_interaction_gui/build/camera_node/resource/camera_node -> /home/yeah2/allex_ces_idle_interaction_gui/install/camera_node/share/ament_index/resource_index/packages
+[0.702s] symbolically linking /home/yeah2/allex_ces_idle_interaction_gui/build/camera_node/package.xml -> /home/yeah2/allex_ces_idle_interaction_gui/install/camera_node/share/camera_node
+[0.702s] creating /home/yeah2/allex_ces_idle_interaction_gui/install/camera_node/share/camera_node/config
+[0.702s] symbolically linking /home/yeah2/allex_ces_idle_interaction_gui/build/camera_node/config/llm_topics.json -> /home/yeah2/allex_ces_idle_interaction_gui/install/camera_node/share/camera_node/config
+[0.702s] symbolically linking /home/yeah2/allex_ces_idle_interaction_gui/build/camera_node/config/botsort.yaml -> /home/yeah2/allex_ces_idle_interaction_gui/install/camera_node/share/camera_node/config
+[0.719s] Invoked command in '/home/yeah2/allex_ces_idle_interaction_gui/build/camera_node' returned '0': CONDA_PROMPT_MODIFIER=(base) PYTHONPATH=/home/yeah2/allex_ces_idle_interaction_gui/build/camera_node/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/yeah2/allex_ces_idle_interaction_gui/install/camera_node/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/yeah2/allex_ces_idle_interaction_gui/build/camera_node/build --no-deps symlink_data

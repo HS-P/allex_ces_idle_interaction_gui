@@ -1,0 +1,17 @@
+[0.461s] Invoking command in '/home/yeah2/allex_ces_idle_interaction_gui/build/insta360_simple_camera': CONDA_PROMPT_MODIFIER=(base) PYTHONPATH=/home/yeah2/allex_ces_idle_interaction_gui/build/insta360_simple_camera/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/yeah2/allex_ces_idle_interaction_gui/install/insta360_simple_camera/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/yeah2/allex_ces_idle_interaction_gui/build/insta360_simple_camera/build --no-deps symlink_data
+[0.598s] running develop
+[0.689s] running egg_info
+[0.689s] writing insta360_simple_camera.egg-info/PKG-INFO
+[0.689s] writing dependency_links to insta360_simple_camera.egg-info/dependency_links.txt
+[0.689s] writing entry points to insta360_simple_camera.egg-info/entry_points.txt
+[0.689s] writing requirements to insta360_simple_camera.egg-info/requires.txt
+[0.689s] writing top-level names to insta360_simple_camera.egg-info/top_level.txt
+[0.690s] reading manifest file 'insta360_simple_camera.egg-info/SOURCES.txt'
+[0.690s] writing manifest file 'insta360_simple_camera.egg-info/SOURCES.txt'
+[0.691s] running build_ext
+[0.691s] Creating /home/yeah2/allex_ces_idle_interaction_gui/install/insta360_simple_camera/lib/python3.10/site-packages/insta360-simple-camera.egg-link (link to .)
+[0.692s] Installing steram_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/insta360_simple_camera/lib/insta360_simple_camera
+[0.692s] 
+[0.692s] Installed /home/yeah2/allex_ces_idle_interaction_gui/build/insta360_simple_camera
+[0.692s] running symlink_data
+[0.708s] Invoked command in '/home/yeah2/allex_ces_idle_interaction_gui/build/insta360_simple_camera' returned '0': CONDA_PROMPT_MODIFIER=(base) PYTHONPATH=/home/yeah2/allex_ces_idle_interaction_gui/build/insta360_simple_camera/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/yeah2/allex_ces_idle_interaction_gui/install/insta360_simple_camera/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/yeah2/allex_ces_idle_interaction_gui/build/insta360_simple_camera/build --no-deps symlink_data

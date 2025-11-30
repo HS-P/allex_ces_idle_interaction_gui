@@ -19,6 +19,69 @@ from .controller_manager import ControllerManager
 cv2.setNumThreads(0)  # OpenCV의 멀티스레딩 비활성화
 
 
+class RoutineController:
+    """ROS2 Routine 시스템 제어 클래스"""
+    
+    def __init__(self, node: Node, robot_name: str = "the_bodyOne"):
+        """
+        RoutineController 초기화
+        
+        Args:
+            node: ROS2 Node 인스턴스
+            robot_name: 로봇 이름 (기본값: "the_bodyOne")
+        """
+        self.node = node
+        self.robot_name = robot_name
+        self.current_routine = None
+        
+        # HMI 명령 Publisher
+        self.command_pub = node.create_publisher(
+            String,
+            'hmi/robot_command',
+            10
+        )
+        
+        node.get_logger().info(f"RoutineController 초기화 완료 (로봇: {robot_name})")
+    
+    def publish_command(self, command: str):
+        """명령을 토픽으로 발행"""
+        msg = String()
+        msg.data = command
+        self.command_pub.publish(msg)
+        self.node.get_logger().info(f"Routine 명령 발행: {command}")
+    
+    def start_idle_breathing(self):
+        """IDLE 상태: 숨쉬기 루틴 시작 (무한 반복)"""
+        command = f"{self.robot_name}::ROUTINE::idle_breathing_rt::START"
+        self.current_routine = "idle_breathing_rt"
+        self.publish_command(command)
+    
+    def start_hand_wave(self):
+        """손 흔들기 루틴 시작 (1회 실행)"""
+        command = f"{self.robot_name}::ROUTINE::hand_wave_rt::START"
+        self.current_routine = "hand_wave_rt"
+        self.publish_command(command)
+    
+    def switch_routine(self, new_routine: str):
+        """
+        루틴 전환: 기존 루틴 자동 중단 후 새 루틴 시작
+        ⭐ 가장 중요한 함수! 새 루틴 START만 보내면 기존 루틴이 자동으로 중단됨
+        """
+        if new_routine == "idle_breathing_rt":
+            self.start_idle_breathing()
+        elif new_routine == "hand_wave_rt":
+            self.start_hand_wave()
+        else:
+            self.node.get_logger().warn(f"알 수 없는 루틴: {new_routine}")
+    
+    def stop_current_routine(self):
+        """현재 실행 중인 루틴 중단"""
+        if self.current_routine:
+            command = f"{self.robot_name}::ROUTINE::{self.current_routine}::RESET"
+            self.publish_command(command)
+            self.current_routine = None
+
+
 def check_gpu_status():
     """GPU 상태 확인 및 출력"""
     print("=" * 60)
@@ -120,6 +183,12 @@ class CameraPublisher(Node):
         # ControllerManager 초기화 (현재 Node 전달)
         self.controller_manager = ControllerManager(self)
         
+        # RoutineController 초기화
+        self.routine_controller = RoutineController(self, robot_name="the_bodyOne")
+        
+        # 이전 상태 추적 (상태 변경 감지용)
+        self.previous_state = TrackingState.IDLE
+        
         # 실행 상태 플래그 (GUI의 RUN 명령을 받기 전까지는 False)
         self.is_running = False
         
@@ -150,6 +219,12 @@ class CameraPublisher(Node):
         
         # 추적 처리 (YOLO 감지 + 매칭 알고리즘)
         tracked_objects, target_info = self.tracker_manager.process(frame)
+        
+        # 상태 변경 감지 및 루틴 전환 처리
+        current_state = target_info.state
+        if current_state != self.previous_state:
+            self._handle_state_change(self.previous_state, current_state)
+            self.previous_state = current_state
         
         # 목 제어 명령 생성 및 전송
         self.controller_manager.update(
@@ -337,6 +412,57 @@ class CameraPublisher(Node):
         except Exception as e:
             self.get_logger().error(f"타겟 Crop 이미지 발행 실패: {e}")
     
+    def _handle_state_change(self, old_state: TrackingState, new_state: TrackingState):
+        """
+        상태 변경 시 루틴 전환 처리
+        
+        규칙:
+        - IDLE, TRACKING, LOST, SEARCHING, WAIST_FOLLOWER → idle_breathing_rt (무한 반복)
+        - HELLO → hand_wave_rt (1회 실행)
+        - INTERACTION → 루틴 없음 (중단)
+        """
+        # INTERACTION 상태로 전환 시 루틴 중단
+        if new_state == TrackingState.INTERACTION:
+            if self.routine_controller.current_routine:
+                self.routine_controller.stop_current_routine()
+                self.get_logger().info("INTERACTION 상태: 루틴 중단")
+            return
+        
+        # INTERACTION에서 다른 상태로 전환 시 루틴 재시작
+        if old_state == TrackingState.INTERACTION:
+            # 새 상태에 맞는 루틴 시작
+            if new_state == TrackingState.HELLO:
+                self.routine_controller.switch_routine("hand_wave_rt")
+                self.get_logger().info("HELLO 상태: hand_wave_rt 시작")
+            elif new_state in (TrackingState.IDLE, TrackingState.TRACKING, TrackingState.LOST, 
+                              TrackingState.SEARCHING, TrackingState.WAIST_FOLLOWER):
+                self.routine_controller.switch_routine("idle_breathing_rt")
+                self.get_logger().info(f"{new_state.value} 상태: idle_breathing_rt 시작")
+            return
+        
+        # HELLO 상태로 전환 시 손 흔들기 루틴 시작
+        if new_state == TrackingState.HELLO:
+            self.routine_controller.switch_routine("hand_wave_rt")
+            self.get_logger().info("HELLO 상태: hand_wave_rt 시작")
+            return
+        
+        # HELLO에서 다른 상태로 전환 시 숨쉬기 루틴으로 전환
+        if old_state == TrackingState.HELLO:
+            if new_state in (TrackingState.IDLE, TrackingState.TRACKING, TrackingState.LOST, 
+                            TrackingState.SEARCHING, TrackingState.WAIST_FOLLOWER):
+                self.routine_controller.switch_routine("idle_breathing_rt")
+                self.get_logger().info(f"{new_state.value} 상태: idle_breathing_rt 시작")
+            return
+        
+        # IDLE, TRACKING, LOST, SEARCHING, WAIST_FOLLOWER 상태들 간 전환 시
+        # idle_breathing_rt 유지 (이미 실행 중이면 자동으로 유지됨)
+        if new_state in (TrackingState.IDLE, TrackingState.TRACKING, TrackingState.LOST, 
+                        TrackingState.SEARCHING, TrackingState.WAIST_FOLLOWER):
+            # 루틴이 실행 중이 아니면 시작
+            if self.routine_controller.current_routine != "idle_breathing_rt":
+                self.routine_controller.switch_routine("idle_breathing_rt")
+                self.get_logger().info(f"{new_state.value} 상태: idle_breathing_rt 시작")
+    
     def _manual_control_callback(self, msg: String):
         """Manual 제어 콜백 - GUI에서 오는 명령 처리"""
         try:
@@ -348,7 +474,10 @@ class CameraPublisher(Node):
                 self.is_running = True
                 manual_mode = command.get('manual', False)
                 self.tracker_manager.set_manual_mode(manual_mode)
-                self.get_logger().info(f"RUN 시작: {'Manual' if manual_mode else 'Auto'} 모드")
+                # IDLE 상태에서 시작하므로 숨쉬기 루틴 시작
+                self.routine_controller.switch_routine("idle_breathing_rt")
+                self.previous_state = TrackingState.IDLE
+                self.get_logger().info(f"RUN 시작: {'Manual' if manual_mode else 'Auto'} 모드, idle_breathing_rt 시작")
             
             elif cmd_type == 'stop':
                 # STOP 명령 - 추적 중지
@@ -357,7 +486,10 @@ class CameraPublisher(Node):
                 self.tracker_manager.set_state(TrackingState.IDLE, None)
                 self.tracker_manager.target_track_id = None
                 self.tracker_manager.target_explicitly_set = False
-                self.get_logger().info("RUN 중지: IDLE 상태로 전환")
+                # 루틴 중단
+                self.routine_controller.stop_current_routine()
+                self.previous_state = TrackingState.IDLE
+                self.get_logger().info("RUN 중지: IDLE 상태로 전환, 루틴 중단")
             
             elif cmd_type == 'set_mode':
                 # 모드 설정 (manual: True/False) - RUN 중일 때만 적용

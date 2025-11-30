@@ -35,6 +35,7 @@ class TrackingState(Enum):
     LOST = "lost"          # 추적 대상 놓침 (잠시 대기)
     SEARCHING = "searching" # 주변 두리번대기 (대상 선택)
     WAIST_FOLLOWER = "waist_follower"   # 허리 따라가기 (0도 유지)
+    HELLO = "hello"        # 인사 제스처 (손 흔들기)
     INTERACTION = "interaction" # 인터렉션
 
 class TrackerManager:

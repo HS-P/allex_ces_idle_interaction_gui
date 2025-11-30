@@ -5,3 +5,4 @@ gui_node = camera_node.gui_node:main
 image_publisher = camera_node.image_publisher:main
 video_publisher = camera_node.video_publisher:main
 zed_publisher = camera_node.zed_publisher:main
+

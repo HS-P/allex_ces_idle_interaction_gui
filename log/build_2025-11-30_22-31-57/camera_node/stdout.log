@@ -1,0 +1,20 @@
+running develop
+running egg_info
+writing camera_node.egg-info/PKG-INFO
+writing dependency_links to camera_node.egg-info/dependency_links.txt
+writing entry points to camera_node.egg-info/entry_points.txt
+writing requirements to camera_node.egg-info/requires.txt
+writing top-level names to camera_node.egg-info/top_level.txt
+reading manifest file 'camera_node.egg-info/SOURCES.txt'
+writing manifest file 'camera_node.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/yeah2/allex_ces_idle_interaction_gui/install/camera_node/lib/python3.10/site-packages/camera-node.egg-link (link to .)
+Installing camera_publisher script to /home/yeah2/allex_ces_idle_interaction_gui/install/camera_node/lib/camera_node
+Installing face_detection_test script to /home/yeah2/allex_ces_idle_interaction_gui/install/camera_node/lib/camera_node
+Installing gui_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/camera_node/lib/camera_node
+Installing image_publisher script to /home/yeah2/allex_ces_idle_interaction_gui/install/camera_node/lib/camera_node
+Installing video_publisher script to /home/yeah2/allex_ces_idle_interaction_gui/install/camera_node/lib/camera_node
+Installing zed_publisher script to /home/yeah2/allex_ces_idle_interaction_gui/install/camera_node/lib/camera_node
+
+Installed /home/yeah2/allex_ces_idle_interaction_gui/build/camera_node
+running symlink_data

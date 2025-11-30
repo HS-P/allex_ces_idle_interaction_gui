@@ -1,1 +1,0 @@
-/home/dgx_allex_one/allex2head/src/OrbbecSDK_ROS2/orbbec_camera/examples/lower_cpu_usage/multi_camera_lower_cpu_usage.launch.py

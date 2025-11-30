@@ -11,7 +11,7 @@
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
             padding: 20px;
             background-color: #f5f5f5;
@@ -19,288 +19,150 @@
         h1 {
             color: #333;
             text-align: center;
-            border-bottom: 3px solid #4CAF50;
-            padding-bottom: 10px;
+            border-bottom: 4px solid #4CAF50;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
         }
         h2 {
-            color: #555;
-            margin-top: 40px;
-            border-left: 5px solid #4CAF50;
-            padding-left: 15px;
+            color: #2c3e50;
+            margin-top: 50px;
+            border-left: 6px solid #4CAF50;
+            padding-left: 20px;
+            font-size: 24px;
         }
         .mermaid {
             background-color: white;
-            padding: 20px;
-            margin: 20px 0;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         .section {
-            margin-bottom: 50px;
+            margin-bottom: 60px;
+        }
+        .description {
+            background-color: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4CAF50;
         }
     </style>
 </head>
 <body>
-    <h1>사람 추적 시스템 플로우차트</h1>
+    <h1>🤖 사람 추적 시스템 플로우차트</h1>
 
+    <!-- ============================================ -->
+    <!-- 섹션 1: 전체 시스템 구조 및 초기화 -->
+    <!-- ============================================ -->
     <div class="section">
-        <h2>1. 전체 시스템 구조</h2>
+        <h2>1. 전체 시스템 구조 및 초기화</h2>
+        <div class="description">
+            <strong>시스템 개요:</strong> CameraPublisher가 이미지를 받아 TrackerManager로 추적하고, ControllerManager로 목/허리를 제어하며, RoutineController로 로봇 동작을 제어합니다.
+        </div>
+
         <div class="mermaid">
 graph TB
     Start([시작]) --> Init[CameraPublisher 초기화]
-    Init --> Sub[이미지 토픽 구독 설정]
+    Init --> Sub[이미지 토픽 구독<br/>/camera/color/image_raw/compressed]
     Sub --> TrackerInit[TrackerManager 초기화]
-    TrackerInit --> YOLOLoad[YOLO 모델 로드]
-    YOLOLoad --> GPUWarmup{GPU 사용 가능?}
-    GPUWarmup -->|Yes| GPUWarm[GPU 워밍업]
-    GPUWarmup -->|No| CPUReady[CPU 준비 완료]
-    GPUWarm --> Ready[시스템 준비 완료]
-    CPUReady --> Ready
-    Ready --> DisplayThread[화면 표시 스레드 시작]
-    DisplayThread --> Spin[ROS2 Spin 시작]
+    TrackerInit --> YOLOLoad[YOLO 모델 로드<br/>+ Face 모델 로드]
+    YOLOLoad --> GPUCheck{GPU 사용 가능?}
+    GPUCheck -->|Yes| GPUWarm[GPU 워밍업]
+    GPUCheck -->|No| CPUReady[CPU 준비]
+    GPUWarm --> ControllerInit[ControllerManager 초기화<br/>목/허리 Publisher 생성]
+    CPUReady --> ControllerInit
+    ControllerInit --> RoutineInit[RoutineController 초기화<br/>HMI 명령 Publisher 생성<br/>hmi/robot_command]
+    RoutineInit --> Ready[시스템 준비 완료]
+    Ready --> Spin[ROS2 Spin 시작]
     Spin --> Callback[이미지 콜백 대기]
     Callback --> End([종료])
         </div>
-    </div>
 
-    <div class="section">
-        <h2>2. 이미지 콜백 처리 흐름</h2>
         <div class="mermaid">
-graph TB
-    Start([이미지 수신]) --> Decode[이미지 디코딩]
-    Decode --> CheckFrame{프레임 유효?}
-    CheckFrame -->|No| Return[반환]
-    CheckFrame -->|Yes| Process[TrackerManager.process 호출]
-    Process --> TrackResult[추적 결과 받기]
-    TrackResult --> LogCheck{5초 경과?}
-    LogCheck -->|Yes| Log[로그 출력]
-    LogCheck -->|No| SkipLog[로그 스킵]
-    Log --> Visualize
-    SkipLog --> Visualize[시각화 준비]
-    Visualize --> QueueCheck{큐 가득참?}
-    QueueCheck -->|Yes| SkipViz[시각화 스킵]
-    QueueCheck -->|No| Draw[프레임에 그리기]
-    Draw --> PutQueue[큐에 추가]
-    PutQueue --> End([완료])
-    SkipViz --> End
+graph LR
+    A[CameraPublisher] --> B[TrackerManager<br/>YOLO + Bot-SORT]
+    A --> C[ControllerManager<br/>목/허리 제어]
+    A --> D[RoutineController<br/>로봇 동작 제어]
+    
+    B --> E[상태 머신<br/>TrackingState]
+    C --> F[목/허리 각도<br/>PID 제어]
+    D --> G[HMI 명령<br/>ROUTINE 제어]
+    
+    style A fill:#4CAF50,color:#fff
+    style B fill:#2196F3,color:#fff
+    style C fill:#FF9800,color:#fff
+    style D fill:#9C27B0,color:#fff
         </div>
     </div>
 
+    <!-- ============================================ -->
+    <!-- 섹션 2: 상태 머신 및 추적 로직 -->
+    <!-- ============================================ -->
     <div class="section">
-        <h2>3. TrackerManager.process 흐름 (Bot-SORT 기반)</h2>
-        <div class="mermaid">
-graph TB
-    Start([프레임 입력]) --> YOLOTrack[YOLO + Bot-SORT track 실행<br/>persist=True로 상태 유지]
-    YOLOTrack --> Sync[GPU 동기화]
-    Sync --> CheckResults{결과 존재?}
-    
-    CheckResults -->|없음| NoResults[감지 없음 처리]
-    CheckResults -->|있음| CheckBoxes{박스 정보 있음?}
-    
-    CheckBoxes -->|없음| NoBoxes[박스 없음 처리]
-    CheckBoxes -->|있음| ExtractData[ID, 좌표, 신뢰도 추출]
-    
-    ExtractData --> CreateObjects[모든 추적 객체 생성]
-    CreateObjects --> StateMachine[상태 머신 처리]
-    
-    NoResults --> StateUpdate1[상태 업데이트]
-    NoBoxes --> StateUpdate2[상태 업데이트]
-    StateUpdate1 --> ReturnEmpty1[빈 리스트 반환]
-    StateUpdate2 --> ReturnEmpty2[빈 리스트 반환]
-    
-    StateMachine --> AssignState[상태에 따라 객체 상태 할당]
-    AssignState --> CheckTarget{추적 대상?}
-    CheckTarget -->|Yes| SetTarget[state='target'<br/>붉은색 표시]
-    CheckTarget -->|No| SetSystem[state=시스템 상태]
-    
-    SetTarget --> ReturnResult[추적 결과 반환]
-    SetSystem --> ReturnResult
-    ReturnEmpty1 --> End([완료])
-    ReturnEmpty2 --> End
-    ReturnResult --> End
+        <h2>2. 상태 머신 및 추적 로직</h2>
+        <div class="description">
+            <strong>상태 머신:</strong> IDLE → TRACKING → WAIST_FOLLOWER 흐름과 LOST/SEARCHING 복구 로직, HELLO/INTERACTION 특수 상태를 포함합니다.
         </div>
-    </div>
 
-    <div class="section">
-        <h2>4. Bot-SORT 추적 알고리즘 (내부 처리)</h2>
-        <div class="mermaid">
-graph TB
-    Start([YOLO 감지 결과]) --> BotSort[Bot-SORT Tracker]
-    
-    BotSort --> Kalman[Kalman Filter<br/>위치 및 속도 예측]
-    BotSort --> Hungarian[Hungarian Algorithm<br/>최적 매칭]
-    BotSort --> GMC[Global Motion Compensation<br/>카메라 움직임 보정]
-    
-    Kalman --> Match[감지-트랙 매칭]
-    Hungarian --> Match
-    GMC --> Match
-    
-    Match --> UpdateTracks[트랙 업데이트]
-    Match --> CreateTracks[새 트랙 생성]
-    Match --> RemoveTracks[오래된 트랙 제거]
-    
-    UpdateTracks --> AssignID[Track ID 할당]
-    CreateTracks --> AssignID
-    RemoveTracks --> AssignID
-    
-    AssignID --> Return[추적 결과 반환]
-    
-    note right of BotSort
-        Bot-SORT는 내부적으로
-        Kalman Filter와 Hungarian
-        알고리즘을 사용하여
-        프레임 간 객체 매칭 수행
-    end note
-        </div>
-    </div>
-
-    <div class="section">
-        <h2>5. 화면 표시 스레드 흐름</h2>
-        <div class="mermaid">
-graph TB
-    Start([스레드 시작]) --> CreateWindow[창 생성]
-    CreateWindow --> Loop[무한 루프]
-    Loop --> CheckRunning{실행 중?}
-    CheckRunning -->|No| DestroyWindow[창 닫기]
-    CheckRunning -->|Yes| GetQueue[큐에서 프레임 가져오기]
-    GetQueue --> QueueEmpty{큐 비어있음?}
-    QueueEmpty -->|Yes| Wait[대기]
-    QueueEmpty -->|No| ShowFrame[화면에 표시]
-    Wait --> Loop
-    ShowFrame --> CheckKey[키 입력 확인]
-    CheckKey --> KeyQ{ESC 또는 'q'?}
-    KeyQ -->|Yes| StopRunning[실행 중지]
-    KeyQ -->|No| Loop
-    StopRunning --> DestroyWindow
-    DestroyWindow --> End([종료])
-        </div>
-    </div>
-
-    <div class="section">
-        <h2>6. 데이터 구조</h2>
-        <div class="mermaid">
-classDiagram
-    class TrackedObject {
-        +int track_id
-        +tuple bbox
-        +tuple centroid
-        +str state
-        +float confidence
-        +int age
-    }
-    
-    class TrackingState {
-        <<enumeration>>
-        IDLE
-        TRACKING
-        LOST
-        SEARCHING
-    }
-    
-    class TrackerManager {
-        -YOLO yolo_model
-        -str tracker_cfg
-        -TrackingState state
-        -int target_track_id
-        -int lost_frames
-        -int max_lost_frames
-        +process(frame) List[TrackedObject]
-        -_find_closest_person(objects, frame_shape) int
-    }
-    
-    class CameraPublisher {
-        -TrackerManager tracker_manager
-        -Queue display_queue
-        -Thread display_thread
-        -int frame_count
-        +image_callback(msg)
-        -_display_worker()
-    }
-    
-    TrackerManager --> TrackedObject : 생성
-    TrackerManager --> TrackingState : 사용
-    CameraPublisher --> TrackerManager : 사용
-        </div>
-    </div>
-
-    <div class="section">
-        <h2>7. Bot-SORT 매칭 알고리즘 (내부 처리)</h2>
-        <div class="mermaid">
-graph TB
-    A[감지 결과] --> B[Kalman Filter 예측]
-    A --> C[IOU 계산]
-    A --> D[ReID 특징 비교]
-    
-    B --> E[예측 위치와<br/>실제 위치 거리]
-    C --> F[바운딩 박스<br/>겹침 정도]
-    D --> G[외관 유사도]
-    
-    E --> H[비용 행렬 생성]
-    F --> H
-    G --> H
-    
-    H --> I[Hungarian Algorithm<br/>최적 매칭]
-    I --> J{매칭 성공?}
-    
-    J -->|Yes| K[트랙 업데이트<br/>ID 유지]
-    J -->|No| L[새 트랙 생성<br/>새 ID 할당]
-    
-    note right of H
-        Bot-SORT는 IOU, 거리,
-        ReID 특징을 종합하여
-        비용 행렬을 생성하고
-        Hungarian 알고리즘으로
-        최적 매칭 수행
-    end note
-        </div>
-    </div>
-
-    <div class="section">
-        <h2>8. 상태 머신 기반 추적 대상 관리 알고리즘</h2>
         <div class="mermaid">
 stateDiagram-v2
-    [*] --> IDLE: 초기화
+    [*] --> IDLE: 시스템 시작
     
-    IDLE --> TRACKING: 가장 가까운 사람 선택
-    IDLE --> IDLE: 사람 없음
+    IDLE --> TRACKING: 가장 가까운 사람 선택<br/>(2초 이상 지속된 객체)
     
     TRACKING --> LOST: 추적 대상 사라짐
     TRACKING --> TRACKING: 추적 대상 유지
+    TRACKING --> WAIST_FOLLOWER: 목 각도 안정 5초<br/>+ 얼굴 검출 성공
     
-    LOST --> TRACKING: 대상 다시 발견
-    LOST --> SEARCHING: 30프레임 이상 놓침
+    LOST --> TRACKING: 대상 재발견
+    LOST --> SEARCHING: 45프레임 이상 놓침
     
     SEARCHING --> TRACKING: 새 대상 선택
     SEARCHING --> SEARCHING: 사람 없음
     
+    WAIST_FOLLOWER --> TRACKING: ControllerManager 요청
+    WAIST_FOLLOWER --> WAIST_FOLLOWER: 허리 제어 유지<br/>목 0도, 허리로 이동
+    
+    IDLE --> HELLO: Manual 모드 설정
+    TRACKING --> HELLO: Manual 모드 설정
+    LOST --> HELLO: Manual 모드 설정
+    SEARCHING --> HELLO: Manual 모드 설정
+    WAIST_FOLLOWER --> HELLO: Manual 모드 설정
+    HELLO --> IDLE: 손 흔들기 완료
+    HELLO --> TRACKING: 손 흔들기 완료
+    
+    IDLE --> INTERACTION: Interaction Mode 활성화
+    TRACKING --> INTERACTION: Interaction Mode 활성화
+    INTERACTION --> IDLE: Interaction Mode 비활성화
+    
     note right of IDLE
-        초기 상태
-        프레임 중심에 가장
-        가까운 사람 선택
+        Routine: idle_breathing_rt
+        무한 반복 숨쉬기 모션
     end note
     
     note right of TRACKING
-        추적 중
-        대상 ID 유지
-        붉은색 표시
+        Routine: idle_breathing_rt
+        추적 중 무한 반복
     end note
     
-    note right of LOST
-        놓침 상태
-        최대 30프레임 대기
-        대상 재발견 시도
+    note right of WAIST_FOLLOWER
+        Routine: idle_breathing_rt
+        허리로 이동, 목 0도
     end note
     
-    note right of SEARCHING
-        탐색 상태
-        주변에서 가장
-        가까운 사람 재선택
+    note right of HELLO
+        Routine: hand_wave_rt
+        1회 실행 후 종료
+    end note
+    
+    note right of INTERACTION
+        Routine: 없음
+        타겟 자동 선택
+        BB Box 추적
     end note
         </div>
-    </div>
 
-    <div class="section">
-        <h2>9. 상태 머신 상세 처리 흐름</h2>
         <div class="mermaid">
 graph TB
     Start([프레임 입력]) --> YOLO[YOLO + Bot-SORT 추적]
@@ -310,132 +172,223 @@ graph TB
     CheckDetect -->|있음| CreateObjects[모든 추적 객체 생성]
     
     NoDetect --> StateCheck1{현재 상태}
-    StateCheck1 -->|TRACKING| ToLost1[LOST 상태로 전이]
-    StateCheck1 -->|LOST| IncLost1[lost_frames 증가]
-    IncLost1 --> CheckMax1{30프레임 이상?}
-    CheckMax1 -->|Yes| ToSearch1[SEARCHING 상태로 전이]
-    CheckMax1 -->|No| KeepLost1[LOST 유지]
+    StateCheck1 -->|TRACKING| ToLost[LOST 상태로 전이]
+    StateCheck1 -->|LOST| IncLost[lost_frames 증가]
+    StateCheck1 -->|WAIST_FOLLOWER| KeepWaist[WAIST_FOLLOWER 유지]
+    StateCheck1 -->|INTERACTION| KeepInteraction[INTERACTION 유지]
+    IncLost --> CheckMax{45프레임 이상?}
+    CheckMax -->|Yes| ToSearch[SEARCHING 상태로 전이]
+    CheckMax -->|No| KeepLost[LOST 유지]
     
     CreateObjects --> StateCheck2{현재 상태}
     
-    StateCheck2 -->|IDLE| FindClosest1[가장 가까운 사람 찾기]
-    FindClosest1 --> CheckFound1{찾음?}
-    CheckFound1 -->|Yes| SetTarget1[target_track_id 설정]
-    SetTarget1 --> ToTracking1[TRACKING 상태로 전이]
-    CheckFound1 -->|No| StayIdle[IDLE 유지]
+    StateCheck2 -->|IDLE| FindClosest[가장 가까운 사람 찾기<br/>2초 이상 지속된 객체만]
+    FindClosest --> CheckFound{찾음?}
+    CheckFound -->|Yes| SetTarget[target_track_id 설정]
+    SetTarget --> ToTracking[TRACKING 상태로 전이]
+    CheckFound -->|No| StayIdle[IDLE 유지]
     
-    StateCheck2 -->|TRACKING| CheckTarget1{추적 대상 존재?}
-    CheckTarget1 -->|Yes| StayTracking[TRACKING 유지]
-    CheckTarget1 -->|No| ToLost2[LOST 상태로 전이]
+    StateCheck2 -->|TRACKING| CheckTarget{추적 대상 존재?}
+    CheckTarget -->|Yes| CheckNeckStable{목 각도 안정?<br/>3도 이내, 5초 이상}
+    CheckTarget -->|No| ToLost2[LOST 상태로 전이]
+    CheckNeckStable -->|Yes| CheckFace{얼굴 검출<br/>Face YOLO}
+    CheckNeckStable -->|No| StayTracking[TRACKING 유지]
+    CheckFace -->|Yes| ToWaistFollower[WAIST_FOLLOWER 상태로 전이]
+    CheckFace -->|No| ResetTimer[타이머 리셋<br/>TRACKING 유지]
     
     StateCheck2 -->|LOST| CheckTarget2{추적 대상 재발견?}
     CheckTarget2 -->|Yes| ToTracking2[TRACKING 상태로 전이]
     CheckTarget2 -->|No| IncLost2[lost_frames 증가]
-    IncLost2 --> CheckMax2{30프레임 이상?}
-    CheckMax2 -->|Yes| ToSearch2[SEARCHING 상태로 전이]
-    CheckMax2 -->|No| KeepLost2[LOST 유지]
     
     StateCheck2 -->|SEARCHING| FindClosest2[가장 가까운 사람 찾기]
     FindClosest2 --> CheckFound2{찾음?}
     CheckFound2 -->|Yes| SetTarget2[target_track_id 설정]
     SetTarget2 --> ToTracking3[TRACKING 상태로 전이]
-    CheckFound2 -->|No| StaySearching[SEARCHING 유지]
     
-    ToLost1 --> AssignState
-    ToSearch1 --> AssignState
-    ToTracking1 --> AssignState
+    StateCheck2 -->|WAIST_FOLLOWER| KeepWaist2[WAIST_FOLLOWER 유지<br/>허리 제어 계속]
+    
+    StateCheck2 -->|INTERACTION| CheckTarget3{타겟 존재?}
+    CheckTarget3 -->|No| FindClosest3[가장 가까운 사람 자동 선택]
+    CheckTarget3 -->|Yes| KeepInteraction2[INTERACTION 유지]
+    
+    StateCheck2 -->|HELLO| KeepHello[HELLO 유지<br/>hand_wave_rt 실행 중]
+    
+    ToLost --> AssignState
+    ToSearch --> AssignState
+    ToTracking --> AssignState
     StayIdle --> AssignState
     StayTracking --> AssignState
     ToLost2 --> AssignState
     ToTracking2 --> AssignState
-    KeepLost1 --> AssignState
-    KeepLost2 --> AssignState
-    ToSearch2 --> AssignState
+    KeepLost --> AssignState
+    ToSearch --> AssignState
     ToTracking3 --> AssignState
-    StaySearching --> AssignState
+    ToWaistFollower --> AssignState
+    KeepWaist --> AssignState
+    KeepWaist2 --> AssignState
+    KeepInteraction --> AssignState
+    KeepInteraction2 --> AssignState
+    KeepHello --> AssignState
     
-    AssignState[상태에 따라 객체 상태 할당] --> CheckTarget3{추적 대상?}
-    CheckTarget3 -->|Yes| SetTargetState[state = 'target'<br/>붉은색 표시]
-    CheckTarget3 -->|No| SetSystemState[state = 시스템 상태]
+    AssignState[상태에 따라 객체 상태 할당] --> CheckTarget4{추적 대상?}
+    CheckTarget4 -->|Yes| SetTargetState[state = 'target'<br/>붉은색 표시]
+    CheckTarget4 -->|No| SetSystemState[state = 시스템 상태]
     
     SetTargetState --> Return[결과 반환]
     SetSystemState --> Return
     Return --> End([완료])
         </div>
-    </div>
 
-    <div class="section">
-        <h2>10. 가장 가까운 사람 선택 알고리즘</h2>
         <div class="mermaid">
 graph TB
-    Start([추적 객체 리스트 입력]) --> CheckEmpty{리스트 비어있음?}
-    CheckEmpty -->|Yes| ReturnNone[None 반환]
-    CheckEmpty -->|No| CalcCenter[프레임 중심점 계산<br/>center_x = width/2<br/>center_y = height/2]
-    
-    CalcCenter --> InitMin[최소 거리 = 무한대]
-    InitMin --> LoopStart[각 객체 순회]
-    
-    LoopStart --> GetCentroid[객체 중심점 가져오기<br/>cx, cy]
-    GetCentroid --> CalcDist[유클리드 거리 계산<br/>√(cx-center_x)² + (cy-center_y)²]
-    
-    CalcDist --> CompareDist{거리 < 최소 거리?}
-    CompareDist -->|Yes| UpdateMin[최소 거리 업데이트<br/>가장 가까운 ID 저장]
-    CompareDist -->|No| NextObj[다음 객체]
-    
-    UpdateMin --> NextObj
-    NextObj --> MoreObj{더 많은 객체?}
-    MoreObj -->|Yes| LoopStart
-    MoreObj -->|No| ReturnClosest[가장 가까운 ID 반환]
-    
-    ReturnNone --> End([완료])
-    ReturnClosest --> End
-    
-    style CalcCenter fill:#e1f5ff
-    style CalcDist fill:#fff4e1
-    style ReturnClosest fill:#e8f5e9
+    Start([TRACKING 상태]) --> UpdateNeck[ControllerManager.update<br/>목 각도 업데이트]
+    UpdateNeck --> CheckStable{목 각도 안정?<br/>기준 각도로부터 3도 이내<br/>이전 프레임과도 3도 이내<br/>5초 이상 지속}
+    CheckStable -->|No| ResetTimer[타이머 리셋]
+    ResetTimer --> StayTracking[TRACKING 유지]
+    CheckStable -->|Yes| SetFlag[pending_face_check = true]
+    SetFlag --> ProcessFrame[다음 프레임 처리]
+    ProcessFrame --> CheckFlag{pending_face_check?}
+    CheckFlag -->|Yes| FaceDetect[얼굴 검출<br/>Face YOLO 모델<br/>타겟 bbox 영역]
+    CheckFlag -->|No| StayTracking
+    FaceDetect --> CheckFace{얼굴 검출됨?}
+    CheckFace -->|Yes| ToWaistFollower[WAIST_FOLLOWER 상태로 전이<br/>타이머 리셋]
+    CheckFace -->|No| ResetTimer2[타이머 리셋<br/>TRACKING 유지]
+    ResetTimer2 --> StayTracking
+    ToWaistFollower --> WaistControl[허리 제어 시작<br/>목 0도로 이동<br/>허리로 각도 이동]
+    StayTracking --> End([완료])
+    WaistControl --> End
         </div>
     </div>
 
+    <!-- ============================================ -->
+    <!-- 섹션 3: Routine 시스템 통합 -->
+    <!-- ============================================ -->
     <div class="section">
-        <h2>11. 상태별 시각화 색상</h2>
+        <h2>3. Routine 시스템 통합</h2>
+        <div class="description">
+            <strong>Routine 시스템:</strong> 상태 변경 시 자동으로 적절한 Routine을 시작합니다. 새 Routine START 명령만 보내면 기존 Routine이 자동으로 중단됩니다.
+        </div>
+
+        <div class="mermaid">
+graph TB
+    Start([이미지 콜백]) --> Process[TrackerManager.process]
+    Process --> GetState[현재 상태 가져오기]
+    GetState --> CheckChange{상태 변경?}
+    CheckChange -->|No| ControllerUpdate[ControllerManager.update]
+    CheckChange -->|Yes| HandleRoutine[상태별 Routine 전환 처리]
+    
+    HandleRoutine --> CheckNewState{새 상태}
+    
+    CheckNewState -->|IDLE| StartIdle[idle_breathing_rt::START]
+    CheckNewState -->|TRACKING| StartIdle
+    CheckNewState -->|LOST| StartIdle
+    CheckNewState -->|SEARCHING| StartIdle
+    CheckNewState -->|WAIST_FOLLOWER| StartIdle
+    
+    CheckNewState -->|HELLO| StartHello[hand_wave_rt::START<br/>기존 루틴 자동 중단]
+    
+    CheckNewState -->|INTERACTION| StopRoutine[현재 루틴 RESET<br/>루틴 중단]
+    
+    StartIdle --> PublishCmd1[토픽 발행<br/>hmi/robot_command<br/>the_bodyOne::ROUTINE::idle_breathing_rt::START]
+    StartHello --> PublishCmd2[토픽 발행<br/>hmi/robot_command<br/>the_bodyOne::ROUTINE::hand_wave_rt::START]
+    StopRoutine --> PublishCmd3[토픽 발행<br/>hmi/robot_command<br/>the_bodyOne::ROUTINE::routine_name::RESET]
+    
+    PublishCmd1 --> RoutineMgr1[RoutineManager 수신]
+    PublishCmd2 --> RoutineMgr2[RoutineManager 수신]
+    PublishCmd3 --> RoutineMgr3[RoutineManager 수신]
+    
+    RoutineMgr1 --> AutoStop1[기존 루틴 자동 중단<br/>should_stop_flag = true 설정]
+    RoutineMgr2 --> AutoStop2[기존 루틴 자동 중단<br/>should_stop_flag = true 설정]
+    
+    AutoStop1 --> StartNew1[새 루틴 시작<br/>should_stop_flag = false 리셋]
+    AutoStop2 --> StartNew2[새 루틴 시작<br/>should_stop_flag = false 리셋]
+    RoutineMgr3 --> End1([완료])
+    
+    StartNew1 --> End2([완료])
+    StartNew2 --> End3([완료])
+    
+    ControllerUpdate --> End4([완료])
+    
+    note right of AutoStop1
+        새 루틴 START 명령만 보내면
+        시스템이 자동으로 기존 루틴을
+        중단하고 새 루틴을 시작함
+        명시적 RESET 불필요!
+    end note
+    
+    note right of StartHello
+        hand_wave_rt는 1회 실행 후
+        자동으로 종료됨
+    end note
+    
+    note right of StartIdle
+        idle_breathing_rt는 무한 반복
+        LoopWhileNode로 구현됨
+    end note
+        </div>
+
+        <div class="mermaid">
+sequenceDiagram
+    participant CP as CameraPublisher
+    participant RC as RoutineController
+    participant HMI as hmi/robot_command
+    participant RM as RoutineManager
+    participant OR as 기존 루틴<br/>idle_breathing_rt
+    participant NR as 새 루틴<br/>hand_wave_rt
+    
+    CP->>CP: 상태 변경 감지<br/>IDLE → HELLO
+    CP->>RC: switch_routine("hand_wave_rt")
+    RC->>HMI: 발행: the_bodyOne::ROUTINE::hand_wave_rt::START
+    HMI->>RM: 명령 수신
+    RM->>OR: should_stop_flag = true 설정
+    OR->>OR: LoopWhileNode 조건 함수<br/>false 반환 (루프 중단)
+    OR->>OR: reset() 호출하여 정리
+    RM->>RM: should_stop_flag = false 리셋
+    RM->>NR: 새 루틴 시작
+    NR->>NR: hand_wave_rt 실행 중...
+    NR->>NR: 1회 실행 완료 후 종료
+    
+    Note over CP,NR: 자동 전환 완료<br/>명시적 RESET 불필요
+        </div>
+
         <div class="mermaid">
 graph LR
-    A[상태] --> B[target<br/>붉은색<br/>0,0,255]
-    A --> C[tracking<br/>초록색<br/>0,255,0]
-    A --> D[idle<br/>회색<br/>128,128,128]
-    A --> E[lost<br/>주황색<br/>0,165,255]
-    A --> F[searching<br/>노란색<br/>255,255,0]
+    A[상태] --> B[IDLE<br/>idle_breathing_rt<br/>무한 반복]
+    A --> C[TRACKING<br/>idle_breathing_rt<br/>무한 반복]
+    A --> D[LOST<br/>idle_breathing_rt<br/>무한 반복]
+    A --> E[SEARCHING<br/>idle_breathing_rt<br/>무한 반복]
+    A --> F[WAIST_FOLLOWER<br/>idle_breathing_rt<br/>무한 반복]
+    A --> G[HELLO<br/>hand_wave_rt<br/>1회 실행]
+    A --> H[INTERACTION<br/>루틴 없음<br/>중단]
     
-    style B fill:#ff0000,color:#fff
-    style C fill:#00ff00
-    style D fill:#808080,color:#fff
-    style E fill:#ffa500
-    style F fill:#ffff00
+    style B fill:#e8f5e9
+    style C fill:#e8f5e9
+    style D fill:#e8f5e9
+    style E fill:#e8f5e9
+    style F fill:#e8f5e9
+    style G fill:#fff3e0
+    style H fill:#ffebee
         </div>
-    </div>
 
-    <div class="section">
-        <h2>12. 성능 최적화 포인트</h2>
         <div class="mermaid">
 graph TB
-    A[최적화 전략] --> B[GPU 사용]
-    A --> C[프레임 리사이즈]
-    A --> D[비동기 처리]
-    A --> E[큐 관리]
+    A[Routine 명령 형식] --> B[ROBOT_NAME::ROUTINE::routine_name::sub_mode]
     
-    B --> B1[FP16 반정밀도]
-    B --> B2[CUDA 동기화]
+    B --> C[ROBOT_NAME<br/>the_bodyOne]
+    B --> D[ROUTINE<br/>고정값]
+    B --> E[routine_name<br/>idle_breathing_rt<br/>hand_wave_rt]
+    B --> F[sub_mode<br/>START<br/>PAUSE<br/>RESUME<br/>RESET]
     
-    C --> C1[1920x1080 제한]
+    C --> G[예시]
+    D --> G
+    E --> G
+    F --> G
     
-    D --> D1[별도 스레드 시각화]
-    D --> D2[논블로킹 큐]
-    
-    E --> E1[최대 2개 프레임만 유지]
-    E --> E2[가득 차면 스킵]
+    G --> H[the_bodyOne::ROUTINE::idle_breathing_rt::START]
+    G --> I[the_bodyOne::ROUTINE::hand_wave_rt::START]
+    G --> J[the_bodyOne::ROUTINE::idle_breathing_rt::RESET]
         </div>
     </div>
 
 </body>
 </html>
-

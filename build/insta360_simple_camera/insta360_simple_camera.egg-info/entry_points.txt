@@ -1,2 +1,3 @@
 [console_scripts]
 steram_node = insta360_simple_camera.steram_node:main
+

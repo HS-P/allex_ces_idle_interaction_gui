@@ -17,8 +17,11 @@ from std_msgs.msg import Header
 class ZedPublisher(Node):
     """ZED 카메라 (0번째 카메라)를 ROS2 토픽으로 발행하는 노드"""
     
-    def __init__(self, camera_index: int = 0, fps: float = 30.0) -> None:
+    def __init__(self, camera_index: int = 0, fps: float = 30.0, rotation: int = 0) -> None:
         super().__init__("zed_publisher")
+        
+        # 이미지 회전 설정 (0: 없음, 90: 시계방향 90도, -90: 반시계방향 90도, 180: 180도)
+        self.rotation = rotation
         
         # 카메라 초기화 - V4L2 백엔드 명시적 사용
         self.camera_index = camera_index
@@ -109,6 +112,14 @@ class ZedPublisher(Node):
         # 1280x720으로 resize
         frame = cv2.resize(frame, (1280, 720), interpolation=cv2.INTER_LINEAR)
         
+        # 이미지 회전 적용 (카메라 설치 각도 보정)
+        if self.rotation == 90:
+            frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+        elif self.rotation == -90:
+            frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        elif self.rotation == 180:
+            frame = cv2.rotate(frame, cv2.ROTATE_180)
+        
         # OpenCV 이미지를 JPEG로 압축
         encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
         _, compressed_img = cv2.imencode('.jpg', frame, encode_param)
@@ -149,16 +160,22 @@ class ZedPublisher(Node):
 def main(args=None):
     rclpy.init(args=args)
     
-    # 명령행 인자에서 카메라 인덱스와 FPS 가져오기
+    # 명령행 인자에서 카메라 인덱스, FPS, 회전 각도 가져오기
     import sys
     camera_index = 0
     fps = 30.0
+    rotation = -90  # 기본값: 반시계방향 90도 (우측으로 회전된 카메라 보정)
     
+    # 첫 번째 인자가 음수이면 회전 각도로 해석
     if len(sys.argv) > 1:
         try:
-            camera_index = int(sys.argv[1])
+            first_arg = int(sys.argv[1])
+            if first_arg < 0 or first_arg in [90, 180]:
+                rotation = first_arg
+            else:
+                camera_index = first_arg
         except ValueError:
-            print(f"잘못된 카메라 인덱스: {sys.argv[1]}, 기본값 0 사용")
+            print(f"잘못된 인자: {sys.argv[1]}, 기본값 사용")
     
     if len(sys.argv) > 2:
         try:
@@ -166,7 +183,13 @@ def main(args=None):
         except ValueError:
             print(f"잘못된 FPS: {sys.argv[2]}, 기본값 30.0 사용")
     
-    zed_publisher = ZedPublisher(camera_index=camera_index, fps=fps)
+    if len(sys.argv) > 3:
+        try:
+            rotation = int(sys.argv[3])
+        except ValueError:
+            print(f"잘못된 회전 각도: {sys.argv[3]}, 기본값 -90 사용")
+    
+    zed_publisher = ZedPublisher(camera_index=camera_index, fps=fps, rotation=rotation)
     
     try:
         rclpy.spin(zed_publisher)

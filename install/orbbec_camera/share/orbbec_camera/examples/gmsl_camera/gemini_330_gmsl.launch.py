@@ -1,1 +1,0 @@
-/home/dgx_allex_one/allex2head/src/OrbbecSDK_ROS2/orbbec_camera/examples/gmsl_camera/gemini_330_gmsl.launch.py

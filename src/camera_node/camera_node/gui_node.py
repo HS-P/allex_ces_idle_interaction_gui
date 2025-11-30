@@ -503,7 +503,7 @@ class GuiNode(Node, QMainWindow):
         state_select_layout.addWidget(QLabel("State 선택:"))
         
         self.state_combo = QComboBox()
-        self.state_combo.addItems(["IDLE", "TRACKING", "LOST", "SEARCHING"])
+        self.state_combo.addItems(["IDLE", "TRACKING", "LOST", "SEARCHING", "WAIST_FOLLOWER", "HELLO"])
         self.state_combo.setMinimumHeight(40)
         self.state_combo.setStyleSheet("font-size: 12pt;")
         self.state_combo.currentTextChanged.connect(self.on_state_changed)
@@ -925,7 +925,8 @@ class GuiNode(Node, QMainWindow):
             'TRACKING': 'green',
             'LOST': 'orange',
             'SEARCHING': 'yellow',
-            'WAIST_FOLLOWER': 'purple',  # WAIST_FOLLOWER 상태 추가
+            'WAIST_FOLLOWER': 'purple',
+            'HELLO': 'cyan',  # HELLO 상태 추가
             'INTERACTION': 'blue'
         }
         color = state_colors.get(state_str, 'black')

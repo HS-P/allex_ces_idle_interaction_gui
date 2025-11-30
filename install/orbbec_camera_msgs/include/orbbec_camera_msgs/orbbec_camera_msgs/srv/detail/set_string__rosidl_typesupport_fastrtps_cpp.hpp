@@ -1,1 +1,0 @@
-/home/dgx_allex_one/allex2head/build/orbbec_camera_msgs/rosidl_typesupport_fastrtps_cpp/orbbec_camera_msgs/srv/detail/set_string__rosidl_typesupport_fastrtps_cpp.hpp
