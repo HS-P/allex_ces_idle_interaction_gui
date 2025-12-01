@@ -1,0 +1,23 @@
+[0.485s] Invoking command in '/home/dgx_allex_one/allex_ces_idle_interaction_gui/build/camera_node': CONDA_PROMPT_MODIFIER=(base) DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/dgx_allex_one/allex_ces_idle_interaction_gui/build/camera_node/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/dgx_allex_one/allex_ces_idle_interaction_gui/install/camera_node/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/dgx_allex_one/allex_ces_idle_interaction_gui/build/camera_node/build --no-deps symlink_data
+[0.641s] running develop
+[0.718s] running egg_info
+[0.725s] writing camera_node.egg-info/PKG-INFO
+[0.726s] writing dependency_links to camera_node.egg-info/dependency_links.txt
+[0.726s] writing entry points to camera_node.egg-info/entry_points.txt
+[0.726s] writing requirements to camera_node.egg-info/requires.txt
+[0.726s] writing top-level names to camera_node.egg-info/top_level.txt
+[0.743s] reading manifest file 'camera_node.egg-info/SOURCES.txt'
+[0.743s] writing manifest file 'camera_node.egg-info/SOURCES.txt'
+[0.756s] running build_ext
+[0.756s] Creating /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/camera_node/lib/python3.12/site-packages/camera-node.egg-link (link to .)
+[0.756s] Installing camera_publisher script to /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/camera_node/lib/camera_node
+[0.756s] Installing face_detection_test script to /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/camera_node/lib/camera_node
+[0.756s] Installing gui_node script to /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/camera_node/lib/camera_node
+[0.756s] Installing image_publisher script to /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/camera_node/lib/camera_node
+[0.756s] Installing video_publisher script to /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/camera_node/lib/camera_node
+[0.756s] Installing zed_publisher script to /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/camera_node/lib/camera_node
+[0.756s] 
+[0.756s] Installed /home/dgx_allex_one/allex_ces_idle_interaction_gui/build/camera_node
+[0.757s] running symlink_data
+[0.757s] symbolically linking /home/dgx_allex_one/allex_ces_idle_interaction_gui/build/camera_node/config/topics.json -> /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/camera_node/share/camera_node/config
+[0.774s] Invoked command in '/home/dgx_allex_one/allex_ces_idle_interaction_gui/build/camera_node' returned '0': CONDA_PROMPT_MODIFIER=(base) DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/dgx_allex_one/allex_ces_idle_interaction_gui/build/camera_node/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/dgx_allex_one/allex_ces_idle_interaction_gui/install/camera_node/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/dgx_allex_one/allex_ces_idle_interaction_gui/build/camera_node/build --no-deps symlink_data

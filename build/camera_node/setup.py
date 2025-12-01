@@ -1,1 +1,1 @@
-/home/yeah2/allex_ces_idle_interaction_gui/src/camera_node/setup.py
+/home/dgx_allex_one/allex_ces_idle_interaction_gui/src/camera_node/setup.py

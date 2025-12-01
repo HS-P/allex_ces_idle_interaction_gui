@@ -26,7 +26,7 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
     ] + config_data_files,
-    install_requires=['setuptools', 'ultralytics', 'pyyaml', 'lap', 'filterpy', 'scipy', 'numpy', 'PyQt5', 'huggingface_hub'],
+    install_requires=['setuptools', 'ultralytics', 'pyyaml', 'lap', 'filterpy', 'scipy', 'numpy', 'PySide6', 'huggingface_hub'],
     zip_safe=True,
     maintainer='yeah2',
     maintainer_email='yeah2@todo.todo',

@@ -1,4 +1,4 @@
-PyQt5
+PySide6
 filterpy
 huggingface_hub
 lap

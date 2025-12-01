@@ -18,5 +18,5 @@ camera_node.egg-info/requires.txt
 camera_node.egg-info/top_level.txt
 camera_node.egg-info/zip-safe
 config/botsort.yaml
-config/llm_topics.json
+config/topics.json
 resource/camera_node

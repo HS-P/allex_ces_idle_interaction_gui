@@ -164,7 +164,7 @@ def main(args=None):
     import sys
     camera_index = 0
     fps = 30.0
-    rotation = -90  # 기본값: 반시계방향 90도 (우측으로 회전된 카메라 보정)
+    rotation = 90  # 기본값: 시계방향 90도
     
     # 첫 번째 인자가 음수이면 회전 각도로 해석
     if len(sys.argv) > 1:
