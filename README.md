@@ -1,4 +1,3 @@
-Main Branch에서 ZED_PUBLISHER의 역할을 현재는 INSTA 360으로 대체했습니다.
+Routine이 포함되어 있습니다.
 
-Rotate Image를 적용시키고 난 후에 Routine을 적용시켜놨는데, 이게 잘 작동할지는 하나씩 디버깅해보면서 진행해보아야합니다.
-
+여전히 잘 안 돌 가능성이 있고, Routine을 상세 설정시켜야 하기 때문에 이를 유의하며 진행하십시오.
