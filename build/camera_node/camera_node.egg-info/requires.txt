@@ -1,9 +1,0 @@
-PySide6
-filterpy
-huggingface_hub
-lap
-numpy
-pyyaml
-scipy
-setuptools
-ultralytics

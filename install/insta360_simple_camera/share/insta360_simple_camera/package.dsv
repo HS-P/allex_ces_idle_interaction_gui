@@ -1,9 +1,0 @@
-source;share/insta360_simple_camera/hook/pythonpath.ps1
-source;share/insta360_simple_camera/hook/pythonpath.dsv
-source;share/insta360_simple_camera/hook/pythonpath.sh
-source;share/insta360_simple_camera/hook/ament_prefix_path.ps1
-source;share/insta360_simple_camera/hook/ament_prefix_path.dsv
-source;share/insta360_simple_camera/hook/ament_prefix_path.sh
-source;../../build/insta360_simple_camera/share/insta360_simple_camera/hook/pythonpath_develop.ps1
-source;../../build/insta360_simple_camera/share/insta360_simple_camera/hook/pythonpath_develop.dsv
-source;../../build/insta360_simple_camera/share/insta360_simple_camera/hook/pythonpath_develop.sh

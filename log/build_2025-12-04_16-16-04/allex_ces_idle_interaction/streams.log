@@ -1,0 +1,33 @@
+[0.316s] Invoking command in '/home/yeah2/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction': PYTHONPATH=/home/yeah2/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/yeah2/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction/build --no-deps symlink_data
+[0.454s] running develop
+[0.543s] running egg_info
+[0.543s] creating allex_ces_idle_interaction.egg-info
+[0.543s] writing allex_ces_idle_interaction.egg-info/PKG-INFO
+[0.543s] writing dependency_links to allex_ces_idle_interaction.egg-info/dependency_links.txt
+[0.544s] writing entry points to allex_ces_idle_interaction.egg-info/entry_points.txt
+[0.544s] writing requirements to allex_ces_idle_interaction.egg-info/requires.txt
+[0.544s] writing top-level names to allex_ces_idle_interaction.egg-info/top_level.txt
+[0.544s] writing manifest file 'allex_ces_idle_interaction.egg-info/SOURCES.txt'
+[0.545s] reading manifest file 'allex_ces_idle_interaction.egg-info/SOURCES.txt'
+[0.545s] writing manifest file 'allex_ces_idle_interaction.egg-info/SOURCES.txt'
+[0.546s] running build_ext
+[0.546s] Creating /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/python3.10/site-packages/allex-ces-idle-interaction.egg-link (link to .)
+[0.546s] Installing allex_idle_interaction_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+[0.546s] Installing gaze_controller_neck_waist_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+[0.546s] Installing idle_interaction_gui_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+[0.546s] Installing llm_hand_gesture_clip_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+[0.546s] Installing person_tracker_botsort_reid_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+[0.546s] 
+[0.546s] Installed /home/yeah2/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction
+[0.546s] running symlink_data
+[0.546s] creating /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/share/ament_index
+[0.546s] creating /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/share/ament_index/resource_index
+[0.546s] creating /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/share/ament_index/resource_index/packages
+[0.547s] symbolically linking /home/yeah2/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction/resource/allex_ces_idle_interaction -> /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/share/ament_index/resource_index/packages
+[0.547s] symbolically linking /home/yeah2/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction/package.xml -> /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/share/allex_ces_idle_interaction
+[0.547s] creating /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/share/allex_ces_idle_interaction/config
+[0.547s] symbolically linking /home/yeah2/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction/config/botsort.yaml -> /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/share/allex_ces_idle_interaction/config
+[0.547s] symbolically linking /home/yeah2/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction/config/topics.json -> /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/share/allex_ces_idle_interaction/config
+[0.547s] creating /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/share/allex_ces_idle_interaction/launch
+[0.547s] symbolically linking /home/yeah2/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction/launch/allex_idle_interaction.launch.py -> /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/share/allex_ces_idle_interaction/launch
+[0.560s] Invoked command in '/home/yeah2/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction' returned '0': PYTHONPATH=/home/yeah2/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/yeah2/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction/build --no-deps symlink_data

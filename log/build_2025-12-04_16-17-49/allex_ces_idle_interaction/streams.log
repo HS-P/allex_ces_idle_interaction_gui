@@ -1,0 +1,22 @@
+[0.316s] Invoking command in '/home/yeah2/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction': CONDA_PROMPT_MODIFIER=(base) PYTHONPATH=/home/yeah2/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/yeah2/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction/build --no-deps symlink_data
+[0.457s] running develop
+[0.549s] running egg_info
+[0.550s] writing allex_ces_idle_interaction.egg-info/PKG-INFO
+[0.550s] writing dependency_links to allex_ces_idle_interaction.egg-info/dependency_links.txt
+[0.550s] writing entry points to allex_ces_idle_interaction.egg-info/entry_points.txt
+[0.550s] writing requirements to allex_ces_idle_interaction.egg-info/requires.txt
+[0.550s] writing top-level names to allex_ces_idle_interaction.egg-info/top_level.txt
+[0.551s] reading manifest file 'allex_ces_idle_interaction.egg-info/SOURCES.txt'
+[0.551s] writing manifest file 'allex_ces_idle_interaction.egg-info/SOURCES.txt'
+[0.552s] running build_ext
+[0.552s] Creating /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/python3.10/site-packages/allex-ces-idle-interaction.egg-link (link to .)
+[0.553s] Installing allex_idle_interaction_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+[0.553s] Installing gaze_controller_neck_waist_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+[0.553s] Installing gui_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+[0.553s] Installing idle_interaction_gui_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+[0.553s] Installing llm_hand_gesture_clip_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+[0.553s] Installing person_tracker_botsort_reid_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+[0.553s] 
+[0.553s] Installed /home/yeah2/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction
+[0.553s] running symlink_data
+[0.567s] Invoked command in '/home/yeah2/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction' returned '0': CONDA_PROMPT_MODIFIER=(base) PYTHONPATH=/home/yeah2/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/yeah2/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction/build --no-deps symlink_data

@@ -1,0 +1,29 @@
+running egg_info
+writing ../../build/allex_ces_idle_interaction/allex_ces_idle_interaction.egg-info/PKG-INFO
+writing dependency_links to ../../build/allex_ces_idle_interaction/allex_ces_idle_interaction.egg-info/dependency_links.txt
+writing entry points to ../../build/allex_ces_idle_interaction/allex_ces_idle_interaction.egg-info/entry_points.txt
+writing requirements to ../../build/allex_ces_idle_interaction/allex_ces_idle_interaction.egg-info/requires.txt
+writing top-level names to ../../build/allex_ces_idle_interaction/allex_ces_idle_interaction.egg-info/top_level.txt
+reading manifest file '../../build/allex_ces_idle_interaction/allex_ces_idle_interaction.egg-info/SOURCES.txt'
+writing manifest file '../../build/allex_ces_idle_interaction/allex_ces_idle_interaction.egg-info/SOURCES.txt'
+running build
+running build_py
+copying allex_ces_idle_interaction/gaze_controller_neck_waist_node.py -> /home/yeah2/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction/build/lib/allex_ces_idle_interaction
+running install
+running install_lib
+copying /home/yeah2/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction/build/lib/allex_ces_idle_interaction/gaze_controller_neck_waist_node.py -> /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/python3.10/site-packages/allex_ces_idle_interaction
+byte-compiling /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/python3.10/site-packages/allex_ces_idle_interaction/gaze_controller_neck_waist_node.py to gaze_controller_neck_waist_node.cpython-310.pyc
+running install_data
+running install_egg_info
+removing '/home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/python3.10/site-packages/allex_ces_idle_interaction-1.2.0-py3.10.egg-info' (and everything under it)
+Copying ../../build/allex_ces_idle_interaction/allex_ces_idle_interaction.egg-info to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/python3.10/site-packages/allex_ces_idle_interaction-1.2.0-py3.10.egg-info
+running install_scripts
+Installing allex_idle_interaction_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+Installing camera_test script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+Installing gaze_controller_neck_waist_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+Installing gui_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+Installing idle_interaction_gui_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+Installing llm_hand_gesture_clip_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+Installing tracking_fsm_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+Installing yolo_detection_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+writing list of installed files to '/home/yeah2/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction/install.log'
