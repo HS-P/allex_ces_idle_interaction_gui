@@ -1,0 +1,1 @@
+/home/yeah2/allex_ces_idle_interaction_gui/src/OrbbecSDK_ROS2/orbbec_camera/examples/multi_camera_synced_verification_tool/multi_camera_synced_verify.launch.py

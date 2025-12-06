@@ -1,0 +1,14 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : [],
+		"nodes" : []
+	},
+	"installers" : [],
+	"paths" : 
+	{
+		"build" : "orbbec_camera_msgs__py",
+		"source" : "/home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs/orbbec_camera_msgs__py"
+	}
+}

@@ -27,16 +27,16 @@ def generate_launch_description():
     llm_control_topic = LaunchConfiguration('llm_control_topic', default='/llm/control')
     llm_status_topic = LaunchConfiguration('llm_status_topic', default='/llm/status')
     
-    # 1. Camera Publisher Node (카메라 이미지 발행)
-    camera_publisher_node = Node(
-        package='allex_ces_idle_interaction',
-        executable='camera_test',
-        name='camera_publisher_node',
-        output='screen',
-        parameters=[{
-            'camera_image_topic': camera_image_topic,
-        }],
-    )
+    # # 1. Camera Publisher Node (카메라 이미지 발행)
+    # camera_publisher_node = Node(
+    #     package='allex_ces_idle_interaction',
+    #     executable='camera_test',
+    #     name='camera_publisher_node',
+    #     output='screen',
+    #     parameters=[{
+    #         'camera_image_topic': camera_image_topic,
+    #     }],
+    # )
     
     # 2. YOLO Detection Node (YOLO Detection)
     yolo_detection_node = Node(
@@ -111,7 +111,7 @@ def generate_launch_description():
     )
     
     return LaunchDescription([
-        camera_publisher_node,
+        # camera_publisher_node,
         yolo_detection_node,
         tracking_fsm_node,
         gaze_controller_node,

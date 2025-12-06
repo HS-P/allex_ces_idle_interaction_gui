@@ -1,0 +1,1 @@
+/home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs/rosidl_typesupport_introspection_c/orbbec_camera_msgs/msg/detail/device_status__rosidl_typesupport_introspection_c.h

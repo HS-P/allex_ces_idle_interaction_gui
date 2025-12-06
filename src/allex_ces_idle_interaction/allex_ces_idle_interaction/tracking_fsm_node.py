@@ -444,8 +444,23 @@ class TrackingFSMNode(Node):
         target_point = None
         target_track_id = None
         
+        # 디버깅: 현재 타겟 ID와 detection ID 목록 출력
+        detection_ids = [det['track_id'] for det in detections]
+        if self.target_track_id is not None:
+            if self.target_track_id not in detection_ids:
+                self.get_logger().warn(
+                    f"⚠️ 타겟 ID {self.target_track_id}가 detection에 없음! "
+                    f"현재 detection IDs: {detection_ids}"
+                )
+            else:
+                self.get_logger().debug(
+                    f"✓ 타겟 ID {self.target_track_id} 매칭 성공. "
+                    f"전체 IDs: {detection_ids}"
+                )
+        
         for det in detections:
-            if det['track_id'] == self.target_track_id:
+            if self.target_track_id is not None and det['track_id'] == self.target_track_id:
+                # 타겟 매칭 성공
                 tracked_objects.append(
                     TrackedObject(
                         track_id=det['track_id'],
@@ -460,7 +475,14 @@ class TrackingFSMNode(Node):
                 x1, y1, x2, y2 = det['bbox']
                 target_point = ((x1 + x2) / 2.0, y1 + (y2 - y1) * 0.2)
                 target_track_id = det['track_id']
+                
+                # 디버깅: 타겟 포인트 확인
+                self.get_logger().debug(
+                    f"🎯 타겟 ID {target_track_id} 포인트 설정: ({target_point[0]:.1f}, {target_point[1]:.1f}) "
+                    f"| BBox: ({x1:.1f}, {y1:.1f}, {x2:.1f}, {y2:.1f})"
+                )
             else:
+                # 타겟이 아닌 객체
                 tracked_objects.append(
                     TrackedObject(
                         track_id=det['track_id'],
@@ -473,11 +495,44 @@ class TrackingFSMNode(Node):
                 )
         
         # 타겟 정보 생성
+        # 실제로 매칭된 타겟이 있을 때만 target_track_id 사용
+        if target_track_id is not None:
+            final_target_id = target_track_id
+        elif self.target_track_id is not None and target_exists:
+            # 타겟이 설정되어 있고 존재하지만 아직 매칭 안 됨 (이론적으로는 발생하지 않아야 함)
+            final_target_id = self.target_track_id
+            self.get_logger().warn(
+                f"⚠️ 타겟 ID {self.target_track_id}는 존재하지만 포인트가 설정되지 않음!"
+            )
+        else:
+            # 타겟이 없거나 매칭 안 됨
+            final_target_id = None
+        
+        # 타겟 포인트와 ID 일치 확인
+        if target_point is not None and final_target_id is not None:
+            # 타겟 포인트가 설정되었고 ID도 일치하는지 확인
+            matched_obj = next((obj for obj in tracked_objects if obj.track_id == final_target_id), None)
+            if matched_obj is None:
+                self.get_logger().error(
+                    f"❌ 심각한 오류: 타겟 ID {final_target_id}에 해당하는 객체가 tracked_objects에 없음!"
+                )
+            elif matched_obj.state != "target":
+                self.get_logger().error(
+                    f"❌ 심각한 오류: 타겟 ID {final_target_id}의 객체 상태가 'target'이 아님: {matched_obj.state}"
+                )
+        
         target_info = TargetInfo(
             point=target_point,
             state=self.state,
-            track_id=target_track_id if target_track_id is not None else self.target_track_id
+            track_id=final_target_id
         )
+        
+        # 최종 확인 로그
+        if self.target_track_id is not None and final_target_id != self.target_track_id:
+            self.get_logger().warn(
+                f"⚠️ 타겟 ID 불일치: 설정된 ID={self.target_track_id}, "
+                f"최종 ID={final_target_id}, 포인트={target_point}"
+            )
         
         return tracked_objects, target_info
     
@@ -563,12 +618,59 @@ class TrackingFSMNode(Node):
                     'age': obj.age
                 })
             
+            # 타겟 정보 검증: track_id와 point가 일치하는지 확인
+            validated_target_info = target_info
+            if target_info.track_id is not None and target_info.point is not None:
+                # tracked_objects에서 해당 track_id를 가진 객체 찾기
+                target_obj = next((obj for obj in tracked_objects if obj.track_id == target_info.track_id), None)
+                if target_obj is None:
+                    self.get_logger().error(
+                        f"❌ 타겟 정보 불일치: track_id={target_info.track_id}인 객체가 tracked_objects에 없음!"
+                    )
+                    # 포인트를 None으로 설정하여 추적 중지
+                    validated_target_info = TargetInfo(
+                        point=None,
+                        state=target_info.state,
+                        track_id=target_info.track_id
+                    )
+                elif target_obj.state != "target":
+                    self.get_logger().error(
+                        f"❌ 타겟 정보 불일치: track_id={target_info.track_id}인 객체의 상태가 'target'이 아님: {target_obj.state}"
+                    )
+                    # 포인트를 None으로 설정하여 추적 중지
+                    validated_target_info = TargetInfo(
+                        point=None,
+                        state=target_info.state,
+                        track_id=target_info.track_id
+                    )
+                else:
+                    # 검증 성공: 포인트가 타겟 객체의 bbox와 일치하는지 확인
+                    x1, y1, x2, y2 = target_obj.bbox
+                    expected_point_x = (x1 + x2) / 2.0
+                    expected_point_y = y1 + (y2 - y1) * 0.2
+                    actual_point_x, actual_point_y = target_info.point
+                    
+                    # 포인트가 bbox 내에 있는지 확인 (약간의 오차 허용)
+                    tolerance = 50.0  # 픽셀 단위
+                    if abs(actual_point_x - expected_point_x) > tolerance or abs(actual_point_y - expected_point_y) > tolerance:
+                        self.get_logger().warn(
+                            f"⚠️ 타겟 포인트 불일치: track_id={target_info.track_id}, "
+                            f"예상 포인트=({expected_point_x:.1f}, {expected_point_y:.1f}), "
+                            f"실제 포인트=({actual_point_x:.1f}, {actual_point_y:.1f})"
+                        )
+                        # 올바른 포인트로 교정
+                        validated_target_info = TargetInfo(
+                            point=(expected_point_x, expected_point_y),
+                            state=target_info.state,
+                            track_id=target_info.track_id
+                        )
+            
             # JSON 데이터 구성
             data = {
                 'state': state_str,
                 'target_info': {
-                    'track_id': target_info.track_id,
-                    'point': list(target_info.point) if target_info.point else None,
+                    'track_id': validated_target_info.track_id,
+                    'point': list(validated_target_info.point) if validated_target_info.point else None,
                     'state': state_str
                 },
                 'tracked_objects': objects_data,

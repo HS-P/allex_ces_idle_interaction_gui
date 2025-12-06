@@ -1,0 +1,1 @@
+/home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs/rosidl_typesupport_introspection_cpp/orbbec_camera_msgs/srv/detail/get_camera_info__rosidl_typesupport_introspection_cpp.hpp

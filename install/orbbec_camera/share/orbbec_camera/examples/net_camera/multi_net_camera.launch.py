@@ -1,0 +1,1 @@
+/home/yeah2/allex_ces_idle_interaction_gui/src/OrbbecSDK_ROS2/orbbec_camera/examples/net_camera/multi_net_camera.launch.py

@@ -152,11 +152,25 @@ class YOLODetectionNode(Node):
             return
         
         # YOLO Detection 수행 (track 사용하여 track_id 생성)
+        # BOTSORT 설정 파일 무조건 사용 - 실패 시 즉시 오류 발생
+        import os
+        from ament_index_python import get_package_share_directory
+        
+        # 패키지 공유 디렉토리에서 설정 파일 찾기
+        package_dir = get_package_share_directory('allex_ces_idle_interaction')
+        tracker_config_path = os.path.join(package_dir, 'config', 'botsort.yaml')
+        
+        if not os.path.exists(tracker_config_path):
+            self.get_logger().error(f"❌ BOTSORT 설정 파일을 찾을 수 없음: {tracker_config_path}")
+            raise FileNotFoundError(f"BOTSORT 설정 파일이 필요합니다: {tracker_config_path}")
+        
+        # BOTSORT 설정 파일을 반드시 사용
         results = self.yolo_model.track(
             frame,
             conf=self.conf_threshold,
             classes=[PERSON_CLASS_ID],   # 사람만
             persist=True,                # 내부 tracker 상태 유지
+            tracker=tracker_config_path,  # BOTSORT 설정 파일 사용 (필수)
             verbose=False,
             imgsz=640,
         )

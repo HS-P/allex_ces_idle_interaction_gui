@@ -1,0 +1,17 @@
+/home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:msg/DeviceInfo.idl
+/home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:msg/DeviceStatus.idl
+/home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:msg/Extrinsics.idl
+/home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:msg/Metadata.idl
+/home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:msg/IMUInfo.idl
+/home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:msg/RGBD.idl
+/home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:srv/GetBool.idl
+/home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:srv/GetDeviceInfo.idl
+/home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:srv/GetCameraInfo.idl
+/home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:srv/GetInt32.idl
+/home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:srv/GetString.idl
+/home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:srv/SetFilter.idl
+/home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:srv/SetInt32.idl
+/home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:srv/SetString.idl
+/home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:srv/SetArrays.idl
+/home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:srv/GetUserCalibParams.idl
+/home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs/rosidl_adapter/orbbec_camera_msgs:srv/SetUserCalibParams.idl

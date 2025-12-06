@@ -1,0 +1,1 @@
+/home/yeah2/allex_ces_idle_interaction_gui/src/OrbbecSDK_ROS2/orbbec_camera/scripts/common_benchmark_node.py

@@ -1,0 +1,644 @@
+[0.010s] Invoking command in '/home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction:/home/yeah2/ros2_ws/install/trajectory_recorder:/home/yeah2/ros2_ws/install/joy_traj_param:/home/yeah2/ros2_ws/install/irim_control_panel_n_dashboard:/home/yeah2/ros2_ws/install/iri_zmq_ros2_bridge:/opt/ros/humble /usr/bin/cmake /home/yeah2/allex_ces_idle_interaction_gui/src/OrbbecSDK_ROS2/orbbec_camera_msgs -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs
+[0.157s] -- The C compiler identification is GNU 11.4.0
+[0.157s] -- The CXX compiler identification is GNU 11.4.0
+[0.157s] -- Detecting C compiler ABI info
+[0.157s] -- Detecting C compiler ABI info - done
+[0.157s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.157s] -- Detecting C compile features
+[0.157s] -- Detecting C compile features - done
+[0.157s] -- Detecting CXX compiler ABI info
+[0.182s] -- Detecting CXX compiler ABI info - done
+[0.186s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.186s] -- Detecting CXX compile features
+[0.187s] -- Detecting CXX compile features - done
+[0.188s] -- Found ament_cmake: 1.3.12 (/opt/ros/humble/share/ament_cmake/cmake)
+[0.305s] -- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter 
+[0.543s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[0.558s] -- Found rosidl_default_generators: 1.2.0 (/opt/ros/humble/share/rosidl_default_generators/cmake)
+[0.559s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.563s] -- Found rosidl_adapter: 3.1.7 (/opt/ros/humble/share/rosidl_adapter/cmake)
+[0.586s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[0.605s] -- Found sensor_msgs: 4.9.0 (/opt/ros/humble/share/sensor_msgs/cmake)
+[1.133s] -- Found ament_cmake_ros: 0.10.0 (/opt/ros/humble/share/ament_cmake_ros/cmake)
+[1.321s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[1.549s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[1.566s] -- Found PythonInterp: /usr/bin/python3 (found suitable version "3.10.12", minimum required is "3.6") 
+[1.566s] -- Found python_cmake_module: 0.10.0 (/opt/ros/humble/share/python_cmake_module/cmake)
+[1.817s] -- Found PythonLibs: /usr/lib/x86_64-linux-gnu/libpython3.10.so (found suitable version "3.10.12", minimum required is "3.5") 
+[1.817s] -- Using PYTHON_EXECUTABLE: /usr/bin/python3
+[1.817s] -- Using PYTHON_INCLUDE_DIRS: /usr/include/python3.10
+[1.817s] -- Using PYTHON_LIBRARIES: /usr/lib/x86_64-linux-gnu/libpython3.10.so
+[1.831s] -- Found PythonExtra: .so  
+[1.877s] -- Found ament_lint_auto: 0.12.14 (/opt/ros/humble/share/ament_lint_auto/cmake)
+[1.889s] -- Added test 'copyright' to check source files copyright and LICENSE
+[1.890s] -- Added test 'lint_cmake' to check CMake code style
+[1.891s] -- Added test 'xmllint' to check XML markup files
+[1.892s] -- Configuring done
+[1.926s] -- Generating done
+[1.934s] -- Build files have been written to: /home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs
+[1.940s] Invoked command in '/home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction:/home/yeah2/ros2_ws/install/trajectory_recorder:/home/yeah2/ros2_ws/install/joy_traj_param:/home/yeah2/ros2_ws/install/irim_control_panel_n_dashboard:/home/yeah2/ros2_ws/install/iri_zmq_ros2_bridge:/opt/ros/humble /usr/bin/cmake /home/yeah2/allex_ces_idle_interaction_gui/src/OrbbecSDK_ROS2/orbbec_camera_msgs -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs
+[1.941s] Invoking command in '/home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction:/home/yeah2/ros2_ws/install/trajectory_recorder:/home/yeah2/ros2_ws/install/joy_traj_param:/home/yeah2/ros2_ws/install/irim_control_panel_n_dashboard:/home/yeah2/ros2_ws/install/iri_zmq_ros2_bridge:/opt/ros/humble /usr/bin/cmake --build /home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs -- -j20 -l20
+[1.973s] [  0%] [34m[1mGenerating C code for ROS interfaces[0m
+[1.980s] [  0%] [34m[1mGenerating C++ code for ROS interfaces[0m
+[1.983s] [  0%] Built target ament_cmake_python_symlink_orbbec_camera_msgs
+[2.117s] running egg_info
+[2.117s] creating orbbec_camera_msgs.egg-info
+[2.117s] writing orbbec_camera_msgs.egg-info/PKG-INFO
+[2.117s] writing dependency_links to orbbec_camera_msgs.egg-info/dependency_links.txt
+[2.118s] writing top-level names to orbbec_camera_msgs.egg-info/top_level.txt
+[2.118s] writing manifest file 'orbbec_camera_msgs.egg-info/SOURCES.txt'
+[2.119s] reading manifest file 'orbbec_camera_msgs.egg-info/SOURCES.txt'
+[2.119s] writing manifest file 'orbbec_camera_msgs.egg-info/SOURCES.txt'
+[2.135s] [  0%] Built target ament_cmake_python_build_orbbec_camera_msgs_egg
+[2.764s] [  0%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_c.dir/rosidl_generator_c/orbbec_camera_msgs/msg/detail/rgbd__functions.c.o[0m
+[2.764s] [  2%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_c.dir/rosidl_generator_c/orbbec_camera_msgs/msg/detail/device_info__functions.c.o[0m
+[2.764s] [  2%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_c.dir/rosidl_generator_c/orbbec_camera_msgs/msg/detail/metadata__functions.c.o[0m
+[2.764s] [  2%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_c.dir/rosidl_generator_c/orbbec_camera_msgs/msg/detail/extrinsics__functions.c.o[0m
+[2.764s] [  3%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_c.dir/rosidl_generator_c/orbbec_camera_msgs/msg/detail/device_status__functions.c.o[0m
+[2.764s] [  4%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_c.dir/rosidl_generator_c/orbbec_camera_msgs/srv/detail/get_camera_info__functions.c.o[0m
+[2.764s] [  5%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_c.dir/rosidl_generator_c/orbbec_camera_msgs/srv/detail/get_bool__functions.c.o[0m
+[2.764s] [  5%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_c.dir/rosidl_generator_c/orbbec_camera_msgs/srv/detail/get_string__functions.c.o[0m
+[2.764s] [  6%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_c.dir/rosidl_generator_c/orbbec_camera_msgs/srv/detail/get_int32__functions.c.o[0m
+[2.765s] [  6%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_c.dir/rosidl_generator_c/orbbec_camera_msgs/srv/detail/get_device_info__functions.c.o[0m
+[2.765s] [  7%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_c.dir/rosidl_generator_c/orbbec_camera_msgs/srv/detail/set_int32__functions.c.o[0m
+[2.766s] [  9%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_c.dir/rosidl_generator_c/orbbec_camera_msgs/msg/detail/imu_info__functions.c.o[0m
+[2.766s] [  9%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_c.dir/rosidl_generator_c/orbbec_camera_msgs/srv/detail/set_filter__functions.c.o[0m
+[2.766s] [ 10%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_c.dir/rosidl_generator_c/orbbec_camera_msgs/srv/detail/set_arrays__functions.c.o[0m
+[2.766s] [ 10%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_c.dir/rosidl_generator_c/orbbec_camera_msgs/srv/detail/get_user_calib_params__functions.c.o[0m
+[2.766s] [ 10%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_c.dir/rosidl_generator_c/orbbec_camera_msgs/srv/detail/set_string__functions.c.o[0m
+[2.766s] [ 11%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_c.dir/rosidl_generator_c/orbbec_camera_msgs/srv/detail/set_user_calib_params__functions.c.o[0m
+[2.769s] [ 11%] Built target orbbec_camera_msgs__cpp
+[2.777s] [ 12%] [34m[1mGenerating C++ type support for eProsima Fast-RTPS[0m
+[2.778s] [ 13%] [34m[1mGenerating C++ type support dispatch for ROS interfaces[0m
+[2.785s] [ 13%] [34m[1mGenerating C++ introspection for ROS interfaces[0m
+[2.817s] [ 14%] [32m[1mLinking C shared library liborbbec_camera_msgs__rosidl_generator_c.so[0m
+[2.846s] [ 14%] Built target orbbec_camera_msgs__rosidl_generator_c
+[2.852s] [ 15%] [34m[1mGenerating C type support dispatch for ROS interfaces[0m
+[2.852s] [ 16%] [34m[1mGenerating C type support for eProsima Fast-RTPS[0m
+[2.854s] [ 17%] [34m[1mGenerating C introspection for ROS interfaces[0m
+[3.256s] [ 18%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/orbbec_camera_msgs/msg/device_info__type_support.cpp.o[0m
+[3.256s] [ 18%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/orbbec_camera_msgs/msg/metadata__type_support.cpp.o[0m
+[3.257s] [ 18%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/orbbec_camera_msgs/msg/imu_info__type_support.cpp.o[0m
+[3.257s] [ 20%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/orbbec_camera_msgs/msg/rgbd__type_support.cpp.o[0m
+[3.257s] [ 20%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/orbbec_camera_msgs/msg/device_status__type_support.cpp.o[0m
+[3.257s] [ 20%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/orbbec_camera_msgs/srv/get_bool__type_support.cpp.o[0m
+[3.257s] [ 21%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/orbbec_camera_msgs/srv/get_device_info__type_support.cpp.o[0m
+[3.257s] [ 22%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/orbbec_camera_msgs/srv/get_camera_info__type_support.cpp.o[0m
+[3.257s] [ 24%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/orbbec_camera_msgs/srv/get_string__type_support.cpp.o[0m
+[3.258s] [ 24%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/orbbec_camera_msgs/msg/extrinsics__type_support.cpp.o[0m
+[3.258s] [ 24%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/orbbec_camera_msgs/srv/get_int32__type_support.cpp.o[0m
+[3.258s] [ 25%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/orbbec_camera_msgs/srv/set_string__type_support.cpp.o[0m
+[3.258s] [ 25%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/orbbec_camera_msgs/srv/set_arrays__type_support.cpp.o[0m
+[3.258s] [ 26%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/orbbec_camera_msgs/srv/set_int32__type_support.cpp.o[0m
+[3.260s] [ 26%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/orbbec_camera_msgs/srv/set_filter__type_support.cpp.o[0m
+[3.469s] [ 26%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/orbbec_camera_msgs/msg/device_info__type_support.cpp.o[0m
+[3.476s] [ 27%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/orbbec_camera_msgs/srv/get_user_calib_params__type_support.cpp.o[0m
+[3.476s] [ 28%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/orbbec_camera_msgs/srv/set_user_calib_params__type_support.cpp.o[0m
+[3.477s] [ 29%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/orbbec_camera_msgs/msg/device_status__type_support.cpp.o[0m
+[3.477s] [ 29%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/orbbec_camera_msgs/msg/metadata__type_support.cpp.o[0m
+[3.479s] [ 30%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/orbbec_camera_msgs/msg/extrinsics__type_support.cpp.o[0m
+[3.482s] [ 31%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/orbbec_camera_msgs/msg/imu_info__type_support.cpp.o[0m
+[3.488s] [ 31%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/orbbec_camera_msgs/msg/rgbd__type_support.cpp.o[0m
+[3.491s] [ 32%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/orbbec_camera_msgs/srv/get_bool__type_support.cpp.o[0m
+[3.498s] [ 33%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/orbbec_camera_msgs/srv/get_device_info__type_support.cpp.o[0m
+[3.499s] [ 33%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/orbbec_camera_msgs/srv/get_camera_info__type_support.cpp.o[0m
+[3.499s] [ 34%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/orbbec_camera_msgs/srv/get_int32__type_support.cpp.o[0m
+[3.501s] [ 34%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/orbbec_camera_msgs/srv/set_filter__type_support.cpp.o[0m
+[3.501s] [ 35%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/orbbec_camera_msgs/srv/get_string__type_support.cpp.o[0m
+[3.504s] [ 36%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/orbbec_camera_msgs/srv/set_int32__type_support.cpp.o[0m
+[3.507s] [ 36%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/orbbec_camera_msgs/srv/set_string__type_support.cpp.o[0m
+[3.513s] [ 37%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/orbbec_camera_msgs/srv/get_user_calib_params__type_support.cpp.o[0m
+[3.513s] [ 38%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/orbbec_camera_msgs/srv/set_arrays__type_support.cpp.o[0m
+[3.515s] [ 38%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/orbbec_camera_msgs/srv/set_user_calib_params__type_support.cpp.o[0m
+[3.537s] [ 39%] [32m[1mLinking CXX shared library liborbbec_camera_msgs__rosidl_typesupport_c.so[0m
+[3.545s] [ 39%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/orbbec_camera_msgs/msg/detail/device_status__type_support.cpp.o[0m
+[3.545s] [ 40%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/orbbec_camera_msgs/msg/detail/metadata__type_support.cpp.o[0m
+[3.545s] [ 40%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/orbbec_camera_msgs/msg/detail/imu_info__type_support.cpp.o[0m
+[3.546s] [ 42%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/orbbec_camera_msgs/msg/detail/device_info__type_support.cpp.o[0m
+[3.546s] [ 42%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/orbbec_camera_msgs/msg/detail/extrinsics__type_support.cpp.o[0m
+[3.546s] [ 42%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/orbbec_camera_msgs/srv/detail/get_device_info__type_support.cpp.o[0m
+[3.546s] [ 43%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/orbbec_camera_msgs/msg/detail/rgbd__type_support.cpp.o[0m
+[3.546s] [ 43%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/orbbec_camera_msgs/srv/detail/get_int32__type_support.cpp.o[0m
+[3.547s] [ 44%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/orbbec_camera_msgs/srv/detail/get_bool__type_support.cpp.o[0m
+[3.547s] [ 44%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/orbbec_camera_msgs/srv/detail/set_int32__type_support.cpp.o[0m
+[3.547s] [ 45%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/orbbec_camera_msgs/srv/detail/get_string__type_support.cpp.o[0m
+[3.547s] [ 46%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/orbbec_camera_msgs/srv/detail/set_filter__type_support.cpp.o[0m
+[3.551s] [ 47%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/orbbec_camera_msgs/srv/detail/get_camera_info__type_support.cpp.o[0m
+[3.551s] [ 48%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/orbbec_camera_msgs/srv/detail/set_string__type_support.cpp.o[0m
+[3.592s] [ 48%] Built target orbbec_camera_msgs__rosidl_typesupport_c
+[3.598s] [ 49%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/orbbec_camera_msgs/srv/detail/set_arrays__type_support.cpp.o[0m
+[3.694s] [ 49%] [32m[1mLinking CXX shared library liborbbec_camera_msgs__rosidl_typesupport_cpp.so[0m
+[3.697s] [ 49%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/orbbec_camera_msgs/srv/detail/get_user_calib_params__type_support.cpp.o[0m
+[3.736s] [ 49%] Built target orbbec_camera_msgs__rosidl_typesupport_cpp
+[3.756s] [ 50%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/orbbec_camera_msgs/srv/detail/set_user_calib_params__type_support.cpp.o[0m
+[3.872s] [ 51%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/orbbec_camera_msgs/msg/detail/device_info__type_support.c.o[0m
+[3.872s] [ 51%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/orbbec_camera_msgs/msg/detail/device_status__type_support.c.o[0m
+[3.874s] [ 52%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/orbbec_camera_msgs/msg/detail/extrinsics__type_support.c.o[0m
+[3.875s] [ 53%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/orbbec_camera_msgs/msg/detail/metadata__type_support.c.o[0m
+[3.875s] [ 53%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/orbbec_camera_msgs/msg/detail/imu_info__type_support.c.o[0m
+[3.876s] [ 54%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/orbbec_camera_msgs/msg/detail/rgbd__type_support.c.o[0m
+[3.876s] [ 54%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/orbbec_camera_msgs/srv/detail/get_bool__type_support.c.o[0m
+[3.883s] [ 55%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/orbbec_camera_msgs/srv/detail/get_device_info__type_support.c.o[0m
+[3.889s] [ 56%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/orbbec_camera_msgs/srv/detail/get_camera_info__type_support.c.o[0m
+[3.899s] [ 56%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/orbbec_camera_msgs/srv/detail/get_int32__type_support.c.o[0m
+[3.901s] [ 57%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/orbbec_camera_msgs/srv/detail/get_string__type_support.c.o[0m
+[3.903s] [ 58%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/orbbec_camera_msgs/srv/detail/set_filter__type_support.c.o[0m
+[3.904s] [ 59%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/orbbec_camera_msgs/srv/detail/set_int32__type_support.c.o[0m
+[3.904s] [ 59%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/orbbec_camera_msgs/srv/detail/set_string__type_support.c.o[0m
+[3.906s] [ 59%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/orbbec_camera_msgs/srv/detail/set_arrays__type_support.c.o[0m
+[3.911s] [ 60%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/orbbec_camera_msgs/srv/detail/get_user_calib_params__type_support.c.o[0m
+[3.914s] [ 61%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/orbbec_camera_msgs/srv/detail/set_user_calib_params__type_support.c.o[0m
+[3.914s] [ 61%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/orbbec_camera_msgs/msg/detail/device_info__type_support_c.cpp.o[0m
+[3.914s] [ 62%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/orbbec_camera_msgs/msg/detail/device_status__type_support_c.cpp.o[0m
+[3.921s] [ 63%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/orbbec_camera_msgs/msg/detail/extrinsics__type_support_c.cpp.o[0m
+[3.922s] [ 64%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/orbbec_camera_msgs/msg/detail/dds_fastrtps/device_info__type_support.cpp.o[0m
+[3.924s] [ 64%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/orbbec_camera_msgs/msg/detail/metadata__type_support_c.cpp.o[0m
+[3.929s] [ 66%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/orbbec_camera_msgs/msg/detail/rgbd__type_support_c.cpp.o[0m
+[3.929s] [ 66%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/orbbec_camera_msgs/msg/detail/imu_info__type_support_c.cpp.o[0m
+[3.933s] [ 66%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/orbbec_camera_msgs/msg/detail/dds_fastrtps/device_status__type_support.cpp.o[0m
+[3.933s] [ 66%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/orbbec_camera_msgs/srv/detail/get_bool__type_support_c.cpp.o[0m
+[3.933s] [ 67%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/orbbec_camera_msgs/msg/detail/dds_fastrtps/extrinsics__type_support.cpp.o[0m
+[3.945s] [ 67%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/orbbec_camera_msgs/msg/detail/dds_fastrtps/imu_info__type_support.cpp.o[0m
+[3.945s] [ 68%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/orbbec_camera_msgs/msg/detail/dds_fastrtps/metadata__type_support.cpp.o[0m
+[3.949s] [ 70%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/orbbec_camera_msgs/msg/detail/dds_fastrtps/rgbd__type_support.cpp.o[0m
+[3.949s] [ 70%] [32m[1mLinking C shared library liborbbec_camera_msgs__rosidl_typesupport_introspection_c.so[0m
+[3.949s] [ 70%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/orbbec_camera_msgs/srv/detail/get_device_info__type_support_c.cpp.o[0m
+[3.956s] [ 70%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/orbbec_camera_msgs/srv/detail/dds_fastrtps/get_bool__type_support.cpp.o[0m
+[3.990s] [ 71%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/orbbec_camera_msgs/srv/detail/dds_fastrtps/get_device_info__type_support.cpp.o[0m
+[3.996s] [ 71%] Built target orbbec_camera_msgs__rosidl_typesupport_introspection_c
+[4.009s] [ 71%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/orbbec_camera_msgs/srv/detail/get_camera_info__type_support_c.cpp.o[0m
+[4.023s] [ 72%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/orbbec_camera_msgs/srv/detail/dds_fastrtps/get_camera_info__type_support.cpp.o[0m
+[4.035s] [ 72%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/orbbec_camera_msgs/srv/detail/dds_fastrtps/get_int32__type_support.cpp.o[0m
+[4.122s] [ 73%] [32m[1mLinking CXX shared library liborbbec_camera_msgs__rosidl_typesupport_introspection_cpp.so[0m
+[4.197s] [ 74%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/orbbec_camera_msgs/srv/detail/dds_fastrtps/get_string__type_support.cpp.o[0m
+[4.200s] [ 75%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/orbbec_camera_msgs/srv/detail/dds_fastrtps/set_filter__type_support.cpp.o[0m
+[4.212s] [ 75%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/orbbec_camera_msgs/srv/detail/dds_fastrtps/set_int32__type_support.cpp.o[0m
+[4.215s] [ 75%] Built target orbbec_camera_msgs__rosidl_typesupport_introspection_cpp
+[4.222s] [ 76%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/orbbec_camera_msgs/srv/detail/get_int32__type_support_c.cpp.o[0m
+[4.228s] [ 77%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/orbbec_camera_msgs/srv/detail/get_string__type_support_c.cpp.o[0m
+[4.255s] [ 77%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/orbbec_camera_msgs/srv/detail/set_filter__type_support_c.cpp.o[0m
+[4.258s] [ 78%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/orbbec_camera_msgs/srv/detail/dds_fastrtps/set_string__type_support.cpp.o[0m
+[4.264s] [ 78%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/orbbec_camera_msgs/srv/detail/dds_fastrtps/set_arrays__type_support.cpp.o[0m
+[4.281s] [ 79%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/orbbec_camera_msgs/srv/detail/set_int32__type_support_c.cpp.o[0m
+[4.286s] [ 80%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/orbbec_camera_msgs/srv/detail/set_string__type_support_c.cpp.o[0m
+[4.299s] [ 80%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/orbbec_camera_msgs/srv/detail/set_arrays__type_support_c.cpp.o[0m
+[4.300s] [ 81%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/orbbec_camera_msgs/srv/detail/dds_fastrtps/get_user_calib_params__type_support.cpp.o[0m
+[4.301s] [ 82%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/orbbec_camera_msgs/srv/detail/dds_fastrtps/set_user_calib_params__type_support.cpp.o[0m
+[4.307s] [ 83%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/orbbec_camera_msgs/srv/detail/get_user_calib_params__type_support_c.cpp.o[0m
+[4.345s] [ 84%] [32mBuilding CXX object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/orbbec_camera_msgs/srv/detail/set_user_calib_params__type_support_c.cpp.o[0m
+[4.600s] [ 84%] [32m[1mLinking CXX shared library liborbbec_camera_msgs__rosidl_typesupport_fastrtps_c.so[0m
+[4.613s] [ 84%] [32m[1mLinking CXX shared library liborbbec_camera_msgs__rosidl_typesupport_fastrtps_cpp.so[0m
+[4.651s] [ 84%] Built target orbbec_camera_msgs__rosidl_typesupport_fastrtps_c
+[4.661s] [ 84%] Built target orbbec_camera_msgs__rosidl_typesupport_fastrtps_cpp
+[4.673s] [ 84%] Built target orbbec_camera_msgs
+[4.685s] [ 85%] [34m[1mGenerating Python code for ROS interfaces[0m
+[5.984s] [ 85%] Built target orbbec_camera_msgs__py
+[5.998s] [ 86%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_py.dir/rosidl_generator_py/orbbec_camera_msgs/msg/_extrinsics_s.c.o[0m
+[5.998s] [ 86%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_py.dir/rosidl_generator_py/orbbec_camera_msgs/srv/_get_camera_info_s.c.o[0m
+[5.999s] [ 87%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_py.dir/rosidl_generator_py/orbbec_camera_msgs/msg/_metadata_s.c.o[0m
+[5.999s] [ 87%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_py.dir/rosidl_generator_py/orbbec_camera_msgs/msg/_imu_info_s.c.o[0m
+[5.999s] [ 87%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_py.dir/rosidl_generator_py/orbbec_camera_msgs/msg/_rgbd_s.c.o[0m
+[5.999s] [ 88%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_py.dir/rosidl_generator_py/orbbec_camera_msgs/srv/_get_bool_s.c.o[0m
+[5.999s] [ 89%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_py.dir/rosidl_generator_py/orbbec_camera_msgs/srv/_get_device_info_s.c.o[0m
+[5.999s] [ 90%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_py.dir/rosidl_generator_py/orbbec_camera_msgs/srv/_get_int32_s.c.o[0m
+[6.000s] [ 91%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_py.dir/rosidl_generator_py/orbbec_camera_msgs/msg/_device_info_s.c.o[0m
+[6.000s] [ 91%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_py.dir/rosidl_generator_py/orbbec_camera_msgs/msg/_device_status_s.c.o[0m
+[6.000s] [ 91%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_py.dir/rosidl_generator_py/orbbec_camera_msgs/srv/_set_filter_s.c.o[0m
+[6.000s] [ 92%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_py.dir/rosidl_generator_py/orbbec_camera_msgs/srv/_set_int32_s.c.o[0m
+[6.001s] [ 93%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_py.dir/rosidl_generator_py/orbbec_camera_msgs/srv/_set_string_s.c.o[0m
+[6.001s] [ 94%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_py.dir/rosidl_generator_py/orbbec_camera_msgs/srv/_set_arrays_s.c.o[0m
+[6.001s] [ 94%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_py.dir/rosidl_generator_py/orbbec_camera_msgs/srv/_get_user_calib_params_s.c.o[0m
+[6.001s] [ 94%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_py.dir/rosidl_generator_py/orbbec_camera_msgs/srv/_set_user_calib_params_s.c.o[0m
+[6.002s] [ 95%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_generator_py.dir/rosidl_generator_py/orbbec_camera_msgs/srv/_get_string_s.c.o[0m
+[6.188s] [ 96%] [32m[1mLinking C shared library rosidl_generator_py/orbbec_camera_msgs/liborbbec_camera_msgs__rosidl_generator_py.so[0m
+[6.217s] [ 96%] Built target orbbec_camera_msgs__rosidl_generator_py
+[6.228s] [ 97%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_c__pyext.dir/rosidl_generator_py/orbbec_camera_msgs/_orbbec_camera_msgs_s.ep.rosidl_typesupport_c.c.o[0m
+[6.232s] [ 99%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_introspection_c__pyext.dir/rosidl_generator_py/orbbec_camera_msgs/_orbbec_camera_msgs_s.ep.rosidl_typesupport_introspection_c.c.o[0m
+[6.232s] [ 99%] [32mBuilding C object CMakeFiles/orbbec_camera_msgs__rosidl_typesupport_fastrtps_c__pyext.dir/rosidl_generator_py/orbbec_camera_msgs/_orbbec_camera_msgs_s.ep.rosidl_typesupport_fastrtps_c.c.o[0m
+[6.329s] [ 99%] [32m[1mLinking C shared library rosidl_generator_py/orbbec_camera_msgs/orbbec_camera_msgs_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so[0m
+[6.330s] [100%] [32m[1mLinking C shared library rosidl_generator_py/orbbec_camera_msgs/orbbec_camera_msgs_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so[0m
+[6.332s] [100%] [32m[1mLinking C shared library rosidl_generator_py/orbbec_camera_msgs/orbbec_camera_msgs_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so[0m
+[6.355s] [100%] Built target orbbec_camera_msgs__rosidl_typesupport_c__pyext
+[6.355s] [100%] Built target orbbec_camera_msgs__rosidl_typesupport_introspection_c__pyext
+[6.360s] [100%] Built target orbbec_camera_msgs__rosidl_typesupport_fastrtps_c__pyext
+[6.367s] Invoked command in '/home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction:/home/yeah2/ros2_ws/install/trajectory_recorder:/home/yeah2/ros2_ws/install/joy_traj_param:/home/yeah2/ros2_ws/install/irim_control_panel_n_dashboard:/home/yeah2/ros2_ws/install/iri_zmq_ros2_bridge:/opt/ros/humble /usr/bin/cmake --build /home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs -- -j20 -l20
+[6.368s] Invoking command in '/home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction:/home/yeah2/ros2_ws/install/trajectory_recorder:/home/yeah2/ros2_ws/install/joy_traj_param:/home/yeah2/ros2_ws/install/irim_control_panel_n_dashboard:/home/yeah2/ros2_ws/install/iri_zmq_ros2_bridge:/opt/ros/humble /usr/bin/cmake --install /home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs
+[6.374s] -- Install configuration: ""
+[6.375s] -- Execute custom install script
+[6.375s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/ament_index/resource_index/rosidl_interfaces/orbbec_camera_msgs
+[6.380s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/device_info__functions.h
+[6.385s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/device_info__struct.h
+[6.390s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/device_info__type_support.h
+[6.395s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/device_status__functions.h
+[6.401s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/device_status__struct.h
+[6.406s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/device_status__type_support.h
+[6.412s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/extrinsics__functions.h
+[6.416s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/extrinsics__struct.h
+[6.421s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/extrinsics__type_support.h
+[6.426s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/imu_info__functions.h
+[6.431s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/imu_info__struct.h
+[6.436s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/imu_info__type_support.h
+[6.440s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/metadata__functions.h
+[6.445s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/metadata__struct.h
+[6.449s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/metadata__type_support.h
+[6.453s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/rgbd__functions.h
+[6.457s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/rgbd__struct.h
+[6.461s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/rgbd__type_support.h
+[6.466s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/device_info.h
+[6.471s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/device_status.h
+[6.476s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/extrinsics.h
+[6.481s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/imu_info.h
+[6.486s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/metadata.h
+[6.490s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/rgbd.h
+[6.495s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/rosidl_generator_c__visibility_control.h
+[6.499s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_bool__functions.h
+[6.505s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_bool__struct.h
+[6.509s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_bool__type_support.h
+[6.515s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_camera_info__functions.h
+[6.519s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_camera_info__struct.h
+[6.523s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_camera_info__type_support.h
+[6.527s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_device_info__functions.h
+[6.532s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_device_info__struct.h
+[6.538s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_device_info__type_support.h
+[6.542s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_int32__functions.h
+[6.547s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_int32__struct.h
+[6.551s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_int32__type_support.h
+[6.557s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_string__functions.h
+[6.562s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_string__struct.h
+[6.567s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_string__type_support.h
+[6.573s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_user_calib_params__functions.h
+[6.579s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_user_calib_params__struct.h
+[6.585s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_user_calib_params__type_support.h
+[6.591s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_arrays__functions.h
+[6.595s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_arrays__struct.h
+[6.601s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_arrays__type_support.h
+[6.607s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_filter__functions.h
+[6.613s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_filter__struct.h
+[6.618s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_filter__type_support.h
+[6.622s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_int32__functions.h
+[6.628s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_int32__struct.h
+[6.632s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_int32__type_support.h
+[6.639s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_string__functions.h
+[6.644s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_string__struct.h
+[6.648s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_string__type_support.h
+[6.652s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_user_calib_params__functions.h
+[6.658s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_user_calib_params__struct.h
+[6.662s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_user_calib_params__type_support.h
+[6.667s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/get_bool.h
+[6.671s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/get_camera_info.h
+[6.676s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/get_device_info.h
+[6.681s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/get_int32.h
+[6.688s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/get_string.h
+[6.692s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/get_user_calib_params.h
+[6.697s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/set_arrays.h
+[6.702s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/set_filter.h
+[6.708s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/set_int32.h
+[6.713s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/set_string.h
+[6.718s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/set_user_calib_params.h
+[6.723s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/environment/library_path.sh
+[6.727s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/environment/library_path.dsv
+[6.733s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/device_info__rosidl_typesupport_fastrtps_c.h
+[6.738s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/device_status__rosidl_typesupport_fastrtps_c.h
+[6.742s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/extrinsics__rosidl_typesupport_fastrtps_c.h
+[6.747s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/imu_info__rosidl_typesupport_fastrtps_c.h
+[6.752s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/metadata__rosidl_typesupport_fastrtps_c.h
+[6.757s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/rgbd__rosidl_typesupport_fastrtps_c.h
+[6.761s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/rosidl_typesupport_fastrtps_c__visibility_control.h
+[6.767s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_bool__rosidl_typesupport_fastrtps_c.h
+[6.773s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_camera_info__rosidl_typesupport_fastrtps_c.h
+[6.777s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_device_info__rosidl_typesupport_fastrtps_c.h
+[6.782s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_int32__rosidl_typesupport_fastrtps_c.h
+[6.788s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_string__rosidl_typesupport_fastrtps_c.h
+[6.793s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_user_calib_params__rosidl_typesupport_fastrtps_c.h
+[6.798s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_arrays__rosidl_typesupport_fastrtps_c.h
+[6.802s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_filter__rosidl_typesupport_fastrtps_c.h
+[6.808s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_int32__rosidl_typesupport_fastrtps_c.h
+[6.812s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_string__rosidl_typesupport_fastrtps_c.h
+[6.819s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_user_calib_params__rosidl_typesupport_fastrtps_c.h
+[6.824s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/device_info__rosidl_typesupport_introspection_c.h
+[6.830s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/device_status__rosidl_typesupport_introspection_c.h
+[6.835s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/extrinsics__rosidl_typesupport_introspection_c.h
+[6.840s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/imu_info__rosidl_typesupport_introspection_c.h
+[6.844s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/metadata__rosidl_typesupport_introspection_c.h
+[6.850s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/rgbd__rosidl_typesupport_introspection_c.h
+[6.855s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/rosidl_typesupport_introspection_c__visibility_control.h
+[6.861s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_bool__rosidl_typesupport_introspection_c.h
+[6.865s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_camera_info__rosidl_typesupport_introspection_c.h
+[6.869s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_device_info__rosidl_typesupport_introspection_c.h
+[6.875s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_int32__rosidl_typesupport_introspection_c.h
+[6.880s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_string__rosidl_typesupport_introspection_c.h
+[6.885s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_user_calib_params__rosidl_typesupport_introspection_c.h
+[6.890s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_arrays__rosidl_typesupport_introspection_c.h
+[6.895s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_filter__rosidl_typesupport_introspection_c.h
+[6.901s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_int32__rosidl_typesupport_introspection_c.h
+[6.906s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_string__rosidl_typesupport_introspection_c.h
+[6.913s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_user_calib_params__rosidl_typesupport_introspection_c.h
+[6.918s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/device_info__builder.hpp
+[6.923s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/device_info__struct.hpp
+[6.930s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/device_info__traits.hpp
+[6.935s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/device_info__type_support.hpp
+[6.939s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/device_status__builder.hpp
+[6.944s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/device_status__struct.hpp
+[6.949s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/device_status__traits.hpp
+[6.954s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/device_status__type_support.hpp
+[6.959s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/extrinsics__builder.hpp
+[6.965s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/extrinsics__struct.hpp
+[6.969s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/extrinsics__traits.hpp
+[6.975s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/extrinsics__type_support.hpp
+[6.980s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/imu_info__builder.hpp
+[6.985s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/imu_info__struct.hpp
+[6.989s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/imu_info__traits.hpp
+[6.995s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/imu_info__type_support.hpp
+[7.000s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/metadata__builder.hpp
+[7.005s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/metadata__struct.hpp
+[7.010s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/metadata__traits.hpp
+[7.014s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/metadata__type_support.hpp
+[7.018s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/rgbd__builder.hpp
+[7.024s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/rgbd__struct.hpp
+[7.029s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/rgbd__traits.hpp
+[7.035s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/rgbd__type_support.hpp
+[7.040s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/device_info.hpp
+[7.045s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/device_status.hpp
+[7.050s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/extrinsics.hpp
+[7.056s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/imu_info.hpp
+[7.061s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/metadata.hpp
+[7.067s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/rgbd.hpp
+[7.072s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
+[7.077s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_bool__builder.hpp
+[7.081s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_bool__struct.hpp
+[7.087s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_bool__traits.hpp
+[7.092s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_bool__type_support.hpp
+[7.097s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_camera_info__builder.hpp
+[7.102s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_camera_info__struct.hpp
+[7.109s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_camera_info__traits.hpp
+[7.115s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_camera_info__type_support.hpp
+[7.121s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_device_info__builder.hpp
+[7.125s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_device_info__struct.hpp
+[7.130s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_device_info__traits.hpp
+[7.136s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_device_info__type_support.hpp
+[7.140s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_int32__builder.hpp
+[7.145s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_int32__struct.hpp
+[7.149s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_int32__traits.hpp
+[7.156s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_int32__type_support.hpp
+[7.160s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_string__builder.hpp
+[7.165s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_string__struct.hpp
+[7.169s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_string__traits.hpp
+[7.175s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_string__type_support.hpp
+[7.179s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_user_calib_params__builder.hpp
+[7.184s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_user_calib_params__struct.hpp
+[7.189s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_user_calib_params__traits.hpp
+[7.196s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_user_calib_params__type_support.hpp
+[7.201s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_arrays__builder.hpp
+[7.206s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_arrays__struct.hpp
+[7.212s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_arrays__traits.hpp
+[7.218s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_arrays__type_support.hpp
+[7.223s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_filter__builder.hpp
+[7.227s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_filter__struct.hpp
+[7.232s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_filter__traits.hpp
+[7.238s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_filter__type_support.hpp
+[7.243s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_int32__builder.hpp
+[7.247s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_int32__struct.hpp
+[7.252s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_int32__traits.hpp
+[7.258s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_int32__type_support.hpp
+[7.263s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_string__builder.hpp
+[7.267s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_string__struct.hpp
+[7.272s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_string__traits.hpp
+[7.277s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_string__type_support.hpp
+[7.282s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_user_calib_params__builder.hpp
+[7.286s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_user_calib_params__struct.hpp
+[7.291s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_user_calib_params__traits.hpp
+[7.296s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_user_calib_params__type_support.hpp
+[7.301s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/get_bool.hpp
+[7.306s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/get_camera_info.hpp
+[7.311s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/get_device_info.hpp
+[7.316s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/get_int32.hpp
+[7.320s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/get_string.hpp
+[7.325s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/get_user_calib_params.hpp
+[7.331s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/set_arrays.hpp
+[7.337s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/set_filter.hpp
+[7.341s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/set_int32.hpp
+[7.346s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/set_string.hpp
+[7.350s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/set_user_calib_params.hpp
+[7.356s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/device_info__rosidl_typesupport_fastrtps_cpp.hpp
+[7.360s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/device_status__rosidl_typesupport_fastrtps_cpp.hpp
+[7.365s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/extrinsics__rosidl_typesupport_fastrtps_cpp.hpp
+[7.370s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/imu_info__rosidl_typesupport_fastrtps_cpp.hpp
+[7.376s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/metadata__rosidl_typesupport_fastrtps_cpp.hpp
+[7.381s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/rgbd__rosidl_typesupport_fastrtps_cpp.hpp
+[7.385s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h
+[7.390s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_bool__rosidl_typesupport_fastrtps_cpp.hpp
+[7.396s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_camera_info__rosidl_typesupport_fastrtps_cpp.hpp
+[7.401s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_device_info__rosidl_typesupport_fastrtps_cpp.hpp
+[7.406s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_int32__rosidl_typesupport_fastrtps_cpp.hpp
+[7.411s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_string__rosidl_typesupport_fastrtps_cpp.hpp
+[7.415s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_user_calib_params__rosidl_typesupport_fastrtps_cpp.hpp
+[7.420s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_arrays__rosidl_typesupport_fastrtps_cpp.hpp
+[7.425s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_filter__rosidl_typesupport_fastrtps_cpp.hpp
+[7.430s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_int32__rosidl_typesupport_fastrtps_cpp.hpp
+[7.435s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_string__rosidl_typesupport_fastrtps_cpp.hpp
+[7.440s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_user_calib_params__rosidl_typesupport_fastrtps_cpp.hpp
+[7.445s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/device_info__rosidl_typesupport_introspection_cpp.hpp
+[7.450s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/device_status__rosidl_typesupport_introspection_cpp.hpp
+[7.454s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/extrinsics__rosidl_typesupport_introspection_cpp.hpp
+[7.460s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/imu_info__rosidl_typesupport_introspection_cpp.hpp
+[7.464s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/metadata__rosidl_typesupport_introspection_cpp.hpp
+[7.468s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/msg/detail/rgbd__rosidl_typesupport_introspection_cpp.hpp
+[7.473s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_bool__rosidl_typesupport_introspection_cpp.hpp
+[7.478s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_camera_info__rosidl_typesupport_introspection_cpp.hpp
+[7.482s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_device_info__rosidl_typesupport_introspection_cpp.hpp
+[7.487s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_int32__rosidl_typesupport_introspection_cpp.hpp
+[7.492s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_string__rosidl_typesupport_introspection_cpp.hpp
+[7.497s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/get_user_calib_params__rosidl_typesupport_introspection_cpp.hpp
+[7.502s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_arrays__rosidl_typesupport_introspection_cpp.hpp
+[7.507s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_filter__rosidl_typesupport_introspection_cpp.hpp
+[7.513s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_int32__rosidl_typesupport_introspection_cpp.hpp
+[7.519s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_string__rosidl_typesupport_introspection_cpp.hpp
+[7.523s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/include/orbbec_camera_msgs/orbbec_camera_msgs/srv/detail/set_user_calib_params__rosidl_typesupport_introspection_cpp.hpp
+[7.528s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/environment/pythonpath.sh
+[7.532s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/environment/pythonpath.dsv
+[7.537s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs-2.5.5-py3.10.egg-info/PKG-INFO
+[7.543s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs-2.5.5-py3.10.egg-info/SOURCES.txt
+[7.548s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs-2.5.5-py3.10.egg-info/dependency_links.txt
+[7.554s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs-2.5.5-py3.10.egg-info/top_level.txt
+[7.558s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/__init__.py
+[7.563s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/_orbbec_camera_msgs_s.ep.rosidl_typesupport_c.c
+[7.567s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/_orbbec_camera_msgs_s.ep.rosidl_typesupport_fastrtps_c.c
+[7.571s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/_orbbec_camera_msgs_s.ep.rosidl_typesupport_introspection_c.c
+[7.575s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/liborbbec_camera_msgs__rosidl_generator_py.so
+[7.580s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/msg/__init__.py
+[7.584s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/msg/_device_info.py
+[7.589s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/msg/_device_info_s.c
+[7.593s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/msg/_device_status.py
+[7.597s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/msg/_device_status_s.c
+[7.602s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/msg/_extrinsics.py
+[7.607s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/msg/_extrinsics_s.c
+[7.612s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/msg/_imu_info.py
+[7.617s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/msg/_imu_info_s.c
+[7.622s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/msg/_metadata.py
+[7.626s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/msg/_metadata_s.c
+[7.631s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/msg/_rgbd.py
+[7.635s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/msg/_rgbd_s.c
+[7.640s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/orbbec_camera_msgs_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so
+[7.645s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/orbbec_camera_msgs_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so
+[7.650s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/orbbec_camera_msgs_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so
+[7.655s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/__init__.py
+[7.660s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_get_bool.py
+[7.664s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_get_bool_s.c
+[7.670s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_get_camera_info.py
+[7.674s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_get_camera_info_s.c
+[7.678s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_get_device_info.py
+[7.682s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_get_device_info_s.c
+[7.687s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_get_int32.py
+[7.690s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_get_int32_s.c
+[7.695s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_get_string.py
+[7.700s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_get_string_s.c
+[7.705s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_get_user_calib_params.py
+[7.711s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_get_user_calib_params_s.c
+[7.716s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_set_arrays.py
+[7.721s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_set_arrays_s.c
+[7.726s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_set_filter.py
+[7.731s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_set_filter_s.c
+[7.736s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_set_int32.py
+[7.740s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_set_int32_s.c
+[7.745s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_set_string.py
+[7.751s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_set_string_s.c
+[7.755s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_set_user_calib_params.py
+[7.761s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_set_user_calib_params_s.c
+[7.766s] -- Up-to-date symlink: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/orbbec_camera_msgs_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so
+[7.766s] -- Up-to-date symlink: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/orbbec_camera_msgs_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so
+[7.766s] -- Up-to-date symlink: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/orbbec_camera_msgs_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so
+[7.766s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/msg/DeviceInfo.idl
+[7.772s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/msg/DeviceStatus.idl
+[7.777s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/msg/Extrinsics.idl
+[7.782s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/msg/Metadata.idl
+[7.786s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/msg/IMUInfo.idl
+[7.793s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/msg/RGBD.idl
+[7.801s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/GetBool.idl
+[7.807s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/GetDeviceInfo.idl
+[7.815s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/GetCameraInfo.idl
+[7.820s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/GetInt32.idl
+[7.825s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/GetString.idl
+[7.830s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/SetFilter.idl
+[7.837s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/SetInt32.idl
+[7.841s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/SetString.idl
+[7.846s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/SetArrays.idl
+[7.851s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/GetUserCalibParams.idl
+[7.857s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/SetUserCalibParams.idl
+[7.863s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/msg/DeviceInfo.msg
+[7.867s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/msg/DeviceStatus.msg
+[7.871s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/msg/Extrinsics.msg
+[7.876s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/msg/Metadata.msg
+[7.880s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/msg/IMUInfo.msg
+[7.885s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/msg/RGBD.msg
+[7.890s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/GetBool.srv
+[7.895s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/GetBool_Request.msg
+[7.900s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/GetBool_Response.msg
+[7.906s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/GetDeviceInfo.srv
+[7.913s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/GetDeviceInfo_Request.msg
+[7.918s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/GetDeviceInfo_Response.msg
+[7.923s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/GetCameraInfo.srv
+[7.928s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/GetCameraInfo_Request.msg
+[7.932s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/GetCameraInfo_Response.msg
+[7.937s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/GetInt32.srv
+[7.941s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/GetInt32_Request.msg
+[7.946s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/GetInt32_Response.msg
+[7.951s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/GetString.srv
+[7.957s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/GetString_Request.msg
+[7.962s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/GetString_Response.msg
+[7.967s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/SetFilter.srv
+[7.971s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/SetFilter_Request.msg
+[7.975s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/SetFilter_Response.msg
+[7.981s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/SetInt32.srv
+[7.986s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/SetInt32_Request.msg
+[7.990s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/SetInt32_Response.msg
+[7.996s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/SetString.srv
+[8.001s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/SetString_Request.msg
+[8.005s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/SetString_Response.msg
+[8.010s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/SetArrays.srv
+[8.015s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/SetArrays_Request.msg
+[8.019s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/SetArrays_Response.msg
+[8.024s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/GetUserCalibParams.srv
+[8.028s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/GetUserCalibParams_Request.msg
+[8.034s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/GetUserCalibParams_Response.msg
+[8.038s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/SetUserCalibParams.srv
+[8.042s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/SetUserCalibParams_Request.msg
+[8.047s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/srv/SetUserCalibParams_Response.msg
+[8.051s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/ament_index/resource_index/package_run_dependencies/orbbec_camera_msgs
+[8.058s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/ament_index/resource_index/parent_prefix_path/orbbec_camera_msgs
+[8.062s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/environment/ament_prefix_path.sh
+[8.067s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/environment/ament_prefix_path.dsv
+[8.071s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/environment/path.sh
+[8.076s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/environment/path.dsv
+[8.081s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/local_setup.bash
+[8.086s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/local_setup.sh
+[8.090s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/local_setup.zsh
+[8.095s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/local_setup.dsv
+[8.100s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/package.dsv
+[8.105s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/ament_index/resource_index/packages/orbbec_camera_msgs
+[8.110s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/cmake/rosidl_cmake-extras.cmake
+[8.115s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/cmake/ament_cmake_export_dependencies-extras.cmake
+[8.120s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/cmake/ament_cmake_export_include_directories-extras.cmake
+[8.125s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/cmake/ament_cmake_export_libraries-extras.cmake
+[8.129s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/cmake/ament_cmake_export_targets-extras.cmake
+[8.133s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/cmake/rosidl_cmake_export_typesupport_targets-extras.cmake
+[8.140s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/cmake/rosidl_cmake_export_typesupport_libraries-extras.cmake
+[8.144s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/cmake/orbbec_camera_msgsConfig.cmake
+[8.148s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/cmake/orbbec_camera_msgsConfig-version.cmake
+[8.152s] -- Symlinking: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/package.xml
+[8.157s] -- Installing: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/lib/liborbbec_camera_msgs__rosidl_generator_c.so
+[8.157s] -- Set runtime path of "/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/lib/liborbbec_camera_msgs__rosidl_generator_c.so" to ""
+[8.157s] -- Installing: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/lib/liborbbec_camera_msgs__rosidl_typesupport_fastrtps_c.so
+[8.157s] -- Set runtime path of "/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/lib/liborbbec_camera_msgs__rosidl_typesupport_fastrtps_c.so" to ""
+[8.157s] -- Installing: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/lib/liborbbec_camera_msgs__rosidl_typesupport_introspection_c.so
+[8.157s] -- Set runtime path of "/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/lib/liborbbec_camera_msgs__rosidl_typesupport_introspection_c.so" to ""
+[8.157s] -- Installing: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/lib/liborbbec_camera_msgs__rosidl_typesupport_c.so
+[8.157s] -- Set runtime path of "/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/lib/liborbbec_camera_msgs__rosidl_typesupport_c.so" to ""
+[8.158s] -- Installing: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/lib/liborbbec_camera_msgs__rosidl_typesupport_fastrtps_cpp.so
+[8.158s] -- Set runtime path of "/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/lib/liborbbec_camera_msgs__rosidl_typesupport_fastrtps_cpp.so" to ""
+[8.158s] -- Installing: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/lib/liborbbec_camera_msgs__rosidl_typesupport_introspection_cpp.so
+[8.158s] -- Set runtime path of "/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/lib/liborbbec_camera_msgs__rosidl_typesupport_introspection_cpp.so" to ""
+[8.158s] -- Installing: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/lib/liborbbec_camera_msgs__rosidl_typesupport_cpp.so
+[8.158s] -- Set runtime path of "/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/lib/liborbbec_camera_msgs__rosidl_typesupport_cpp.so" to ""
+[8.195s] Listing '/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs'...
+[8.195s] Compiling '/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/__init__.py'...
+[8.195s] Listing '/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/msg'...
+[8.195s] Compiling '/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/msg/__init__.py'...
+[8.195s] Compiling '/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/msg/_device_info.py'...
+[8.195s] Compiling '/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/msg/_device_status.py'...
+[8.195s] Compiling '/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/msg/_extrinsics.py'...
+[8.196s] Compiling '/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/msg/_imu_info.py'...
+[8.196s] Compiling '/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/msg/_metadata.py'...
+[8.196s] Compiling '/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/msg/_rgbd.py'...
+[8.196s] Listing '/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv'...
+[8.196s] Compiling '/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/__init__.py'...
+[8.196s] Compiling '/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_get_bool.py'...
+[8.196s] Compiling '/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_get_camera_info.py'...
+[8.196s] Compiling '/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_get_device_info.py'...
+[8.196s] Compiling '/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_get_int32.py'...
+[8.196s] Compiling '/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_get_string.py'...
+[8.196s] Compiling '/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_get_user_calib_params.py'...
+[8.196s] Compiling '/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_set_arrays.py'...
+[8.196s] Compiling '/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_set_filter.py'...
+[8.196s] Compiling '/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_set_int32.py'...
+[8.196s] Compiling '/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_set_string.py'...
+[8.196s] Compiling '/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/local/lib/python3.10/dist-packages/orbbec_camera_msgs/srv/_set_user_calib_params.py'...
+[8.198s] -- Installing: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/lib/liborbbec_camera_msgs__rosidl_generator_py.so
+[8.198s] -- Set runtime path of "/home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/lib/liborbbec_camera_msgs__rosidl_generator_py.so" to ""
+[8.198s] -- Installing: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/cmake/export_orbbec_camera_msgs__rosidl_generator_cExport.cmake
+[8.198s] -- Installing: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/cmake/export_orbbec_camera_msgs__rosidl_generator_cExport-noconfig.cmake
+[8.198s] -- Installing: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/cmake/export_orbbec_camera_msgs__rosidl_typesupport_fastrtps_cExport.cmake
+[8.198s] -- Installing: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/cmake/export_orbbec_camera_msgs__rosidl_typesupport_fastrtps_cExport-noconfig.cmake
+[8.198s] -- Installing: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/cmake/orbbec_camera_msgs__rosidl_typesupport_introspection_cExport.cmake
+[8.198s] -- Installing: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/cmake/orbbec_camera_msgs__rosidl_typesupport_introspection_cExport-noconfig.cmake
+[8.199s] -- Installing: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/cmake/orbbec_camera_msgs__rosidl_typesupport_cExport.cmake
+[8.199s] -- Installing: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/cmake/orbbec_camera_msgs__rosidl_typesupport_cExport-noconfig.cmake
+[8.199s] -- Installing: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/cmake/export_orbbec_camera_msgs__rosidl_generator_cppExport.cmake
+[8.199s] -- Installing: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/cmake/export_orbbec_camera_msgs__rosidl_typesupport_fastrtps_cppExport.cmake
+[8.199s] -- Installing: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/cmake/export_orbbec_camera_msgs__rosidl_typesupport_fastrtps_cppExport-noconfig.cmake
+[8.199s] -- Installing: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/cmake/orbbec_camera_msgs__rosidl_typesupport_introspection_cppExport.cmake
+[8.199s] -- Installing: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/cmake/orbbec_camera_msgs__rosidl_typesupport_introspection_cppExport-noconfig.cmake
+[8.199s] -- Installing: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/cmake/orbbec_camera_msgs__rosidl_typesupport_cppExport.cmake
+[8.199s] -- Installing: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/cmake/orbbec_camera_msgs__rosidl_typesupport_cppExport-noconfig.cmake
+[8.199s] -- Installing: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/cmake/export_orbbec_camera_msgs__rosidl_generator_pyExport.cmake
+[8.199s] -- Installing: /home/yeah2/allex_ces_idle_interaction_gui/install/orbbec_camera_msgs/share/orbbec_camera_msgs/cmake/export_orbbec_camera_msgs__rosidl_generator_pyExport-noconfig.cmake
+[8.201s] Invoked command in '/home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction:/home/yeah2/ros2_ws/install/trajectory_recorder:/home/yeah2/ros2_ws/install/joy_traj_param:/home/yeah2/ros2_ws/install/irim_control_panel_n_dashboard:/home/yeah2/ros2_ws/install/iri_zmq_ros2_bridge:/opt/ros/humble /usr/bin/cmake --install /home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs

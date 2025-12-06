@@ -1,0 +1,22 @@
+running develop
+running egg_info
+writing allex_ces_idle_interaction.egg-info/PKG-INFO
+writing dependency_links to allex_ces_idle_interaction.egg-info/dependency_links.txt
+writing entry points to allex_ces_idle_interaction.egg-info/entry_points.txt
+writing requirements to allex_ces_idle_interaction.egg-info/requires.txt
+writing top-level names to allex_ces_idle_interaction.egg-info/top_level.txt
+reading manifest file 'allex_ces_idle_interaction.egg-info/SOURCES.txt'
+writing manifest file 'allex_ces_idle_interaction.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/python3.10/site-packages/allex-ces-idle-interaction.egg-link (link to .)
+Installing allex_idle_interaction_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+Installing camera_test script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+Installing gaze_controller_neck_waist_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+Installing gui_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+Installing idle_interaction_gui_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+Installing llm_hand_gesture_clip_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+Installing tracking_fsm_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+Installing yolo_detection_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+
+Installed /home/yeah2/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction
+running symlink_data
