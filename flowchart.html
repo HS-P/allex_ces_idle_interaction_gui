@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>사람 추적 시스템 플로우차트</title>
+    <title>ALLEX CES Idle Interaction 시스템 플로우차트</title>
     <script type="module">
         import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
         mermaid.initialize({ startOnLoad: true, theme: 'default' });
@@ -11,7 +11,7 @@
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 1600px;
+            max-width: 1800px;
             margin: 0 auto;
             padding: 20px;
             background-color: #f5f5f5;
@@ -47,52 +47,139 @@
             margin-bottom: 20px;
             border-left: 4px solid #4CAF50;
         }
+        .node-box {
+            background-color: #fff;
+            border: 2px solid #4CAF50;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
-    <h1>🤖 사람 추적 시스템 플로우차트</h1>
+    <h1>🤖 ALLEX CES Idle Interaction 시스템 플로우차트</h1>
 
     <!-- ============================================ -->
-    <!-- 섹션 1: 전체 시스템 구조 및 초기화 -->
+    <!-- 섹션 1: 전체 시스템 구조 및 노드 간 통신 -->
     <!-- ============================================ -->
     <div class="section">
-        <h2>1. 전체 시스템 구조 및 초기화</h2>
+        <h2>1. 전체 시스템 구조 및 노드 간 통신</h2>
         <div class="description">
-            <strong>시스템 개요:</strong> CameraPublisher가 이미지를 받아 TrackerManager로 추적하고, ControllerManager로 목/허리를 제어하며, RoutineController로 로봇 동작을 제어합니다.
+            <strong>시스템 개요:</strong> ROS2 기반 분산 시스템으로 6개의 주요 노드가 토픽을 통해 통신합니다. 카메라 이미지 → YOLO 감지 → FSM 추적 → 로봇 제어 → GUI 표시 흐름으로 동작합니다.
         </div>
 
         <div class="mermaid">
 graph TB
-    Start([시작]) --> Init[CameraPublisher 초기화]
-    Init --> Sub[이미지 토픽 구독<br/>/camera/color/image_raw/compressed]
-    Sub --> TrackerInit[TrackerManager 초기화]
-    TrackerInit --> YOLOLoad[YOLO 모델 로드<br/>+ Face 모델 로드]
-    YOLOLoad --> GPUCheck{GPU 사용 가능?}
-    GPUCheck -->|Yes| GPUWarm[GPU 워밍업]
-    GPUCheck -->|No| CPUReady[CPU 준비]
-    GPUWarm --> ControllerInit[ControllerManager 초기화<br/>목/허리 Publisher 생성]
-    CPUReady --> ControllerInit
-    ControllerInit --> RoutineInit[RoutineController 초기화<br/>HMI 명령 Publisher 생성<br/>hmi/robot_command]
-    RoutineInit --> Ready[시스템 준비 완료]
-    Ready --> Spin[ROS2 Spin 시작]
-    Spin --> Callback[이미지 콜백 대기]
-    Callback --> End([종료])
+    subgraph "카메라 입력"
+        CAM[/camera/color/image_raw/compressed<br/>카메라 이미지]
+    end
+    
+    subgraph "노드 1: YOLO Detection Node"
+        YOLO[yolo_detection_node<br/>YOLO11n + Bot-SORT<br/>사람 감지 및 추적]
+        YOLO_IN[구독: 카메라 이미지<br/>구독: tracker_control]
+        YOLO_OUT[발행: detections<br/>BB box + track_id]
+    end
+    
+    subgraph "노드 2: Tracking FSM Node"
+        FSM[tracking_fsm_node<br/>상태 머신 처리<br/>타겟 선택 및 관리]
+        FSM_IN[구독: detections<br/>구독: 카메라 이미지<br/>구독: tracker_control<br/>구독: tracker_state_request<br/>구독: neck_angle]
+        FSM_OUT[발행: tracking_result<br/>상태 + 타겟 정보]
+    end
+    
+    subgraph "노드 3: Gaze Controller Node"
+        CTRL[gaze_controller_neck_waist_node<br/>목/허리 제어<br/>PID 제어]
+        CTRL_IN[구독: tracking_result<br/>구독: controller_control<br/>구독: 목/허리 위치]
+        CTRL_OUT[발행: 목/허리 명령<br/>발행: neck_angle<br/>발행: tracker_state_request]
+    end
+    
+    subgraph "노드 4: ALLEX Idle Interaction Node"
+        MAIN[allex_idle_interaction_node<br/>총괄 노드<br/>Routine 제어]
+        MAIN_IN[구독: 카메라 이미지<br/>구독: tracking_result<br/>구독: neck_angle<br/>구독: manual_control]
+        MAIN_OUT[발행: tracking_data<br/>발행: target_crop<br/>발행: tracker_control<br/>발행: controller_control<br/>발행: hmi/robot_command]
+    end
+    
+    subgraph "노드 5: LLM Hand Gesture CLIP Node"
+        LLM[llm_hand_gesture_clip_node<br/>손 제스처 인식<br/>CLIP 앙상블]
+        LLM_IN[구독: target_crop<br/>구독: llm/control]
+        LLM_OUT[발행: llm/response<br/>발행: llm/status]
+    end
+    
+    subgraph "노드 6: GUI Node"
+        GUI[idle_interaction_gui_node<br/>GUI 인터페이스]
+        GUI_IN[구독: 모든 상태 정보]
+        GUI_OUT[발행: manual_control<br/>발행: llm/control]
+    end
+    
+    subgraph "로봇 하드웨어"
+        ROBOT[로봇 하드웨어<br/>목/허리 모터]
+        ROBOT_IN[구독: 목/허리 명령]
+        ROBOT_OUT[발행: 목/허리 위치]
+    end
+    
+    CAM --> YOLO_IN
+    YOLO_IN --> YOLO
+    YOLO --> YOLO_OUT
+    YOLO_OUT --> FSM_IN
+    CAM --> FSM_IN
+    FSM_IN --> FSM
+    FSM --> FSM_OUT
+    FSM_OUT --> CTRL_IN
+    CTRL_IN --> CTRL
+    CTRL --> CTRL_OUT
+    CTRL_OUT --> ROBOT_IN
+    ROBOT_OUT --> CTRL_IN
+    
+    CAM --> MAIN_IN
+    FSM_OUT --> MAIN_IN
+    CTRL_OUT --> MAIN_IN
+    MAIN_IN --> MAIN
+    MAIN --> MAIN_OUT
+    MAIN_OUT --> LLM_IN
+    MAIN_OUT --> GUI_IN
+    GUI_OUT --> MAIN_IN
+    GUI_OUT --> LLM_IN
+    LLM_IN --> LLM
+    LLM --> LLM_OUT
+    LLM_OUT --> GUI_IN
+    
+    style YOLO fill:#2196F3,color:#fff
+    style FSM fill:#4CAF50,color:#fff
+    style CTRL fill:#FF9800,color:#fff
+    style MAIN fill:#9C27B0,color:#fff
+    style LLM fill:#E91E63,color:#fff
+    style GUI fill:#607D8B,color:#fff
+    style ROBOT fill:#795548,color:#fff
         </div>
 
         <div class="mermaid">
 graph LR
-    A[CameraPublisher] --> B[TrackerManager<br/>YOLO + Bot-SORT]
-    A --> C[ControllerManager<br/>목/허리 제어]
-    A --> D[RoutineController<br/>로봇 동작 제어]
+    subgraph "주요 토픽"
+        T1[/camera/color/image_raw/compressed]
+        T2[/allex_camera/detections]
+        T3[/allex_camera/tracking_result]
+        T4[/allex_camera/tracking_data]
+        T5[/allex_camera/target_crop/compressed]
+        T6[/allex_camera/neck_angle]
+        T7[/allex_camera/tracker_control]
+        T8[/allex_camera/controller_control]
+        T9[/allex_camera/tracker_state_request]
+        T10[/allex_camera/manual_control]
+        T11[/llm/control]
+        T12[/llm/response]
+        T13[/llm/status]
+        T14[hmi/robot_command]
+        T15[/robot_inbound/theOne_neck/joint_command]
+        T16[/robot_inbound/theOne_waist/joint_command]
+        T17[/robot_outbound_data/theOne_neck/joint_positions_deg]
+        T18[/robot_outbound_data/theOne_waist/joint_positions_deg]
+    end
     
-    B --> E[상태 머신<br/>TrackingState]
-    C --> F[목/허리 각도<br/>PID 제어]
-    D --> G[HMI 명령<br/>ROUTINE 제어]
-    
-    style A fill:#4CAF50,color:#fff
-    style B fill:#2196F3,color:#fff
-    style C fill:#FF9800,color:#fff
-    style D fill:#9C27B0,color:#fff
+    style T1 fill:#e3f2fd
+    style T2 fill:#e8f5e9
+    style T3 fill:#fff3e0
+    style T4 fill:#f3e5f5
+    style T5 fill:#fce4ec
+    style T14 fill:#ffebee
         </div>
     </div>
 
@@ -100,28 +187,30 @@ graph LR
     <!-- 섹션 2: 상태 머신 및 추적 로직 -->
     <!-- ============================================ -->
     <div class="section">
-        <h2>2. 상태 머신 및 추적 로직</h2>
+        <h2>2. 상태 머신 및 추적 로직 (수정 반영)</h2>
         <div class="description">
-            <strong>상태 머신:</strong> IDLE → TRACKING → WAIST_FOLLOWER 흐름과 LOST/SEARCHING 복구 로직, HELLO/INTERACTION 특수 상태를 포함합니다.
+            <strong>상태 머신:</strong> IDLE → TRACKING → WAIST_FOLLOWER 흐름과 LOST/SEARCHING 복구 로직, HELLO/INTERACTION 특수 상태를 포함합니다. <strong>수정사항:</strong> 타겟이 1프레임만 끊겨도 타겟 ID를 유지하고, lost_frames가 45프레임 이상 사라진 경우에만 LOST로 전환합니다.
         </div>
 
         <div class="mermaid">
 stateDiagram-v2
     [*] --> IDLE: 시스템 시작
     
-    IDLE --> TRACKING: 가장 가까운 사람 선택<br/>(2초 이상 지속된 객체)
+    IDLE --> TRACKING: 가장 가까운 사람 선택<br/>(1.4초 이상 지속된 객체)
     
-    TRACKING --> LOST: 추적 대상 사라짐
     TRACKING --> TRACKING: 추적 대상 유지
+    TRACKING --> TRACKING_POINT_NONE: 타겟 1프레임만 끊김<br/>타겟 ID 유지<br/>lost_frames 증가
+    TRACKING_POINT_NONE --> TRACKING: 타겟 재발견<br/>lost_frames = 0
+    TRACKING_POINT_NONE --> LOST: lost_frames >= 45<br/>(약 1.5초)
     TRACKING --> WAIST_FOLLOWER: 목 각도 안정 5초<br/>+ 얼굴 검출 성공
     
-    LOST --> TRACKING: 대상 재발견
-    LOST --> SEARCHING: 45프레임 이상 놓침
+    LOST --> TRACKING: 대상 재발견<br/>lost_frames = 0
+    LOST --> SEARCHING: 45프레임 이상 놓침<br/>target_explicitly_set = false
     
-    SEARCHING --> TRACKING: 새 대상 선택
-    SEARCHING --> SEARCHING: 사람 없음
+    SEARCHING --> TRACKING: 새 대상 선택<br/>(1.4초 이상 지속된 객체)
+    SEARCHING --> SEARCHING: 사람 없음<br/>좌우 스캔 계속
     
-    WAIST_FOLLOWER --> TRACKING: ControllerManager 요청
+    WAIST_FOLLOWER --> TRACKING: 목 0도 도달<br/>+ 허리 목표 도달<br/>Controller 요청
     WAIST_FOLLOWER --> WAIST_FOLLOWER: 허리 제어 유지<br/>목 0도, 허리로 이동
     
     IDLE --> HELLO: Manual 모드 설정
@@ -135,6 +224,14 @@ stateDiagram-v2
     IDLE --> INTERACTION: Interaction Mode 활성화
     TRACKING --> INTERACTION: Interaction Mode 활성화
     INTERACTION --> IDLE: Interaction Mode 비활성화
+    
+    note right of TRACKING_POINT_NONE
+        수정사항:
+        - 타겟 ID 유지
+        - lost_frames 증가
+        - 45프레임 이상 사라진 경우에만 LOST
+        - 현재 위치 유지
+    end note
     
     note right of IDLE
         Routine: idle_breathing_rt
@@ -172,35 +269,42 @@ graph TB
     CheckDetect -->|있음| CreateObjects[모든 추적 객체 생성]
     
     NoDetect --> StateCheck1{현재 상태}
-    StateCheck1 -->|TRACKING| ToLost[LOST 상태로 전이]
-    StateCheck1 -->|LOST| IncLost[lost_frames 증가]
+    StateCheck1 -->|TRACKING| IncLost[lost_frames 증가<br/>타겟 ID 유지]
+    StateCheck1 -->|LOST| IncLost2[lost_frames 증가]
     StateCheck1 -->|WAIST_FOLLOWER| KeepWaist[WAIST_FOLLOWER 유지]
     StateCheck1 -->|INTERACTION| KeepInteraction[INTERACTION 유지]
     IncLost --> CheckMax{45프레임 이상?}
-    CheckMax -->|Yes| ToSearch[SEARCHING 상태로 전이]
-    CheckMax -->|No| KeepLost[LOST 유지]
+    CheckMax -->|Yes| ToLost[LOST 상태로 전이]
+    CheckMax -->|No| KeepTracking[TRACKING 유지<br/>타겟 ID 유지<br/>point = None]
+    IncLost2 --> CheckMax2{45프레임 이상?}
+    CheckMax2 -->|Yes| ToSearch[SEARCHING 상태로 전이]
+    CheckMax2 -->|No| KeepLost[LOST 유지]
     
     CreateObjects --> StateCheck2{현재 상태}
     
-    StateCheck2 -->|IDLE| FindClosest[가장 가까운 사람 찾기<br/>2초 이상 지속된 객체만]
+    StateCheck2 -->|IDLE| FindClosest[가장 가까운 사람 찾기<br/>1.4초 이상 지속된 객체만]
     FindClosest --> CheckFound{찾음?}
     CheckFound -->|Yes| SetTarget[target_track_id 설정]
     SetTarget --> ToTracking[TRACKING 상태로 전이]
     CheckFound -->|No| StayIdle[IDLE 유지]
     
     StateCheck2 -->|TRACKING| CheckTarget{추적 대상 존재?}
-    CheckTarget -->|Yes| CheckNeckStable{목 각도 안정?<br/>3도 이내, 5초 이상}
-    CheckTarget -->|No| ToLost2[LOST 상태로 전이]
+    CheckTarget -->|Yes| ResetLost[lost_frames = 0<br/>타겟 포인트 설정]
+    CheckTarget -->|No| IncLost3[lost_frames 증가<br/>타겟 ID 유지<br/>point = None]
+    ResetLost --> CheckNeckStable{목 각도 안정?<br/>3도 이내, 5초 이상}
     CheckNeckStable -->|Yes| CheckFace{얼굴 검출<br/>Face YOLO}
     CheckNeckStable -->|No| StayTracking[TRACKING 유지]
     CheckFace -->|Yes| ToWaistFollower[WAIST_FOLLOWER 상태로 전이]
     CheckFace -->|No| ResetTimer[타이머 리셋<br/>TRACKING 유지]
+    IncLost3 --> CheckMax3{45프레임 이상?}
+    CheckMax3 -->|Yes| ToLost2[LOST 상태로 전이]
+    CheckMax3 -->|No| KeepTracking2[TRACKING 유지<br/>타겟 ID 유지]
     
     StateCheck2 -->|LOST| CheckTarget2{추적 대상 재발견?}
-    CheckTarget2 -->|Yes| ToTracking2[TRACKING 상태로 전이]
-    CheckTarget2 -->|No| IncLost2[lost_frames 증가]
+    CheckTarget2 -->|Yes| ToTracking2[TRACKING 상태로 전이<br/>lost_frames = 0]
+    CheckTarget2 -->|No| IncLost4[lost_frames 증가]
     
-    StateCheck2 -->|SEARCHING| FindClosest2[가장 가까운 사람 찾기]
+    StateCheck2 -->|SEARCHING| FindClosest2[가장 가까운 사람 찾기<br/>1.4초 이상 지속된 객체만]
     FindClosest2 --> CheckFound2{찾음?}
     CheckFound2 -->|Yes| SetTarget2[target_track_id 설정]
     SetTarget2 --> ToTracking3[TRACKING 상태로 전이]
@@ -218,10 +322,11 @@ graph TB
     ToTracking --> AssignState
     StayIdle --> AssignState
     StayTracking --> AssignState
+    KeepTracking --> AssignState
+    KeepTracking2 --> AssignState
     ToLost2 --> AssignState
     ToTracking2 --> AssignState
     KeepLost --> AssignState
-    ToSearch --> AssignState
     ToTracking3 --> AssignState
     ToWaistFollower --> AssignState
     KeepWaist --> AssignState
@@ -234,60 +339,103 @@ graph TB
     CheckTarget4 -->|Yes| SetTargetState[state = 'target'<br/>붉은색 표시]
     CheckTarget4 -->|No| SetSystemState[state = 시스템 상태]
     
-    SetTargetState --> Return[결과 반환]
+    SetTargetState --> Return[결과 반환<br/>타겟 ID 유지]
     SetSystemState --> Return
     Return --> End([완료])
-        </div>
-
-        <div class="mermaid">
-graph TB
-    Start([TRACKING 상태]) --> UpdateNeck[ControllerManager.update<br/>목 각도 업데이트]
-    UpdateNeck --> CheckStable{목 각도 안정?<br/>기준 각도로부터 3도 이내<br/>이전 프레임과도 3도 이내<br/>5초 이상 지속}
-    CheckStable -->|No| ResetTimer[타이머 리셋]
-    ResetTimer --> StayTracking[TRACKING 유지]
-    CheckStable -->|Yes| SetFlag[pending_face_check = true]
-    SetFlag --> ProcessFrame[다음 프레임 처리]
-    ProcessFrame --> CheckFlag{pending_face_check?}
-    CheckFlag -->|Yes| FaceDetect[얼굴 검출<br/>Face YOLO 모델<br/>타겟 bbox 영역]
-    CheckFlag -->|No| StayTracking
-    FaceDetect --> CheckFace{얼굴 검출됨?}
-    CheckFace -->|Yes| ToWaistFollower[WAIST_FOLLOWER 상태로 전이<br/>타이머 리셋]
-    CheckFace -->|No| ResetTimer2[타이머 리셋<br/>TRACKING 유지]
-    ResetTimer2 --> StayTracking
-    ToWaistFollower --> WaistControl[허리 제어 시작<br/>목 0도로 이동<br/>허리로 각도 이동]
-    StayTracking --> End([완료])
-    WaistControl --> End
         </div>
     </div>
 
     <!-- ============================================ -->
-    <!-- 섹션 3: Routine 시스템 통합 -->
+    <!-- 섹션 3: 목/허리 제어 로직 -->
     <!-- ============================================ -->
     <div class="section">
-        <h2>3. Routine 시스템 통합</h2>
+        <h2>3. 목/허리 제어 로직 (수정 반영)</h2>
+        <div class="description">
+            <strong>제어 로직:</strong> 추적 결과를 받아서 목/허리를 PID 제어로 움직입니다. <strong>수정사항:</strong> TRACKING 상태이지만 타겟 포인트가 None인 경우(1프레임만 끊긴 경우) 현재 위치를 유지합니다.
+        </div>
+
+        <div class="mermaid">
+graph TB
+    Start([tracking_result 수신]) --> Parse[추적 결과 파싱]
+    Parse --> GetState[상태 및 타겟 정보 추출]
+    GetState --> CheckState{상태 확인}
+    
+    CheckState -->|TRACKING<br/>point != None| TrackingControl[타겟 포인트로 이동<br/>PID 제어]
+    CheckState -->|TRACKING<br/>point == None| MaintainPosition[현재 위치 유지<br/>타겟 ID 유지 중]
+    CheckState -->|LOST| LostControl[현재 위치 유지<br/>PID 초기화]
+    CheckState -->|SEARCHING| SearchingControl[좌우 스캔<br/>부드러운 이동]
+    CheckState -->|WAIST_FOLLOWER| WaistControl[목 0도로 이동<br/>허리로 각도 이동]
+    CheckState -->|INTERACTION| InteractionControl[현재 위치 유지<br/>제어 안 함]
+    CheckState -->|IDLE| IdleControl[현재 위치 유지<br/>허리 0도]
+    
+    TrackingControl --> CalcAngle[픽셀 → 각도 변환<br/>상대 각도 계산]
+    CalcAngle --> PIDControl[PID 제어<br/>증분 계산]
+    PIDControl --> SendNeck[목 명령 전송<br/>절대각도]
+    SendNeck --> SendWaist[허리 현재 위치 유지<br/>숨쉬는 모션]
+    
+    MaintainPosition --> SendNeckMaintain[목 현재 위치 전송<br/>절대각도]
+    SendNeckMaintain --> SendWaistMaintain[허리 현재 위치 유지<br/>숨쉬는 모션]
+    
+    LostControl --> SendNeckLost[목 현재 위치 전송<br/>절대각도]
+    SendNeckLost --> SendWaistLost[허리 현재 위치 유지<br/>숨쉬는 모션]
+    
+    SearchingControl --> CalcSearchAngle[스캔 목표 각도 계산<br/>좌우 ±40도]
+    CalcSearchAngle --> PIDSearch[PID 제어<br/>부드러운 이동]
+    PIDSearch --> SendNeckSearch[목 명령 전송]
+    SendNeckSearch --> SendWaistSearch[허리 현재 위치 유지]
+    
+    WaistControl --> CalcWaistAngle[허리 목표 각도 계산<br/>초기 목 각도 + 허리 각도]
+    CalcWaistAngle --> PIDWaist[허리 PID 제어]
+    PIDWaist --> PIDNeckZero[목 0도로 PID 제어]
+    PIDNeckZero --> SendWaistCmd[허리 명령 전송]
+    SendWaistCmd --> SendNeckZero[목 명령 전송]
+    SendNeckZero --> CheckReached{목 0도 도달?<br/>+ 허리 목표 도달?}
+    CheckReached -->|Yes| RequestTracking[tracker_state_request<br/>TRACKING 상태로 전환 요청]
+    CheckReached -->|No| WaistControl
+    
+    InteractionControl --> End1([완료])
+    IdleControl --> SendNeckIdle[목 현재 위치 유지]
+    SendNeckIdle --> SendWaistIdle[허리 0도로 이동<br/>PID 제어]
+    
+    SendNeck --> End2([완료])
+    SendNeckMaintain --> End3([완료])
+    SendNeckLost --> End4([완료])
+    SendNeckSearch --> End5([완료])
+    SendNeckZero --> End6([완료])
+    SendNeckIdle --> End7([완료])
+    RequestTracking --> End8([완료])
+    
+    note right of MaintainPosition
+        수정사항:
+        - 타겟 ID 유지
+        - 현재 위치 유지
+        - 다른 ID로 전환 안 함
+    end note
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- 섹션 4: Routine 시스템 통합 -->
+    <!-- ============================================ -->
+    <div class="section">
+        <h2>4. Routine 시스템 통합</h2>
         <div class="description">
             <strong>Routine 시스템:</strong> 상태 변경 시 자동으로 적절한 Routine을 시작합니다. 새 Routine START 명령만 보내면 기존 Routine이 자동으로 중단됩니다.
         </div>
 
         <div class="mermaid">
 graph TB
-    Start([이미지 콜백]) --> Process[TrackerManager.process]
-    Process --> GetState[현재 상태 가져오기]
-    GetState --> CheckChange{상태 변경?}
-    CheckChange -->|No| ControllerUpdate[ControllerManager.update]
-    CheckChange -->|Yes| HandleRoutine[상태별 Routine 전환 처리]
+    Start([상태 변경 감지]) --> CheckState{새 상태}
     
-    HandleRoutine --> CheckNewState{새 상태}
+    CheckState -->|IDLE| StartIdle[idle_breathing_rt::START]
+    CheckState -->|TRACKING| StartIdle
+    CheckState -->|LOST| StartIdle
+    CheckState -->|SEARCHING| StartIdle
+    CheckState -->|WAIST_FOLLOWER| StartIdle
     
-    CheckNewState -->|IDLE| StartIdle[idle_breathing_rt::START]
-    CheckNewState -->|TRACKING| StartIdle
-    CheckNewState -->|LOST| StartIdle
-    CheckNewState -->|SEARCHING| StartIdle
-    CheckNewState -->|WAIST_FOLLOWER| StartIdle
+    CheckState -->|HELLO| StartHello[hand_wave_rt::START<br/>기존 루틴 자동 중단]
     
-    CheckNewState -->|HELLO| StartHello[hand_wave_rt::START<br/>기존 루틴 자동 중단]
-    
-    CheckNewState -->|INTERACTION| StopRoutine[현재 루틴 RESET<br/>루틴 중단]
+    CheckState -->|INTERACTION| StopRoutine[현재 루틴 RESET<br/>루틴 중단]
     
     StartIdle --> PublishCmd1[토픽 발행<br/>hmi/robot_command<br/>the_bodyOne::ROUTINE::idle_breathing_rt::START]
     StartHello --> PublishCmd2[토픽 발행<br/>hmi/robot_command<br/>the_bodyOne::ROUTINE::hand_wave_rt::START]
@@ -306,8 +454,6 @@ graph TB
     
     StartNew1 --> End2([완료])
     StartNew2 --> End3([완료])
-    
-    ControllerUpdate --> End4([완료])
     
     note right of AutoStop1
         새 루틴 START 명령만 보내면
@@ -329,15 +475,16 @@ graph TB
 
         <div class="mermaid">
 sequenceDiagram
-    participant CP as CameraPublisher
+    participant FSM as Tracking FSM Node
+    participant MAIN as ALLEX Idle Interaction Node
     participant RC as RoutineController
     participant HMI as hmi/robot_command
     participant RM as RoutineManager
     participant OR as 기존 루틴<br/>idle_breathing_rt
     participant NR as 새 루틴<br/>hand_wave_rt
     
-    CP->>CP: 상태 변경 감지<br/>IDLE → HELLO
-    CP->>RC: switch_routine("hand_wave_rt")
+    FSM->>MAIN: 상태 변경: IDLE → HELLO
+    MAIN->>RC: switch_routine("hand_wave_rt")
     RC->>HMI: 발행: the_bodyOne::ROUTINE::hand_wave_rt::START
     HMI->>RM: 명령 수신
     RM->>OR: should_stop_flag = true 설정
@@ -348,45 +495,163 @@ sequenceDiagram
     NR->>NR: hand_wave_rt 실행 중...
     NR->>NR: 1회 실행 완료 후 종료
     
-    Note over CP,NR: 자동 전환 완료<br/>명시적 RESET 불필요
+    Note over FSM,NR: 자동 전환 완료<br/>명시적 RESET 불필요
         </div>
+    </div>
 
-        <div class="mermaid">
-graph LR
-    A[상태] --> B[IDLE<br/>idle_breathing_rt<br/>무한 반복]
-    A --> C[TRACKING<br/>idle_breathing_rt<br/>무한 반복]
-    A --> D[LOST<br/>idle_breathing_rt<br/>무한 반복]
-    A --> E[SEARCHING<br/>idle_breathing_rt<br/>무한 반복]
-    A --> F[WAIST_FOLLOWER<br/>idle_breathing_rt<br/>무한 반복]
-    A --> G[HELLO<br/>hand_wave_rt<br/>1회 실행]
-    A --> H[INTERACTION<br/>루틴 없음<br/>중단]
-    
-    style B fill:#e8f5e9
-    style C fill:#e8f5e9
-    style D fill:#e8f5e9
-    style E fill:#e8f5e9
-    style F fill:#e8f5e9
-    style G fill:#fff3e0
-    style H fill:#ffebee
+    <!-- ============================================ -->
+    <!-- 섹션 5: 노드별 상세 플로우 -->
+    <!-- ============================================ -->
+    <div class="section">
+        <h2>5. 노드별 상세 플로우</h2>
+        <div class="description">
+            <strong>노드별 상세 동작:</strong> 각 노드의 초기화, 콜백 처리, 상태 관리 등을 상세히 설명합니다.
         </div>
 
         <div class="mermaid">
 graph TB
-    A[Routine 명령 형식] --> B[ROBOT_NAME::ROUTINE::routine_name::sub_mode]
+    subgraph "YOLO Detection Node"
+        Y1[초기화] --> Y2[YOLO11n 모델 로드]
+        Y2 --> Y3[Bot-SORT 추적기 초기화]
+        Y3 --> Y4[RUN 명령 대기]
+        Y4 --> Y5[이미지 콜백 수신]
+        Y5 --> Y6[YOLO 추론]
+        Y6 --> Y7[Bot-SORT 추적 업데이트]
+        Y7 --> Y8[detections 발행<br/>BB box + track_id]
+        Y8 --> Y5
+    end
     
-    B --> C[ROBOT_NAME<br/>the_bodyOne]
-    B --> D[ROUTINE<br/>고정값]
-    B --> E[routine_name<br/>idle_breathing_rt<br/>hand_wave_rt]
-    B --> F[sub_mode<br/>START<br/>PAUSE<br/>RESUME<br/>RESET]
+    subgraph "Tracking FSM Node"
+        T1[초기화] --> T2[Face YOLO 모델 로드]
+        T2 --> T3[상태: IDLE]
+        T3 --> T4[detections 콜백 수신]
+        T4 --> T5[FSM 처리]
+        T5 --> T6{상태 전이}
+        T6 -->|IDLE| T7[가장 가까운 사람 찾기]
+        T6 -->|TRACKING| T8[타겟 추적<br/>목 각도 안정성 확인]
+        T6 -->|LOST| T9[lost_frames 증가]
+        T6 -->|SEARCHING| T10[좌우 스캔]
+        T6 -->|WAIST_FOLLOWER| T11[허리 제어]
+        T7 --> T12[tracking_result 발행]
+        T8 --> T12
+        T9 --> T12
+        T10 --> T12
+        T11 --> T12
+        T12 --> T4
+    end
     
-    C --> G[예시]
-    D --> G
-    E --> G
-    F --> G
+    subgraph "Gaze Controller Node"
+        G1[초기화] --> G2[목/허리 Publisher 생성]
+        G2 --> G3[목/허리 위치 Subscriber 생성]
+        G3 --> G4[RUN 명령 대기]
+        G4 --> G5[tracking_result 콜백 수신]
+        G5 --> G6{상태 확인}
+        G6 -->|TRACKING<br/>point != None| G7[타겟 포인트로 PID 제어]
+        G6 -->|TRACKING<br/>point == None| G8[현재 위치 유지]
+        G6 -->|LOST| G9[현재 위치 유지]
+        G6 -->|SEARCHING| G10[좌우 스캔 PID 제어]
+        G6 -->|WAIST_FOLLOWER| G11[목 0도, 허리 제어]
+        G7 --> G12[목/허리 명령 전송]
+        G8 --> G12
+        G9 --> G12
+        G10 --> G12
+        G11 --> G12
+        G12 --> G13[neck_angle 발행]
+        G13 --> G5
+    end
     
-    G --> H[the_bodyOne::ROUTINE::idle_breathing_rt::START]
-    G --> I[the_bodyOne::ROUTINE::hand_wave_rt::START]
-    G --> J[the_bodyOne::ROUTINE::idle_breathing_rt::RESET]
+    subgraph "ALLEX Idle Interaction Node"
+        A1[초기화] --> A2[RoutineController 생성]
+        A2 --> A3[상태 변경 감지 시작]
+        A3 --> A4[tracking_result 콜백]
+        A4 --> A5{상태 변경?}
+        A5 -->|Yes| A6[Routine 전환 처리]
+        A5 -->|No| A7[tracking_data 발행]
+        A6 --> A8[hmi/robot_command 발행]
+        A8 --> A7
+        A7 --> A9[target_crop 발행<br/>INTERACTION 모드]
+        A9 --> A4
+    end
+    
+    subgraph "LLM Hand Gesture CLIP Node"
+        L1[초기화] --> L2[CLIP 모델 로드<br/>앙상블]
+        L2 --> L3[RUN 명령 대기]
+        L3 --> L4[target_crop 콜백 수신]
+        L4 --> L5{is_running?}
+        L5 -->|Yes| L6[CLIP 추론<br/>제스처 분류]
+        L5 -->|No| L4
+        L6 --> L7[llm/response 발행]
+        L7 --> L4
+    end
+    
+    style Y1 fill:#2196F3,color:#fff
+    style T1 fill:#4CAF50,color:#fff
+    style G1 fill:#FF9800,color:#fff
+    style A1 fill:#9C27B0,color:#fff
+    style L1 fill:#E91E63,color:#fff
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- 섹션 6: 타겟 ID 유지 로직 (수정사항) -->
+    <!-- ============================================ -->
+    <div class="section">
+        <h2>6. 타겟 ID 유지 로직 (수정사항 상세)</h2>
+        <div class="description">
+            <strong>수정 내용:</strong> 타겟이 1프레임만 끊겨도 타겟 ID를 유지하고, lost_frames가 45프레임 이상 사라진 경우에만 LOST로 전환합니다. 이를 통해 다른 사람으로 즉시 전환되는 문제를 해결했습니다.
+        </div>
+
+        <div class="mermaid">
+graph TB
+    Start([프레임 처리 시작]) --> CheckTarget{타겟 ID 존재?}
+    
+    CheckTarget -->|Yes| CheckExists{현재 프레임에<br/>타겟 존재?}
+    CheckTarget -->|No| FindNew[새 타겟 찾기]
+    
+    CheckExists -->|Yes| ResetLost[lost_frames = 0<br/>타겟 포인트 설정<br/>TRACKING 유지]
+    CheckExists -->|No| IncLost[lost_frames 증가<br/>타겟 ID 유지<br/>final_target_id = target_track_id<br/>point = None]
+    
+    IncLost --> CheckMax{lost_frames<br/>>= 45?}
+    CheckMax -->|No| KeepTracking[TRACKING 상태 유지<br/>타겟 ID 유지<br/>point = None]
+    CheckMax -->|Yes| ToLost[LOST 상태로 전이]
+    
+    KeepTracking --> SendResult[tracking_result 발행<br/>state: TRACKING<br/>track_id: 유지<br/>point: None]
+    ResetLost --> SendResult2[tracking_result 발행<br/>state: TRACKING<br/>track_id: 유지<br/>point: 설정됨]
+    ToLost --> SendResult3[tracking_result 발행<br/>state: LOST<br/>track_id: 유지]
+    
+    SendResult --> Controller[Gaze Controller 수신]
+    SendResult2 --> Controller
+    SendResult3 --> Controller
+    
+    Controller --> CheckPoint{point == None?}
+    CheckPoint -->|Yes| MaintainPos[현재 위치 유지<br/>타겟 ID 유지 중]
+    CheckPoint -->|No| MoveToTarget[타겟 포인트로 이동]
+    
+    MaintainPos --> End1([완료<br/>다른 ID로 전환 안 함])
+    MoveToTarget --> End2([완료])
+    
+    note right of IncLost
+        수정 전:
+        - 즉시 LOST로 전이
+        - final_target_id = None
+        - 다른 ID로 전환 가능
+        
+        수정 후:
+        - lost_frames 증가
+        - final_target_id = target_track_id 유지
+        - point = None
+        - 45프레임 이상 사라진 경우에만 LOST
+    end note
+    
+    note right of MaintainPos
+        수정 전:
+        - TRACKING 상태이지만 point가 None이면
+        - 다른 케이스로 넘어가서 문제 발생
+        
+        수정 후:
+        - TRACKING 상태이지만 point가 None인 경우
+        - 현재 위치 유지하는 케이스 추가
+    end note
         </div>
     </div>
 

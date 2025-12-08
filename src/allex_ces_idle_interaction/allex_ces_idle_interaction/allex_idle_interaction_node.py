@@ -44,11 +44,7 @@ class RoutineController:
         self.command_pub.publish(msg)
         self.node.get_logger().info(f"Routine 명령 발행: {command}")
     
-    def start_idle_breathing(self):
-        """IDLE 상태: 숨쉬기 루틴 시작 (무한 반복)"""
-        command = f"{self.robot_name}::ROUTINE::idle_breathing_rt::START"
-        self.current_routine = "idle_breathing_rt"
-        self.publish_command(command)
+    # start_idle_breathing 메서드 삭제됨 - 허리 앞뒤 움직임으로 대체됨
     
     def start_hand_wave(self):
         """손 흔들기 루틴 시작 (1회 실행)"""
@@ -56,12 +52,19 @@ class RoutineController:
         self.current_routine = "hand_wave_rt"
         self.publish_command(command)
     
+    def start_idling_heart(self):
+        """인사 제스처 루틴 시작 (HELLO 상태용)"""
+        command = f"{self.robot_name}::ROUTINE::idling_heart_rt::START"
+        self.current_routine = "idling_heart_rt"
+        self.publish_command(command)
+    
     def switch_routine(self, new_routine: str):
         """루틴 전환: 기존 루틴 자동 중단 후 새 루틴 시작"""
-        if new_routine == "idle_breathing_rt":
-            self.start_idle_breathing()
-        elif new_routine == "hand_wave_rt":
+        # idle_breathing_rt는 삭제됨 - 허리 앞뒤 움직임으로 대체됨
+        if new_routine == "hand_wave_rt":
             self.start_hand_wave()
+        elif new_routine == "idling_heart_rt":
+            self.start_idling_heart()
         else:
             self.node.get_logger().warn(f"알 수 없는 루틴: {new_routine}")
     
@@ -360,34 +363,24 @@ class AllexIdleInteractionNode(Node):
         # INTERACTION에서 다른 상태로 전환 시 루틴 재시작
         if old_state == TrackingState.INTERACTION:
             if new_state == TrackingState.HELLO:
-                self.routine_controller.switch_routine("hand_wave_rt")
-                self.get_logger().info("HELLO 상태: hand_wave_rt 시작")
-            elif new_state in (TrackingState.IDLE, TrackingState.TRACKING, TrackingState.LOST, 
-                              TrackingState.SEARCHING, TrackingState.WAIST_FOLLOWER):
-                self.routine_controller.switch_routine("idle_breathing_rt")
-                self.get_logger().info(f"{new_state.value} 상태: idle_breathing_rt 시작")
+                self.routine_controller.switch_routine("idling_heart_rt")
+                self.get_logger().info("HELLO 상태: idling_heart_rt 시작")
+            # idle_breathing_rt는 삭제됨 - 허리 앞뒤 움직임으로 대체됨
             return
         
-        # HELLO 상태로 전환 시 손 흔들기 루틴 시작
+        # HELLO 상태로 전환 시 인사 제스처 루틴 시작
         if new_state == TrackingState.HELLO:
-            self.routine_controller.switch_routine("hand_wave_rt")
-            self.get_logger().info("HELLO 상태: hand_wave_rt 시작")
+            self.routine_controller.switch_routine("idling_heart_rt")
+            self.get_logger().info("HELLO 상태: idling_heart_rt 시작")
             return
         
         # HELLO에서 다른 상태로 전환 시 숨쉬기 루틴으로 전환
         if old_state == TrackingState.HELLO:
-            if new_state in (TrackingState.IDLE, TrackingState.TRACKING, TrackingState.LOST, 
-                            TrackingState.SEARCHING, TrackingState.WAIST_FOLLOWER):
-                self.routine_controller.switch_routine("idle_breathing_rt")
-                self.get_logger().info(f"{new_state.value} 상태: idle_breathing_rt 시작")
+            # idle_breathing_rt는 삭제됨 - 허리 앞뒤 움직임으로 대체됨
             return
         
         # IDLE, TRACKING, LOST, SEARCHING, WAIST_FOLLOWER 상태들 간 전환 시
-        if new_state in (TrackingState.IDLE, TrackingState.TRACKING, TrackingState.LOST, 
-                        TrackingState.SEARCHING, TrackingState.WAIST_FOLLOWER):
-            if self.routine_controller.current_routine != "idle_breathing_rt":
-                self.routine_controller.switch_routine("idle_breathing_rt")
-                self.get_logger().info(f"{new_state.value} 상태: idle_breathing_rt 시작")
+        # idle_breathing_rt는 삭제됨 - 허리 앞뒤 움직임으로 대체됨
     
     def _manual_control_callback(self, msg: String):
         """Manual 제어 콜백 - GUI에서 오는 명령 처리"""
@@ -403,7 +396,7 @@ class AllexIdleInteractionNode(Node):
                 self.is_running = True
                 manual_mode = command.get('manual', False)
                 tracker_command['manual'] = manual_mode
-                self.routine_controller.switch_routine("idle_breathing_rt")
+                # idle_breathing_rt는 삭제됨 - 허리 앞뒤 움직임으로 대체됨
                 self.previous_state = TrackingState.IDLE
                 self.get_logger().info(f"RUN 시작: {'Manual' if manual_mode else 'Auto'} 모드")
             

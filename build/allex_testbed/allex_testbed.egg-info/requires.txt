@@ -1,0 +1,8 @@
+PyQt5
+huggingface-hub
+numpy
+opencv-python
+pyyaml
+setuptools
+torch
+ultralytics

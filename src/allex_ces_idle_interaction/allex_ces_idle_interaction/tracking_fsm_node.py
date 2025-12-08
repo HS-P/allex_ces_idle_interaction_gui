@@ -11,6 +11,7 @@ from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, Duration
 from sensor_msgs.msg import CompressedImage
 from std_msgs.msg import String
+from std_msgs.msg import Int32MultiArray
 import cv2
 import numpy as np
 from typing import List, Optional, Dict
@@ -118,6 +119,14 @@ class TrackingFSMNode(Node):
             10
         )
         
+        # HAND 피드백 구독 (HELLO 상태에서 사용)
+        self.hand_feedback_subscription = self.create_subscription(
+            Int32MultiArray,
+            '/robot_outbound_data/Hand_L_ring_wir/articulation_now',
+            self._hand_feedback_callback,
+            10
+        )
+        
         # 추적 상태 관리
         self.state = TrackingState.IDLE
         self.target_track_id: Optional[int] = None  # 추적 대상 ID
@@ -140,11 +149,17 @@ class TrackingFSMNode(Node):
         
         # WAIST_FOLLOWER 전이를 위한 변수들 (목 각도 기반)
         self.neck_stable_start_time: Optional[float] = None  # 목 각도가 안정되기 시작한 시간
-        self.neck_stable_duration = 5.0  # 목 각도가 안정되어야 하는 최소 시간 (초)
-        self.neck_stable_threshold_deg = 3.0  # 목 각도 안정성 임계값 (도)
+        self.neck_stable_duration = 3.0  # 목 각도가 안정되어야 하는 최소 시간 (초)
+        self.neck_stable_threshold_deg = 1.5  # 목 각도 안정성 임계값 (도)
         self.last_neck_yaw_rad: Optional[float] = None  # 이전 목 각도 (라디안)
         self.neck_stable_reference_yaw_rad: Optional[float] = None  # 안정성 기준 목 각도 (라디안)
         self.pending_face_check: bool = False  # 얼굴 검출 대기 플래그
+        
+        # HELLO 상태를 위한 변수들
+        self.hello_routine_sent_time: Optional[float] = None  # HELLO 루틴 발행 시간
+        self.hello_feedback_delay = 0.1  # 루틴 발행 후 피드백 확인 대기 시간 (초)
+        self.current_hand_state: Optional[int] = None  # 현재 HAND 상태 (4: READY, 5: RUNNING)
+        self.hello_routine_sent = False  # HELLO 루틴 발행 여부
         
         # 얼굴 검출용 모델 (필요시)
         try:
@@ -155,10 +170,20 @@ class TrackingFSMNode(Node):
         
         # 목 각도 저장 (안정성 추적용)
         self.current_neck_yaw_rad = None
+        self.current_neck_pitch_rad = None
+        self.current_waist_yaw_rad = None
+        self.target_neck_yaw_rad = None
+        self.target_waist_yaw_rad = None
         
         # 최신 프레임 저장 (얼굴 검출용)
         self.latest_frame = None
         self.latest_frame_shape = None
+        
+        # 카메라 파라미터 (픽셀→각도 변환용) - v1.3.0과 동일
+        self.frame_width = 1280.0
+        self.frame_height = 720.0
+        self.horizontal_fov_deg = 120.0
+        self.vertical_fov_deg = 45.0
         
         # 실행 상태 플래그
         self.is_running = False
@@ -169,6 +194,29 @@ class TrackingFSMNode(Node):
         
         self.get_logger().info("Tracking FSM Node 초기화 완료")
         self.get_logger().info("대기 중: RUN 명령을 기다립니다...")
+    
+    def _pixel_to_angle(self, target_x: float, target_y: float) -> tuple:
+        """타겟 픽셀 좌표를 상대 각도로 변환 (라디안)
+        
+        타겟이 화면 오른쪽에 있으면 → 목을 오른쪽으로 (양수 각도)
+        타겟이 화면 왼쪽에 있으면 → 목을 왼쪽으로 (음수 각도)
+        """
+        center_x = self.frame_width / 2.0
+        center_y = self.frame_height / 2.0
+        
+        offset_x = target_x - center_x  # 양수: 우측, 음수: 좌측
+        offset_y = target_y - center_y  # 양수: 하단, 음수: 상단
+        
+        yaw_deg = (offset_x / self.frame_width) * self.horizontal_fov_deg
+        pitch_deg = (offset_y / self.frame_height) * self.vertical_fov_deg
+        
+        yaw_rad = math.radians(yaw_deg)
+        pitch_rad = math.radians(pitch_deg)
+        
+        # 방향 정의에 맞게 변환
+        yaw_rad = -yaw_rad  # Neck Yaw: 좌측 방향이 양수
+        
+        return yaw_rad, pitch_rad
     
     def _find_closest_person(self, detections: List[Dict], frame_shape: tuple, current_time: float) -> Optional[int]:
         """프레임 중심에 가장 가까운 사람 찾기 (최소 지속 시간 이상인 객체만 후보)"""
@@ -311,6 +359,8 @@ class TrackingFSMNode(Node):
         
         reference_change_deg = abs(math.degrees(current_neck_yaw_rad - self.neck_stable_reference_yaw_rad))
         
+        # 진동 방지: 기준 각도와의 차이, 그리고 연속 프레임 간 변화량 모두 체크
+        # 둘 다 임계값 이내여야 안정으로 간주 (진동 중에는 전환되지 않도록)
         if reference_change_deg <= self.neck_stable_threshold_deg and angle_change_deg <= self.neck_stable_threshold_deg:
             if self.neck_stable_start_time is None:
                 self.neck_stable_start_time = current_time
@@ -318,10 +368,23 @@ class TrackingFSMNode(Node):
             
             elapsed_time = current_time - self.neck_stable_start_time
             if elapsed_time >= self.neck_stable_duration:
-                self.pending_face_check = True
+                if not self.pending_face_check:
+                    self.pending_face_check = True
+                    self.get_logger().info(
+                        f"목 각도 안정 확인: {elapsed_time:.1f}초 동안 "
+                        f"기준 오차={reference_change_deg:.2f}도, "
+                        f"연속 오차={angle_change_deg:.2f}도 → 얼굴 체크 대기"
+                    )
         else:
+            # 진동이 감지되면 타이머 리셋 및 pending_face_check도 리셋
+            if self.pending_face_check:
+                self.get_logger().debug(
+                    f"목 각도 진동 감지: 기준 오차={reference_change_deg:.2f}도, "
+                    f"연속 오차={angle_change_deg:.2f}도 → 안정성 체크 리셋"
+                )
             self.neck_stable_start_time = None
             self.neck_stable_reference_yaw_rad = None
+            self.pending_face_check = False
         
         self.last_neck_yaw_rad = current_neck_yaw_rad
     
@@ -359,9 +422,9 @@ class TrackingFSMNode(Node):
             )
             return [], target_info
         
-        # 타겟이 존재하면 상태 업데이트
-        if target_exists and self.state not in (TrackingState.WAIST_FOLLOWER, TrackingState.INTERACTION):
-            if self.state not in (TrackingState.TRACKING, TrackingState.WAIST_FOLLOWER, TrackingState.INTERACTION):
+        # 타겟이 존재하면 상태 업데이트 (HELLO 상태는 제외 - HAND 피드백 대기 중)
+        if target_exists and self.state not in (TrackingState.WAIST_FOLLOWER, TrackingState.INTERACTION, TrackingState.HELLO):
+            if self.state not in (TrackingState.TRACKING, TrackingState.WAIST_FOLLOWER, TrackingState.INTERACTION, TrackingState.HELLO):
                 self.state = TrackingState.TRACKING
             self.lost_frames = 0
         
@@ -392,27 +455,30 @@ class TrackingFSMNode(Node):
                             self.target_explicitly_set = False
                 
                 case TrackingState.TRACKING:
+                    # 같은 장소에 일정 시간 있으면 계속 얼굴 감지 (pending_face_check를 리셋하지 않음)
                     if self.pending_face_check and frame is not None:
                         target_det = next((det for det in detections if det['track_id'] == self.target_track_id), None)
                         if target_det is not None:
                             if self.is_facing_me(frame, target_det['bbox']):
+                                # 얼굴을 보면 바로 WAIST_FOLLOWER로 전환
                                 self.state = TrackingState.WAIST_FOLLOWER
                                 self.neck_stable_start_time = None
                                 self.last_neck_yaw_rad = None
                                 self.neck_stable_reference_yaw_rad = None
-                            else:
-                                self.neck_stable_start_time = None
-                                self.last_neck_yaw_rad = None
-                                self.neck_stable_reference_yaw_rad = None
-                        self.pending_face_check = False
+                                self.pending_face_check = False  # 전환 후에만 리셋
+                            # 얼굴을 보지 않으면 pending_face_check를 유지하여 계속 감지
                     
                     if not target_exists and self.target_track_id is not None and not self.target_explicitly_set:
-                        self.state = TrackingState.LOST
-                        self.lost_frames = 0
-                        self.neck_stable_start_time = None
-                        self.last_neck_yaw_rad = None
-                        self.neck_stable_reference_yaw_rad = None
-                        self.pending_face_check = False
+                        # 타겟이 없으면 lost_frames를 증가시키고, 일정 프레임 이상 사라진 경우에만 LOST로 전환
+                        # 1프레임만 끊겨도 즉시 다른 ID로 전환되는 것을 방지
+                        self.lost_frames += 1
+                        if self.lost_frames >= self.max_lost_frames:
+                            self.state = TrackingState.LOST
+                            self.neck_stable_start_time = None
+                            self.last_neck_yaw_rad = None
+                            self.neck_stable_reference_yaw_rad = None
+                            self.pending_face_check = False
+                        # lost_frames가 max_lost_frames 미만이면 TRACKING 상태 유지 (타겟 ID 유지)
                 
                 case TrackingState.LOST:
                     if target_exists:
@@ -437,7 +503,76 @@ class TrackingFSMNode(Node):
                             self.target_explicitly_set = False
                 
                 case TrackingState.WAIST_FOLLOWER:
-                    pass
+                    # WAIST_FOLLOWER 상태: 목과 허리 각도 확인 후 HELLO로 전환
+                    # 목표: 목 YAW = 0도, 허리 YAW = TRACKING 상태에서의 목 YAW만큼
+                    if (self.current_neck_yaw_rad is not None and 
+                        self.target_neck_yaw_rad is not None and
+                        self.current_waist_yaw_rad is not None and
+                        self.target_waist_yaw_rad is not None):
+                        
+                        # target_waist_yaw_rad 유효성 검사:
+                        # gaze_controller에서 waist_follower_initial_neck_yaw가 설정되기 전에는 0.0이 반환됨
+                        # 현재 허리 각도가 5도 이상인데 목표가 0도라면 아직 유효하지 않은 값
+                        waist_target_valid = True
+                        if abs(self.target_waist_yaw_rad) < math.radians(1.0):  # 목표가 거의 0도
+                            if abs(self.current_waist_yaw_rad) > math.radians(5.0):  # 현재 허리가 5도 이상
+                                waist_target_valid = False
+                                self.get_logger().debug(
+                                    f"WAIST_FOLLOWER 대기: target_waist_yaw_rad가 아직 유효하지 않음 "
+                                    f"(목표={math.degrees(self.target_waist_yaw_rad):.2f}도, "
+                                    f"현재={math.degrees(self.current_waist_yaw_rad):.2f}도)"
+                                )
+                        
+                        if waist_target_valid:
+                            # 목 목표: 0도
+                            neck_target_rad = 0.0
+                            neck_error_deg = abs(math.degrees(self.current_neck_yaw_rad - neck_target_rad))
+                            
+                            # 허리 목표: target_waist_yaw_rad (TRACKING 상태에서의 목 YAW만큼)
+                            waist_error_deg = abs(math.degrees(self.current_waist_yaw_rad - self.target_waist_yaw_rad))
+                            target_reached_threshold_deg = 1.5  # 1.5도 이내
+                            
+                            # 디버깅: 각도 정보 출력
+                            self.get_logger().debug(
+                                f"WAIST_FOLLOWER 체크: 목 현재={math.degrees(self.current_neck_yaw_rad):.2f}도, "
+                                f"목 목표=0.0도, 목 오차={neck_error_deg:.2f}도, "
+                                f"허리 현재={math.degrees(self.current_waist_yaw_rad):.2f}도, "
+                                f"허리 목표={math.degrees(self.target_waist_yaw_rad):.2f}도, "
+                                f"허리 오차={waist_error_deg:.2f}도"
+                            )
+                            
+                            if neck_error_deg <= target_reached_threshold_deg and waist_error_deg <= target_reached_threshold_deg:
+                                # 목표 도달: HELLO 상태로 직접 전환
+                                self.state = TrackingState.HELLO
+                                self.hello_routine_sent_time = time.monotonic()
+                                self.hello_routine_sent = True
+                                self.current_hand_state = None  # 초기화
+                                self.get_logger().info(
+                                    f"WAIST_FOLLOWER 목표 도착: 목={neck_error_deg:.2f}도, 허리={waist_error_deg:.2f}도 → HELLO 상태로 전환"
+                                )
+                
+                case TrackingState.HELLO:
+                    # HELLO 상태: 루틴 발행 후 HAND 피드백 모니터링
+                    current_time = time.monotonic()
+                    
+                    # 루틴이 아직 발행되지 않았으면 발행 (allex_idle_interaction_node에서 처리)
+                    # 여기서는 피드백만 모니터링
+                    if self.hello_routine_sent and self.hello_routine_sent_time is not None:
+                        elapsed_time = current_time - self.hello_routine_sent_time
+                        
+                        # 0.1초 후부터 피드백 확인
+                        if elapsed_time >= self.hello_feedback_delay:
+                            # HAND 상태가 READY(4)로 바뀌면 SEARCHING으로 전이
+                            if self.current_hand_state == 4:  # READY
+                                self.state = TrackingState.SEARCHING
+                                self.target_track_id = None
+                                self.target_explicitly_set = False
+                                self.hello_routine_sent = False
+                                self.hello_routine_sent_time = None
+                                self.current_hand_state = None
+                                self.get_logger().info(
+                                    f"HELLO 완료: HAND 상태 READY → SEARCHING 상태로 전환"
+                                )
         
         # 추적 객체 생성
         tracked_objects: List[TrackedObject] = []
@@ -498,14 +633,18 @@ class TrackingFSMNode(Node):
         # 실제로 매칭된 타겟이 있을 때만 target_track_id 사용
         if target_track_id is not None:
             final_target_id = target_track_id
-        elif self.target_track_id is not None and target_exists:
-            # 타겟이 설정되어 있고 존재하지만 아직 매칭 안 됨 (이론적으로는 발생하지 않아야 함)
+        elif self.target_track_id is not None:
+            # 타겟이 설정되어 있으면 (존재하지 않아도) final_target_id를 유지
+            # 1프레임만 끊겨도 타겟 ID가 사라지는 것을 방지
             final_target_id = self.target_track_id
-            self.get_logger().warn(
-                f"⚠️ 타겟 ID {self.target_track_id}는 존재하지만 포인트가 설정되지 않음!"
-            )
+            if not target_exists:
+                # 타겟이 현재 프레임에 없지만 ID는 유지 (lost_frames가 증가 중)
+                self.get_logger().debug(
+                    f"타겟 ID {self.target_track_id}가 현재 프레임에 없지만 ID 유지 중 "
+                    f"(lost_frames={self.lost_frames}/{self.max_lost_frames})"
+                )
         else:
-            # 타겟이 없거나 매칭 안 됨
+            # 타겟이 설정되지 않음
             final_target_id = None
         
         # 타겟 포인트와 ID 일치 확인
@@ -665,12 +804,23 @@ class TrackingFSMNode(Node):
                             track_id=target_info.track_id
                         )
             
+            # 픽셀 좌표를 각도로 변환
+            target_angle = None
+            if validated_target_info.point is not None:
+                pixel_x, pixel_y = validated_target_info.point
+                relative_yaw_rad, relative_pitch_rad = self._pixel_to_angle(pixel_x, pixel_y)
+                target_angle = {
+                    'relative_yaw_rad': float(relative_yaw_rad),
+                    'relative_pitch_rad': float(relative_pitch_rad)
+                }
+            
             # JSON 데이터 구성
             data = {
                 'state': state_str,
                 'target_info': {
                     'track_id': validated_target_info.track_id,
                     'point': list(validated_target_info.point) if validated_target_info.point else None,
+                    'target_angle': target_angle,  # 각도 정보 추가
                     'state': state_str
                 },
                 'tracked_objects': objects_data,
@@ -757,8 +907,29 @@ class TrackingFSMNode(Node):
             
             try:
                 state = TrackingState[state_str.upper()]
-                self.set_state(state, target_id)
-                self.get_logger().info(f"상태 변경 요청 수신: {state_str}")
+                
+                # 상태 변경 요청은 manual_mode와 관계없이 처리 (자동 전환)
+                # Controller에서 요청한 상태 전환은 항상 허용
+                # 상태 변경 (manual_mode 체크 없이)
+                self.state = state
+                
+                # HELLO 상태로 전환 시 변수 초기화 (매번 리셋)
+                if state == TrackingState.HELLO:
+                    self.hello_routine_sent_time = time.monotonic()
+                    self.hello_routine_sent = True
+                    self.current_hand_state = None  # 초기화
+                    self.get_logger().info(
+                        f"HELLO 상태로 전환: 루틴 발행 시간 기록, "
+                        f"{self.hello_feedback_delay}초 후 HAND 피드백 확인 시작"
+                    )
+                if target_id is not None:
+                    self.target_track_id = int(target_id)
+                    self.target_explicitly_set = True
+                elif state != TrackingState.TRACKING:
+                    self.target_track_id = None
+                    self.target_explicitly_set = False
+                
+                self.get_logger().info(f"상태 변경 요청 수신: {state_str} → {self.state.value}")
             except (KeyError, AttributeError) as e:
                 self.get_logger().error(f"잘못된 상태: {state_str}")
                 
@@ -772,8 +943,28 @@ class TrackingFSMNode(Node):
         try:
             data = json.loads(msg.data)
             self.current_neck_yaw_rad = data.get('current_yaw_rad', None)
+            self.current_neck_pitch_rad = data.get('current_pitch_rad', None)
+            self.current_waist_yaw_rad = data.get('current_waist_yaw_rad', None)
+            self.target_neck_yaw_rad = data.get('target_yaw_rad', None)
+            self.target_waist_yaw_rad = data.get('target_waist_yaw_rad', None)
         except Exception as e:
             self.get_logger().warn(f"목 각도 파싱 실패: {e}")
+    
+    def _hand_feedback_callback(self, msg: Int32MultiArray):
+        """HAND 피드백 콜백 - HELLO 상태에서 사용"""
+        try:
+            if len(msg.data) >= 2:
+                # 두 번째 인자가 HAND 상태 (4: READY, 5: RUNNING)
+                hand_state = int(msg.data[1])
+                self.current_hand_state = hand_state
+                
+                if self.state == TrackingState.HELLO:
+                    self.get_logger().debug(
+                        f"HAND 피드백: 상태={hand_state} "
+                        f"(4: READY, 5: RUNNING)"
+                    )
+        except Exception as e:
+            self.get_logger().warn(f"HAND 피드백 파싱 실패: {e}")
 
 
 def main(args=None):
