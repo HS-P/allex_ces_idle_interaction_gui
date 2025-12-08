@@ -126,9 +126,9 @@ class GazeControllerNode(Node):
         self.kp_yaw = 1.45   # P 게인 (Yaw)
         self.kp_pitch = 1.0 # P 게인 (Pitch)
         self.ki_yaw = 0.16   # I 게인 (Yaw)
-        self.ki_pitch = 0.1 # I 게인 (Pitch)
+        self.ki_pitch = 0.04 # I 게인 (Pitch)
         self.kd_yaw = 0.02   # D 게인 (Yaw) - 진동 억제
-        self.kd_pitch = 0.1 # D 게인 (Pitch)
+        self.kd_pitch = 0.001 # D 게인 (Pitch)
         
         # 스무딩 파라미터 (v1.1 구조: 단순 1st-order filter)
         self.smoothing_factor = 0.8  # 스무딩 비활성화 (빠른 반응)
@@ -154,9 +154,9 @@ class GazeControllerNode(Node):
         self.last_waist_position_update_time = 0.0
         
         # WAIST_FOLLOWER 상태용 PID 게인 (허리 제어용) - 사용자 튜닝값
-        self.kp_waist_yaw = 0.55   # P 게인 (Waist Yaw) - 천천히 움직임
-        self.ki_waist_yaw = 0.015  # I 게인 (Waist Yaw) - 낮은 적분 게인
-        self.kd_waist_yaw = 0.001  # D 게인 (Waist Yaw)
+        self.kp_waist_yaw = 0.65   # P 게인 (Waist Yaw) - 천천히 움직임
+        self.ki_waist_yaw = 0.018  # I 게인 (Waist Yaw) - 낮은 적분 게인
+        self.kd_waist_yaw = 0.005  # D 게인 (Waist Yaw)
         
         # WAIST_FOLLOWER 상태용 목 제어 PID 게인 (목을 0도로 이동) - 독립적으로 설정 가능
         self.kp_neck_yaw_waist_mode = 0.3   # P 게인 (Neck Yaw - Waist 모드, IDLE에서도 사용)
@@ -167,6 +167,11 @@ class GazeControllerNode(Node):
         self.kp_waist_yaw_idle = 0.2   # P 게인 (Waist Yaw - IDLE 모드)
         self.ki_waist_yaw_idle = 0.01  # I 게인 (Waist Yaw - IDLE 모드)
         self.kd_waist_yaw_idle = 0.0   # D 게인 (Waist Yaw - IDLE 모드)
+        
+        # HELLO 상태용 허리 PID 게인 (일반 허리 게인의 1.5배)
+        self.kp_waist_yaw_hello = 1.0  # P 게인 (Waist Yaw - HELLO 모드) = 0.65 * 1.5
+        self.ki_waist_yaw_hello = 0.027  # I 게인 (Waist Yaw - HELLO 모드) = 0.018 * 1.5
+        self.kd_waist_yaw_hello = 0.003  # D 게인 (Waist Yaw - HELLO 모드) = 0.002 * 1.5
         
         # 허리 PID 제어 상태 변수
         self.integral_waist_yaw = 0.0
@@ -364,7 +369,7 @@ class GazeControllerNode(Node):
         
         return delta_yaw_rad, delta_pitch_rad
     
-    def _pid_control_waist(self, target_waist_yaw_rad: float, use_idle_gain: bool = False) -> float:
+    def _pid_control_waist(self, target_waist_yaw_rad: float, use_idle_gain: bool = False, use_hello_gain: bool = False) -> float:
         """허리 PID 제어를 사용하여 증분 명령 계산"""
         current_time = time.monotonic()
         dt = current_time - self.last_waist_update_time
@@ -373,8 +378,12 @@ class GazeControllerNode(Node):
         # 오차 계산: 목표 - 현재
         error_waist_yaw = target_waist_yaw_rad - self.current_waist_yaw_rad
         
-        # 게인 선택 (IDLE 모드면 IDLE용 게인 사용)
-        if use_idle_gain:
+        # 게인 선택 (HELLO 모드 > IDLE 모드 > 일반 순서)
+        if use_hello_gain:
+            kp = self.kp_waist_yaw_hello
+            ki = self.ki_waist_yaw_hello
+            kd = self.kd_waist_yaw_hello
+        elif use_idle_gain:
             kp = self.kp_waist_yaw_idle
             ki = self.ki_waist_yaw_idle
             kd = self.kd_waist_yaw_idle
@@ -429,14 +438,14 @@ class GazeControllerNode(Node):
         breathing_pitch_rad = math.sin(2.0 * math.pi * elapsed_time / self.breathing_period_sec) * math.radians(self.breathing_amplitude_deg)
         return breathing_pitch_rad
     
-    def _send_waist_command(self, target_waist_yaw_rad: float, use_pid: bool = True, use_idle_gain: bool = False, enable_breathing: bool = False) -> float:
+    def _send_waist_command(self, target_waist_yaw_rad: float, use_pid: bool = True, use_idle_gain: bool = False, use_hello_gain: bool = False, enable_breathing: bool = False) -> float:
         """허리 명령 전송 - PID 제어 후 절대각도로 전송"""
         # 목표 각도를 제한 범위 내로 클리핑
         target_waist_yaw_rad = max(self.waist_yaw_min, min(self.waist_yaw_max, target_waist_yaw_rad))
         
         if use_pid:
             # PID 제어로 증분 계산
-            delta_waist_yaw_rad = self._pid_control_waist(target_waist_yaw_rad, use_idle_gain=use_idle_gain)
+            delta_waist_yaw_rad = self._pid_control_waist(target_waist_yaw_rad, use_idle_gain=use_idle_gain, use_hello_gain=use_hello_gain)
         else:
             # PID 없이 직접 증분 계산
             delta_waist_yaw_rad = target_waist_yaw_rad - self.current_waist_yaw_rad
@@ -734,26 +743,44 @@ class GazeControllerNode(Node):
                 return absolute_neck_yaw_rad, absolute_neck_pitch_rad
             
             case TrackingState.HELLO:
-                # HELLO 상태: 현재 위치 유지 (손 제스처 루틴 실행 중)
+                # HELLO 상태: 목은 현재 위치 유지, 허리는 타겟을 따라감 (손 제스처 루틴 실행 중)
                 self.previous_state = TrackingState.HELLO
                 self.searching_start_time = None
                 self.search_phase = 0
-                self.waist_follower_initial_neck_yaw = None
-                self.integral_waist_yaw = 0.0
-                self.last_error_waist_yaw = 0.0
                 self.integral_neck_yaw_waist_mode = 0.0
                 self.last_error_neck_yaw_waist_mode = 0.0
                 
-                # 현재 위치를 절대각도로 직접 전송하여 유지
+                # 목은 현재 위치를 절대각도로 직접 전송하여 유지
                 msg = Float64MultiArray()
                 msg.data = [float(self.current_pitch_rad), float(self.current_yaw_rad)]  # [pitch, yaw] 순서, 절대각도 명령
                 self.neck_publisher.publish(msg)
                 
-                # 허리도 현재 위치 유지, 숨쉬는 모션 포함
-                waist_pitch_rad = self._get_breathing_pitch()
-                msg_waist = Float64MultiArray()
-                msg_waist.data = [float(self.current_waist_yaw_rad), float(waist_pitch_rad)]  # [yaw, pitch] 순서
-                self.waist_publisher.publish(msg_waist)
+                # 허리는 타겟이 있으면 따라가고, 없으면 현재 위치 유지
+                if target_info.point is not None:
+                    target_x, target_y = target_info.point
+                    
+                    # 픽셀을 각도로 변환
+                    relative_yaw_rad, relative_pitch_rad = self._pixel_to_angle(target_x, target_y, frame_width, frame_height)
+                    
+                    # 상대 각도 제한
+                    max_relative_yaw_rad = math.radians(90.0)
+                    relative_yaw_rad = max(-max_relative_yaw_rad, min(max_relative_yaw_rad, relative_yaw_rad))
+                    
+                    # 허리 목표 각도: 현재 허리 각도 + 상대 yaw 각도
+                    # 목은 고정되어 있으므로 허리만 움직여서 타겟을 따라감
+                    target_waist_yaw_rad = self.current_waist_yaw_rad + relative_yaw_rad
+                    
+                    # 허리 각도 제한 확인
+                    target_waist_yaw_rad = max(self.waist_yaw_min, min(self.waist_yaw_max, target_waist_yaw_rad))
+                    
+                    # 허리 명령 전송 (HELLO용 PID 게인 사용, 숨쉬는 모션 포함)
+                    self._send_waist_command(target_waist_yaw_rad, use_pid=True, use_hello_gain=True, enable_breathing=True)
+                else:
+                    # 타겟이 없으면 허리도 현재 위치 유지, 숨쉬는 모션 포함
+                    waist_pitch_rad = self._get_breathing_pitch()
+                    msg_waist = Float64MultiArray()
+                    msg_waist.data = [float(self.current_waist_yaw_rad), float(waist_pitch_rad)]  # [yaw, pitch] 순서
+                    self.waist_publisher.publish(msg_waist)
                 
                 return self.current_yaw_rad, self.current_pitch_rad
             

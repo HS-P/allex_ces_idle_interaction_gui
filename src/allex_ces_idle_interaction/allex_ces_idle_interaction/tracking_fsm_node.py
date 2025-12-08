@@ -149,7 +149,7 @@ class TrackingFSMNode(Node):
         
         # WAIST_FOLLOWER 전이를 위한 변수들 (목 각도 기반)
         self.neck_stable_start_time: Optional[float] = None  # 목 각도가 안정되기 시작한 시간
-        self.neck_stable_duration = 3.0  # 목 각도가 안정되어야 하는 최소 시간 (초)
+        self.neck_stable_duration = 1.75  # 목 각도가 안정되어야 하는 최소 시간 (초) - 반으로 줄임
         self.neck_stable_threshold_deg = 1.5  # 목 각도 안정성 임계값 (도)
         self.last_neck_yaw_rad: Optional[float] = None  # 이전 목 각도 (라디안)
         self.neck_stable_reference_yaw_rad: Optional[float] = None  # 안정성 기준 목 각도 (라디안)

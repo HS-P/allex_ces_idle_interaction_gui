@@ -1,0 +1,20 @@
+[1.008s] Invoking command in '/home/yeah2/allex_ces_idle_interaction_gui/build/allex_testbed': CONDA_PROMPT_MODIFIER=(base) PYTHONPATH=/home/yeah2/allex_ces_idle_interaction_gui/build/allex_testbed/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/yeah2/allex_ces_idle_interaction_gui/install/allex_testbed/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/yeah2/allex_ces_idle_interaction_gui/build/allex_testbed/build --no-deps symlink_data
+[1.179s] running develop
+[1.279s] running egg_info
+[1.279s] writing allex_testbed.egg-info/PKG-INFO
+[1.279s] writing dependency_links to allex_testbed.egg-info/dependency_links.txt
+[1.279s] writing entry points to allex_testbed.egg-info/entry_points.txt
+[1.279s] writing requirements to allex_testbed.egg-info/requires.txt
+[1.279s] writing top-level names to allex_testbed.egg-info/top_level.txt
+[1.280s] reading manifest file 'allex_testbed.egg-info/SOURCES.txt'
+[1.281s] writing manifest file 'allex_testbed.egg-info/SOURCES.txt'
+[1.282s] running build_ext
+[1.282s] Creating /home/yeah2/allex_ces_idle_interaction_gui/install/allex_testbed/lib/python3.10/site-packages/allex-testbed.egg-link (link to .)
+[1.283s] Installing gaze_controller_testbed_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_testbed/lib/allex_testbed
+[1.283s] Installing testbed_gaze_tracking_gui_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_testbed/lib/allex_testbed
+[1.283s] Installing testbed_gaze_tracking_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_testbed/lib/allex_testbed
+[1.283s] Installing testbed_gui_node script to /home/yeah2/allex_ces_idle_interaction_gui/install/allex_testbed/lib/allex_testbed
+[1.283s] 
+[1.283s] Installed /home/yeah2/allex_ces_idle_interaction_gui/build/allex_testbed
+[1.283s] running symlink_data
+[1.305s] Invoked command in '/home/yeah2/allex_ces_idle_interaction_gui/build/allex_testbed' returned '0': CONDA_PROMPT_MODIFIER=(base) PYTHONPATH=/home/yeah2/allex_ces_idle_interaction_gui/build/allex_testbed/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/yeah2/allex_ces_idle_interaction_gui/install/allex_testbed/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/yeah2/allex_ces_idle_interaction_gui/build/allex_testbed/build --no-deps symlink_data
