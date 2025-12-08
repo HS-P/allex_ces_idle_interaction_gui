@@ -1,4 +1,7 @@
-Main Branch에서 ZED_PUBLISHER의 역할을 현재는 INSTA 360으로 대체했습니다.
+V 1.3.0 기준으로 Routine 기능을 활용해서 정상 작동을 확인했습니다.
 
-Rotate Image를 적용시키고 난 후에 Routine을 적용시켜놨는데, 이게 잘 작동할지는 하나씩 디버깅해보면서 진행해보아야합니다.
-
+- 차후 개선 예정 사항
+* State 간 간헐적 튕김 현상 보완
+* Head-Waist Feedback 보완
+* 다중 객체 인식 정상 판단
+* SEARCHING 게인 설정
