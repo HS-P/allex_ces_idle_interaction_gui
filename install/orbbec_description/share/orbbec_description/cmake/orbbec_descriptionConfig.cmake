@@ -1,1 +1,0 @@
-/home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_description/ament_cmake_core/orbbec_descriptionConfig.cmake

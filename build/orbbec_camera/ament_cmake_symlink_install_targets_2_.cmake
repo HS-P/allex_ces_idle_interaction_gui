@@ -1,1 +1,0 @@
-ament_cmake_symlink_install_targets("TARGET_FILES" "/home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera/start_benchmark_node" "TARGETS" "start_benchmark_node" "DESTINATION" "lib/orbbec_camera")

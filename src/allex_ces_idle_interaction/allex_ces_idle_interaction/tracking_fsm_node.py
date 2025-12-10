@@ -122,7 +122,7 @@ class TrackingFSMNode(Node):
         # HAND 피드백 구독 (HELLO 상태에서 사용)
         self.hand_feedback_subscription = self.create_subscription(
             Int32MultiArray,
-            '/robot_outbound_data/Hand_L_ring_wir/articulation_now',
+            '/robot_outbound_data/Hand_R_ring_wir/articulation_now',
             self._hand_feedback_callback,
             10
         )

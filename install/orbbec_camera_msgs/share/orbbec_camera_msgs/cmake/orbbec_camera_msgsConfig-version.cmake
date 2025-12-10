@@ -1,1 +1,0 @@
-/home/yeah2/allex_ces_idle_interaction_gui/build/orbbec_camera_msgs/ament_cmake_core/orbbec_camera_msgsConfig-version.cmake

@@ -1,1 +1,0 @@
-/home/yeah2/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction/launch/allex_idle_interaction.launch.py
