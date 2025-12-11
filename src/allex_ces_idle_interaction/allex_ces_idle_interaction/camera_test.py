@@ -56,7 +56,7 @@ class CameraPublisherNode(Node):
         self.capture_thread.start()
 
         # timer callback: 30Hz 발행 요청
-        self.timer = self.create_timer(1.0 / 30.0, self.publish_frame)
+        self.timer = self.create_timer(1.0 / 60.0, self.publish_frame)
 
         # FPS 측정
         self.frame_count = 0
@@ -84,7 +84,7 @@ class CameraPublisherNode(Node):
 
         target_width = self.target_width
         target_height = self.target_height
-        target_fps = 30
+        target_fps = 60
 
         # MJPEG 설정 시도
         self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
