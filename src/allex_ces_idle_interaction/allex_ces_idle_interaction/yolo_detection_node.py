@@ -14,7 +14,6 @@ import cv2
 import numpy as np
 import torch
 from ultralytics import YOLO
-from huggingface_hub import hf_hub_download
 
 PERSON_CLASS_ID = 0  # COCO 사람 클래스 ID
 
@@ -93,7 +92,6 @@ class YOLODetectionNode(Node):
     def _init_yolo_model(self):
         """YOLO 모델 초기화"""
         model_path = "yolo11n.pt"
-        face_model_path = hf_hub_download(repo_id="AdamCodd/YOLOv11n-face-detection", filename="model.pt")
         
         # GPU 디바이스 설정
         device = 'cpu'
@@ -114,12 +112,10 @@ class YOLODetectionNode(Node):
         
         # YOLO 모델 초기화
         self.yolo_model = YOLO(model_path)
-        self.face_model = YOLO(face_model_path)
         
         # GPU로 모델 이동
         if device != 'cpu':
             self.yolo_model.to(device)
-            self.face_model.to(device)
         
         self.conf_threshold = 0.7
         
@@ -229,10 +225,15 @@ class YOLODetectionNode(Node):
             }
             
             # JSON 문자열로 변환하여 발행
-            json_str = json.dumps(data, ensure_ascii=False)
-            msg = String()
-            msg.data = json_str
-            self.detection_publisher.publish(msg)
+            try:
+                json_str = json.dumps(data, ensure_ascii=False)
+                if not isinstance(json_str, str):
+                    json_str = str(json_str)
+                msg = String()
+                msg.data = json_str
+                self.detection_publisher.publish(msg)
+            except Exception as pub_e:
+                self.get_logger().error(f"Detection 발행 실패: {pub_e}")
             
         except Exception as e:
             self.get_logger().error(f"Detection 결과 발행 실패: {e}")

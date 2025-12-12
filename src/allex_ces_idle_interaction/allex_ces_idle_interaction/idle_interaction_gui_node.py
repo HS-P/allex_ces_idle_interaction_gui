@@ -571,7 +571,7 @@ class GuiNode(Node, QMainWindow):
         state_select_layout.addWidget(QLabel("State 선택:"))
         
         self.state_combo = QComboBox()
-        self.state_combo.addItems(["IDLE", "TRACKING", "LOST", "SEARCHING", "WAIST_FOLLOWER", "HELLO"])
+        self.state_combo.addItems(["IDLE", "TRACKING", "LOST", "SEARCHING", "HELLO"])
         self.state_combo.setMinimumHeight(40)
         self.state_combo.setStyleSheet("font-size: 12pt;")
         self.state_combo.currentTextChanged.connect(self.on_state_changed)
@@ -957,20 +957,28 @@ class GuiNode(Node, QMainWindow):
         self.signals.state_changed.emit(state_text)
     
     def _on_target_button_clicked(self, target_id: int):
-        """타겟 변경 버튼 클릭 이벤트 - tracking_result를 받을 때까지 기다림"""
+        """타겟 변경 버튼 클릭 이벤트"""
         if not self.is_running:
             self.get_logger().warn("RUN 버튼을 먼저 눌러주세요.")
             return
         
-        # 로컬 업데이트 제거: tracking_result를 받을 때 자동으로 동기화됨
-        # 명령만 전송하고, 실제 업데이트는 _camera_data_callback에서 처리
+        self.current_target_info = TargetInfo(
+            point=self.current_target_info.point if self.current_target_info else None,
+            state=TrackingState.TRACKING,
+            track_id=target_id
+        )
+        
+        self._update_target_buttons()
+        
+        self.target_id_label.setText(str(target_id))
+        self.target_id_label.setStyleSheet("font-size: 14pt; font-weight: bold; color: green;")
         
         self._send_manual_control({
             'type': 'set_target',
             'target_id': target_id,
             'force': True
         })
-        self.get_logger().info(f"[GUI] 타겟 변경 요청 전송: {target_id} (tracking_result 대기 중...)")
+        self.get_logger().info(f"[GUI] 타겟 변경 요청 전송: {target_id}")
     
     def _send_manual_control(self, command: dict):
         """Manual 제어 명령 전송"""
@@ -1031,7 +1039,6 @@ class GuiNode(Node, QMainWindow):
             'TRACKING': 'green',
             'LOST': 'orange',
             'SEARCHING': 'yellow',
-            'WAIST_FOLLOWER': 'purple',
             'HELLO': 'cyan',
             'INTERACTION': 'blue'
         }
