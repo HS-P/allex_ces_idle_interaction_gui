@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>irim_control_panel_n_dashboard</name>
+  <version>0.0.0</version>
+  <description>TODO: Package description</description>
+  <maintainer email="yeah@todo.todo">yeah</maintainer>
+  <license>TODO: License declaration</license>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+
+  <!-- 빌드 도구 -->
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <!-- 빌드 의존성 -->
+  <build_depend>rclpy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>ament_index_python</build_depend>
+
+  <!-- 실행 의존성 -->
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>PyQt5</exec_depend>
+
+  <exec_depend>sshpass</exec_depend>
+  <!-- 필요하면 런타임/테스트 의존성도 추가 -->
+  <test_depend>sshpass</test_depend>
+
+
+
+
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

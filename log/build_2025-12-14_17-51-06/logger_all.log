@@ -1,0 +1,269 @@
+[0.088s] DEBUG:colcon:Command line arguments: ['/usr/bin/colcon', 'build', '--symlink-install']
+[0.088s] DEBUG:colcon:Parsed command line arguments: Namespace(log_base=None, log_level=None, verb_name='build', build_base='build', install_base='install', merge_install=False, symlink_install=True, test_result_base=None, continue_on_error=False, executor='parallel', parallel_workers=14, event_handlers=None, ignore_user_meta=False, metas=['./colcon.meta'], base_paths=['.'], packages_ignore=None, packages_ignore_regex=None, paths=None, packages_up_to=None, packages_up_to_regex=None, packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_select_by_dep=None, packages_skip_by_dep=None, packages_skip_up_to=None, packages_select_build_failed=False, packages_skip_build_finished=False, packages_select_test_failures=False, packages_skip_test_passed=False, packages_select=None, packages_skip=None, packages_select_regex=None, packages_skip_regex=None, packages_start=None, packages_end=None, allow_overriding=[], cmake_args=None, cmake_target=None, cmake_target_skip_unavailable=False, cmake_clean_cache=False, cmake_clean_first=False, cmake_force_configure=False, ament_cmake_args=None, catkin_cmake_args=None, catkin_skip_building_tests=False, mixin_files=None, mixin=None, verb_parser=<colcon_mixin.mixin.mixin_argument.MixinArgumentDecorator object at 0xffff94606cc0>, verb_extension=<colcon_core.verb.build.BuildVerb object at 0xffff9477f740>, main=<bound method BuildVerb.main of <colcon_core.verb.build.BuildVerb object at 0xffff9477f740>>, mixin_verb=('build',))
+[0.121s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[0.121s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[0.121s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[0.121s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[0.121s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) discover
+[0.121s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[0.121s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/home/mars/allex_ces_idle_interaction'
+[0.121s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ignore', 'ignore_ament_install']
+[0.121s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore'
+[0.121s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore_ament_install'
+[0.122s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_pkg']
+[0.122s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_pkg'
+[0.122s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_meta']
+[0.122s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_meta'
+[0.122s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ros']
+[0.122s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ros'
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['cmake', 'python']
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'cmake'
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python'
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['python_setup_py']
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python_setup_py'
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extensions ['ignore', 'ignore_ament_install']
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extension 'ignore'
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(build) ignored
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(crowd_video_bag) by extensions ['ignore', 'ignore_ament_install']
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(crowd_video_bag) by extension 'ignore'
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(crowd_video_bag) by extension 'ignore_ament_install'
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(crowd_video_bag) by extensions ['colcon_pkg']
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(crowd_video_bag) by extension 'colcon_pkg'
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(crowd_video_bag) by extensions ['colcon_meta']
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(crowd_video_bag) by extension 'colcon_meta'
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(crowd_video_bag) by extensions ['ros']
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(crowd_video_bag) by extension 'ros'
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(crowd_video_bag) by extensions ['cmake', 'python']
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(crowd_video_bag) by extension 'cmake'
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(crowd_video_bag) by extension 'python'
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(crowd_video_bag) by extensions ['python_setup_py']
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(crowd_video_bag) by extension 'python_setup_py'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extensions ['ignore', 'ignore_ament_install']
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extension 'ignore'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(install) ignored
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extensions ['ignore', 'ignore_ament_install']
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extension 'ignore'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(log) ignored
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['ignore', 'ignore_ament_install']
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ignore'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ignore_ament_install'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['colcon_pkg']
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'colcon_pkg'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['colcon_meta']
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'colcon_meta'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['ros']
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ros'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['cmake', 'python']
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'cmake'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'python'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['python_setup_py']
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'python_setup_py'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/OrbbecSDK_ROS2) by extensions ['ignore', 'ignore_ament_install']
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/OrbbecSDK_ROS2) by extension 'ignore'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/OrbbecSDK_ROS2) by extension 'ignore_ament_install'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/OrbbecSDK_ROS2) by extensions ['colcon_pkg']
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/OrbbecSDK_ROS2) by extension 'colcon_pkg'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/OrbbecSDK_ROS2) by extensions ['colcon_meta']
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/OrbbecSDK_ROS2) by extension 'colcon_meta'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/OrbbecSDK_ROS2) by extensions ['ros']
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/OrbbecSDK_ROS2) by extension 'ros'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/OrbbecSDK_ROS2) by extensions ['cmake', 'python']
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/OrbbecSDK_ROS2) by extension 'cmake'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/OrbbecSDK_ROS2) by extension 'python'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/OrbbecSDK_ROS2) by extensions ['python_setup_py']
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/OrbbecSDK_ROS2) by extension 'python_setup_py'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/allex_ces_idle_interaction) by extensions ['ignore', 'ignore_ament_install']
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/allex_ces_idle_interaction) by extension 'ignore'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/allex_ces_idle_interaction) by extension 'ignore_ament_install'
+[0.144s] Level 1:colcon.colcon_core.package_identification:_identify(src/allex_ces_idle_interaction) by extensions ['colcon_pkg']
+[0.144s] Level 1:colcon.colcon_core.package_identification:_identify(src/allex_ces_idle_interaction) by extension 'colcon_pkg'
+[0.144s] Level 1:colcon.colcon_core.package_identification:_identify(src/allex_ces_idle_interaction) by extensions ['colcon_meta']
+[0.144s] Level 1:colcon.colcon_core.package_identification:_identify(src/allex_ces_idle_interaction) by extension 'colcon_meta'
+[0.144s] Level 1:colcon.colcon_core.package_identification:_identify(src/allex_ces_idle_interaction) by extensions ['ros']
+[0.144s] Level 1:colcon.colcon_core.package_identification:_identify(src/allex_ces_idle_interaction) by extension 'ros'
+[0.146s] DEBUG:colcon.colcon_core.package_identification:Package 'src/allex_ces_idle_interaction' with type 'ros.ament_python' and name 'allex_ces_idle_interaction'
+[0.146s] Level 1:colcon.colcon_core.package_identification:_identify(src/allex_testbed) by extensions ['ignore', 'ignore_ament_install']
+[0.146s] Level 1:colcon.colcon_core.package_identification:_identify(src/allex_testbed) by extension 'ignore'
+[0.146s] Level 1:colcon.colcon_core.package_identification:_identify(src/allex_testbed) by extension 'ignore_ament_install'
+[0.146s] Level 1:colcon.colcon_core.package_identification:_identify(src/allex_testbed) by extensions ['colcon_pkg']
+[0.146s] Level 1:colcon.colcon_core.package_identification:_identify(src/allex_testbed) by extension 'colcon_pkg'
+[0.146s] Level 1:colcon.colcon_core.package_identification:_identify(src/allex_testbed) by extensions ['colcon_meta']
+[0.146s] Level 1:colcon.colcon_core.package_identification:_identify(src/allex_testbed) by extension 'colcon_meta'
+[0.146s] Level 1:colcon.colcon_core.package_identification:_identify(src/allex_testbed) by extensions ['ros']
+[0.146s] Level 1:colcon.colcon_core.package_identification:_identify(src/allex_testbed) by extension 'ros'
+[0.146s] DEBUG:colcon.colcon_core.package_identification:Package 'src/allex_testbed' with type 'ros.ament_python' and name 'allex_testbed'
+[0.146s] Level 1:colcon.colcon_core.package_identification:_identify(src/irim_control_panel_n_dashboard) by extensions ['ignore', 'ignore_ament_install']
+[0.146s] Level 1:colcon.colcon_core.package_identification:_identify(src/irim_control_panel_n_dashboard) by extension 'ignore'
+[0.147s] Level 1:colcon.colcon_core.package_identification:_identify(src/irim_control_panel_n_dashboard) by extension 'ignore_ament_install'
+[0.147s] Level 1:colcon.colcon_core.package_identification:_identify(src/irim_control_panel_n_dashboard) by extensions ['colcon_pkg']
+[0.147s] Level 1:colcon.colcon_core.package_identification:_identify(src/irim_control_panel_n_dashboard) by extension 'colcon_pkg'
+[0.147s] Level 1:colcon.colcon_core.package_identification:_identify(src/irim_control_panel_n_dashboard) by extensions ['colcon_meta']
+[0.147s] Level 1:colcon.colcon_core.package_identification:_identify(src/irim_control_panel_n_dashboard) by extension 'colcon_meta'
+[0.147s] Level 1:colcon.colcon_core.package_identification:_identify(src/irim_control_panel_n_dashboard) by extensions ['ros']
+[0.147s] Level 1:colcon.colcon_core.package_identification:_identify(src/irim_control_panel_n_dashboard) by extension 'ros'
+[0.147s] DEBUG:colcon.colcon_core.package_identification:Package 'src/irim_control_panel_n_dashboard' with type 'ros.ament_python' and name 'irim_control_panel_n_dashboard'
+[0.147s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults
+[0.147s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) discover
+[0.147s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) using defaults
+[0.147s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) discover
+[0.147s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) using defaults
+[0.163s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) check parameters
+[0.163s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) discover
+[0.166s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 3 installed packages in /home/mars/allex_ces_idle_interaction/install
+[0.166s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 2 installed packages in /home/mars/hansol/allex_ces_idle_interaction_gui/install
+[0.167s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 13 installed packages in /home/mars/allex_ros2_ws/install
+[0.168s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 410 installed packages in /opt/ros/jazzy
+[0.169s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) using defaults
+[0.205s] Level 5:colcon.colcon_core.verb:set package 'allex_ces_idle_interaction' build argument 'cmake_args' from command line to 'None'
+[0.205s] Level 5:colcon.colcon_core.verb:set package 'allex_ces_idle_interaction' build argument 'cmake_target' from command line to 'None'
+[0.205s] Level 5:colcon.colcon_core.verb:set package 'allex_ces_idle_interaction' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.205s] Level 5:colcon.colcon_core.verb:set package 'allex_ces_idle_interaction' build argument 'cmake_clean_cache' from command line to 'False'
+[0.205s] Level 5:colcon.colcon_core.verb:set package 'allex_ces_idle_interaction' build argument 'cmake_clean_first' from command line to 'False'
+[0.205s] Level 5:colcon.colcon_core.verb:set package 'allex_ces_idle_interaction' build argument 'cmake_force_configure' from command line to 'False'
+[0.205s] Level 5:colcon.colcon_core.verb:set package 'allex_ces_idle_interaction' build argument 'ament_cmake_args' from command line to 'None'
+[0.205s] Level 5:colcon.colcon_core.verb:set package 'allex_ces_idle_interaction' build argument 'catkin_cmake_args' from command line to 'None'
+[0.205s] Level 5:colcon.colcon_core.verb:set package 'allex_ces_idle_interaction' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.205s] DEBUG:colcon.colcon_core.verb:Building package 'allex_ces_idle_interaction' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/mars/allex_ces_idle_interaction/build/allex_ces_idle_interaction', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/mars/allex_ces_idle_interaction/install/allex_ces_idle_interaction', 'merge_install': False, 'path': '/home/mars/allex_ces_idle_interaction/src/allex_ces_idle_interaction', 'symlink_install': True, 'test_result_base': None}
+[0.206s] Level 5:colcon.colcon_core.verb:set package 'allex_testbed' build argument 'cmake_args' from command line to 'None'
+[0.206s] Level 5:colcon.colcon_core.verb:set package 'allex_testbed' build argument 'cmake_target' from command line to 'None'
+[0.206s] Level 5:colcon.colcon_core.verb:set package 'allex_testbed' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.206s] Level 5:colcon.colcon_core.verb:set package 'allex_testbed' build argument 'cmake_clean_cache' from command line to 'False'
+[0.206s] Level 5:colcon.colcon_core.verb:set package 'allex_testbed' build argument 'cmake_clean_first' from command line to 'False'
+[0.206s] Level 5:colcon.colcon_core.verb:set package 'allex_testbed' build argument 'cmake_force_configure' from command line to 'False'
+[0.206s] Level 5:colcon.colcon_core.verb:set package 'allex_testbed' build argument 'ament_cmake_args' from command line to 'None'
+[0.206s] Level 5:colcon.colcon_core.verb:set package 'allex_testbed' build argument 'catkin_cmake_args' from command line to 'None'
+[0.206s] Level 5:colcon.colcon_core.verb:set package 'allex_testbed' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.206s] DEBUG:colcon.colcon_core.verb:Building package 'allex_testbed' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/mars/allex_ces_idle_interaction/build/allex_testbed', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/mars/allex_ces_idle_interaction/install/allex_testbed', 'merge_install': False, 'path': '/home/mars/allex_ces_idle_interaction/src/allex_testbed', 'symlink_install': True, 'test_result_base': None}
+[0.206s] Level 5:colcon.colcon_core.verb:set package 'irim_control_panel_n_dashboard' build argument 'cmake_args' from command line to 'None'
+[0.206s] Level 5:colcon.colcon_core.verb:set package 'irim_control_panel_n_dashboard' build argument 'cmake_target' from command line to 'None'
+[0.206s] Level 5:colcon.colcon_core.verb:set package 'irim_control_panel_n_dashboard' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.206s] Level 5:colcon.colcon_core.verb:set package 'irim_control_panel_n_dashboard' build argument 'cmake_clean_cache' from command line to 'False'
+[0.206s] Level 5:colcon.colcon_core.verb:set package 'irim_control_panel_n_dashboard' build argument 'cmake_clean_first' from command line to 'False'
+[0.206s] Level 5:colcon.colcon_core.verb:set package 'irim_control_panel_n_dashboard' build argument 'cmake_force_configure' from command line to 'False'
+[0.206s] Level 5:colcon.colcon_core.verb:set package 'irim_control_panel_n_dashboard' build argument 'ament_cmake_args' from command line to 'None'
+[0.206s] Level 5:colcon.colcon_core.verb:set package 'irim_control_panel_n_dashboard' build argument 'catkin_cmake_args' from command line to 'None'
+[0.206s] Level 5:colcon.colcon_core.verb:set package 'irim_control_panel_n_dashboard' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.206s] DEBUG:colcon.colcon_core.verb:Building package 'irim_control_panel_n_dashboard' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/mars/allex_ces_idle_interaction/build/irim_control_panel_n_dashboard', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/mars/allex_ces_idle_interaction/install/irim_control_panel_n_dashboard', 'merge_install': False, 'path': '/home/mars/allex_ces_idle_interaction/src/irim_control_panel_n_dashboard', 'symlink_install': True, 'test_result_base': None}
+[0.206s] INFO:colcon.colcon_core.executor:Executing jobs using 'parallel' executor
+[0.207s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete
+[0.208s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/mars/allex_ces_idle_interaction/src/allex_ces_idle_interaction' with build type 'ament_python'
+[0.208s] Level 1:colcon.colcon_core.shell:create_environment_hook('allex_ces_idle_interaction', 'ament_prefix_path')
+[0.210s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_core.shell.bat': Not used on non-Windows systems
+[0.210s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/mars/allex_ces_idle_interaction/install/allex_ces_idle_interaction/share/allex_ces_idle_interaction/hook/ament_prefix_path.ps1'
+[0.211s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/mars/allex_ces_idle_interaction/install/allex_ces_idle_interaction/share/allex_ces_idle_interaction/hook/ament_prefix_path.dsv'
+[0.211s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/mars/allex_ces_idle_interaction/install/allex_ces_idle_interaction/share/allex_ces_idle_interaction/hook/ament_prefix_path.sh'
+[0.211s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.211s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.216s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/mars/allex_ces_idle_interaction/src/allex_testbed' with build type 'ament_python'
+[0.216s] Level 1:colcon.colcon_core.shell:create_environment_hook('allex_testbed', 'ament_prefix_path')
+[0.216s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/mars/allex_ces_idle_interaction/install/allex_testbed/share/allex_testbed/hook/ament_prefix_path.ps1'
+[0.217s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/mars/allex_ces_idle_interaction/install/allex_testbed/share/allex_testbed/hook/ament_prefix_path.dsv'
+[0.217s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/mars/allex_ces_idle_interaction/install/allex_testbed/share/allex_testbed/hook/ament_prefix_path.sh'
+[0.217s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.217s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.221s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/mars/allex_ces_idle_interaction/src/irim_control_panel_n_dashboard' with build type 'ament_python'
+[0.221s] Level 1:colcon.colcon_core.shell:create_environment_hook('irim_control_panel_n_dashboard', 'ament_prefix_path')
+[0.221s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/mars/allex_ces_idle_interaction/install/irim_control_panel_n_dashboard/share/irim_control_panel_n_dashboard/hook/ament_prefix_path.ps1'
+[0.221s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/mars/allex_ces_idle_interaction/install/irim_control_panel_n_dashboard/share/irim_control_panel_n_dashboard/hook/ament_prefix_path.dsv'
+[0.222s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/mars/allex_ces_idle_interaction/install/irim_control_panel_n_dashboard/share/irim_control_panel_n_dashboard/hook/ament_prefix_path.sh'
+[0.222s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.222s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.417s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/mars/allex_ces_idle_interaction/src/allex_ces_idle_interaction'
+[0.418s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.418s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.614s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/mars/allex_ces_idle_interaction/src/allex_testbed'
+[0.615s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.615s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.843s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/mars/allex_ces_idle_interaction/src/irim_control_panel_n_dashboard'
+[0.843s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.844s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[1.409s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/mars/allex_ces_idle_interaction/build/allex_ces_idle_interaction': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/mars/allex_ces_idle_interaction/build/allex_ces_idle_interaction/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/mars/allex_ces_idle_interaction/install/allex_ces_idle_interaction/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/mars/allex_ces_idle_interaction/build/allex_ces_idle_interaction/build --no-deps symlink_data
+[1.485s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/mars/allex_ces_idle_interaction/build/irim_control_panel_n_dashboard': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/mars/allex_ces_idle_interaction/build/irim_control_panel_n_dashboard/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/mars/allex_ces_idle_interaction/install/irim_control_panel_n_dashboard/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/mars/allex_ces_idle_interaction/build/irim_control_panel_n_dashboard/build --no-deps symlink_data
+[1.489s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/mars/allex_ces_idle_interaction/build/allex_testbed': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/mars/allex_ces_idle_interaction/build/allex_testbed/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/mars/allex_ces_idle_interaction/install/allex_testbed/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/mars/allex_ces_idle_interaction/build/allex_testbed/build --no-deps symlink_data
+[2.071s] Level 1:colcon.colcon_core.shell:create_environment_hook('irim_control_panel_n_dashboard', 'pythonpath_develop')
+[2.071s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/mars/allex_ces_idle_interaction/build/irim_control_panel_n_dashboard/share/irim_control_panel_n_dashboard/hook/pythonpath_develop.ps1'
+[2.074s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/mars/allex_ces_idle_interaction/build/irim_control_panel_n_dashboard' returned '0': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/mars/allex_ces_idle_interaction/build/irim_control_panel_n_dashboard/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/mars/allex_ces_idle_interaction/install/irim_control_panel_n_dashboard/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/mars/allex_ces_idle_interaction/build/irim_control_panel_n_dashboard/build --no-deps symlink_data
+[2.076s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/mars/allex_ces_idle_interaction/build/irim_control_panel_n_dashboard/share/irim_control_panel_n_dashboard/hook/pythonpath_develop.dsv'
+[2.077s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/mars/allex_ces_idle_interaction/build/irim_control_panel_n_dashboard/share/irim_control_panel_n_dashboard/hook/pythonpath_develop.sh'
+[2.082s] Level 1:colcon.colcon_core.environment:checking '/home/mars/allex_ces_idle_interaction/install/irim_control_panel_n_dashboard' for CMake module files
+[2.083s] Level 1:colcon.colcon_core.environment:checking '/home/mars/allex_ces_idle_interaction/install/irim_control_panel_n_dashboard' for CMake config files
+[2.084s] Level 1:colcon.colcon_core.environment:checking '/home/mars/allex_ces_idle_interaction/install/irim_control_panel_n_dashboard/lib'
+[2.084s] Level 1:colcon.colcon_core.environment:checking '/home/mars/allex_ces_idle_interaction/install/irim_control_panel_n_dashboard/bin'
+[2.084s] Level 1:colcon.colcon_core.environment:checking '/home/mars/allex_ces_idle_interaction/install/irim_control_panel_n_dashboard/lib/pkgconfig/irim_control_panel_n_dashboard.pc'
+[2.085s] Level 1:colcon.colcon_core.environment:checking '/home/mars/allex_ces_idle_interaction/install/irim_control_panel_n_dashboard/lib/python3.12/site-packages'
+[2.085s] Level 1:colcon.colcon_core.shell:create_environment_hook('irim_control_panel_n_dashboard', 'pythonpath')
+[2.085s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/mars/allex_ces_idle_interaction/install/irim_control_panel_n_dashboard/share/irim_control_panel_n_dashboard/hook/pythonpath.ps1'
+[2.086s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/mars/allex_ces_idle_interaction/install/irim_control_panel_n_dashboard/share/irim_control_panel_n_dashboard/hook/pythonpath.dsv'
+[2.087s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/mars/allex_ces_idle_interaction/install/irim_control_panel_n_dashboard/share/irim_control_panel_n_dashboard/hook/pythonpath.sh'
+[2.088s] Level 1:colcon.colcon_core.environment:checking '/home/mars/allex_ces_idle_interaction/install/irim_control_panel_n_dashboard/bin'
+[2.088s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(irim_control_panel_n_dashboard)
+[2.088s] INFO:colcon.colcon_core.shell:Creating package script '/home/mars/allex_ces_idle_interaction/install/irim_control_panel_n_dashboard/share/irim_control_panel_n_dashboard/package.ps1'
+[2.090s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/mars/allex_ces_idle_interaction/install/irim_control_panel_n_dashboard/share/irim_control_panel_n_dashboard/package.dsv'
+[2.091s] INFO:colcon.colcon_core.shell:Creating package script '/home/mars/allex_ces_idle_interaction/install/irim_control_panel_n_dashboard/share/irim_control_panel_n_dashboard/package.sh'
+[2.092s] INFO:colcon.colcon_core.shell:Creating package script '/home/mars/allex_ces_idle_interaction/install/irim_control_panel_n_dashboard/share/irim_control_panel_n_dashboard/package.bash'
+[2.093s] INFO:colcon.colcon_core.shell:Creating package script '/home/mars/allex_ces_idle_interaction/install/irim_control_panel_n_dashboard/share/irim_control_panel_n_dashboard/package.zsh'
+[2.094s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/mars/allex_ces_idle_interaction/install/irim_control_panel_n_dashboard/share/colcon-core/packages/irim_control_panel_n_dashboard)
+[2.095s] Level 1:colcon.colcon_core.shell:create_environment_hook('allex_ces_idle_interaction', 'pythonpath_develop')
+[2.096s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/mars/allex_ces_idle_interaction/build/allex_ces_idle_interaction/share/allex_ces_idle_interaction/hook/pythonpath_develop.ps1'
+[2.097s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/mars/allex_ces_idle_interaction/build/allex_ces_idle_interaction' returned '0': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/mars/allex_ces_idle_interaction/build/allex_ces_idle_interaction/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/mars/allex_ces_idle_interaction/install/allex_ces_idle_interaction/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/mars/allex_ces_idle_interaction/build/allex_ces_idle_interaction/build --no-deps symlink_data
+[2.098s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/mars/allex_ces_idle_interaction/build/allex_ces_idle_interaction/share/allex_ces_idle_interaction/hook/pythonpath_develop.dsv'
+[2.098s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/mars/allex_ces_idle_interaction/build/allex_ces_idle_interaction/share/allex_ces_idle_interaction/hook/pythonpath_develop.sh'
+[2.099s] Level 1:colcon.colcon_core.environment:checking '/home/mars/allex_ces_idle_interaction/install/allex_ces_idle_interaction' for CMake module files
+[2.100s] Level 1:colcon.colcon_core.environment:checking '/home/mars/allex_ces_idle_interaction/install/allex_ces_idle_interaction' for CMake config files
+[2.101s] Level 1:colcon.colcon_core.environment:checking '/home/mars/allex_ces_idle_interaction/install/allex_ces_idle_interaction/lib'
+[2.101s] Level 1:colcon.colcon_core.environment:checking '/home/mars/allex_ces_idle_interaction/install/allex_ces_idle_interaction/bin'
+[2.101s] Level 1:colcon.colcon_core.environment:checking '/home/mars/allex_ces_idle_interaction/install/allex_ces_idle_interaction/lib/pkgconfig/allex_ces_idle_interaction.pc'
+[2.101s] Level 1:colcon.colcon_core.environment:checking '/home/mars/allex_ces_idle_interaction/install/allex_ces_idle_interaction/lib/python3.12/site-packages'
+[2.102s] Level 1:colcon.colcon_core.shell:create_environment_hook('allex_ces_idle_interaction', 'pythonpath')
+[2.102s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/mars/allex_ces_idle_interaction/install/allex_ces_idle_interaction/share/allex_ces_idle_interaction/hook/pythonpath.ps1'
+[2.103s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/mars/allex_ces_idle_interaction/install/allex_ces_idle_interaction/share/allex_ces_idle_interaction/hook/pythonpath.dsv'
+[2.103s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/mars/allex_ces_idle_interaction/install/allex_ces_idle_interaction/share/allex_ces_idle_interaction/hook/pythonpath.sh'
+[2.104s] Level 1:colcon.colcon_core.environment:checking '/home/mars/allex_ces_idle_interaction/install/allex_ces_idle_interaction/bin'
+[2.104s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(allex_ces_idle_interaction)
+[2.105s] INFO:colcon.colcon_core.shell:Creating package script '/home/mars/allex_ces_idle_interaction/install/allex_ces_idle_interaction/share/allex_ces_idle_interaction/package.ps1'
+[2.106s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/mars/allex_ces_idle_interaction/install/allex_ces_idle_interaction/share/allex_ces_idle_interaction/package.dsv'
+[2.106s] INFO:colcon.colcon_core.shell:Creating package script '/home/mars/allex_ces_idle_interaction/install/allex_ces_idle_interaction/share/allex_ces_idle_interaction/package.sh'
+[2.107s] INFO:colcon.colcon_core.shell:Creating package script '/home/mars/allex_ces_idle_interaction/install/allex_ces_idle_interaction/share/allex_ces_idle_interaction/package.bash'
+[2.108s] INFO:colcon.colcon_core.shell:Creating package script '/home/mars/allex_ces_idle_interaction/install/allex_ces_idle_interaction/share/allex_ces_idle_interaction/package.zsh'
+[2.108s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/mars/allex_ces_idle_interaction/install/allex_ces_idle_interaction/share/colcon-core/packages/allex_ces_idle_interaction)
+[2.141s] Level 1:colcon.colcon_core.shell:create_environment_hook('allex_testbed', 'pythonpath_develop')
+[2.141s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/mars/allex_ces_idle_interaction/build/allex_testbed/share/allex_testbed/hook/pythonpath_develop.ps1'
+[2.142s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/mars/allex_ces_idle_interaction/build/allex_testbed' returned '0': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/mars/allex_ces_idle_interaction/build/allex_testbed/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/mars/allex_ces_idle_interaction/install/allex_testbed/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/mars/allex_ces_idle_interaction/build/allex_testbed/build --no-deps symlink_data
+[2.143s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/mars/allex_ces_idle_interaction/build/allex_testbed/share/allex_testbed/hook/pythonpath_develop.dsv'
+[2.143s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/mars/allex_ces_idle_interaction/build/allex_testbed/share/allex_testbed/hook/pythonpath_develop.sh'
+[2.144s] Level 1:colcon.colcon_core.environment:checking '/home/mars/allex_ces_idle_interaction/install/allex_testbed' for CMake module files
+[2.145s] Level 1:colcon.colcon_core.environment:checking '/home/mars/allex_ces_idle_interaction/install/allex_testbed' for CMake config files
+[2.145s] Level 1:colcon.colcon_core.environment:checking '/home/mars/allex_ces_idle_interaction/install/allex_testbed/lib'
+[2.146s] Level 1:colcon.colcon_core.environment:checking '/home/mars/allex_ces_idle_interaction/install/allex_testbed/bin'
+[2.146s] Level 1:colcon.colcon_core.environment:checking '/home/mars/allex_ces_idle_interaction/install/allex_testbed/lib/pkgconfig/allex_testbed.pc'
+[2.146s] Level 1:colcon.colcon_core.environment:checking '/home/mars/allex_ces_idle_interaction/install/allex_testbed/lib/python3.12/site-packages'
+[2.146s] Level 1:colcon.colcon_core.shell:create_environment_hook('allex_testbed', 'pythonpath')
+[2.146s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/mars/allex_ces_idle_interaction/install/allex_testbed/share/allex_testbed/hook/pythonpath.ps1'
+[2.147s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/mars/allex_ces_idle_interaction/install/allex_testbed/share/allex_testbed/hook/pythonpath.dsv'
+[2.147s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/mars/allex_ces_idle_interaction/install/allex_testbed/share/allex_testbed/hook/pythonpath.sh'
+[2.149s] Level 1:colcon.colcon_core.environment:checking '/home/mars/allex_ces_idle_interaction/install/allex_testbed/bin'
+[2.149s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(allex_testbed)
+[2.149s] INFO:colcon.colcon_core.shell:Creating package script '/home/mars/allex_ces_idle_interaction/install/allex_testbed/share/allex_testbed/package.ps1'
+[2.150s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/mars/allex_ces_idle_interaction/install/allex_testbed/share/allex_testbed/package.dsv'
+[2.150s] INFO:colcon.colcon_core.shell:Creating package script '/home/mars/allex_ces_idle_interaction/install/allex_testbed/share/allex_testbed/package.sh'
+[2.151s] INFO:colcon.colcon_core.shell:Creating package script '/home/mars/allex_ces_idle_interaction/install/allex_testbed/share/allex_testbed/package.bash'
+[2.152s] INFO:colcon.colcon_core.shell:Creating package script '/home/mars/allex_ces_idle_interaction/install/allex_testbed/share/allex_testbed/package.zsh'
+[2.152s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/mars/allex_ces_idle_interaction/install/allex_testbed/share/colcon-core/packages/allex_testbed)
+[2.152s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:closing loop
+[2.153s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:loop closed
+[2.153s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished with '0'
+[2.153s] DEBUG:colcon.colcon_core.event_reactor:joining thread
+[2.165s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.terminal_notifier': Not used on non-Darwin systems
+[2.165s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.win32': Not used on non-Windows systems
+[2.165s] INFO:colcon.colcon_notification.desktop_notification:Sending desktop notification using 'notify2'
+[2.192s] DEBUG:colcon.colcon_core.event_reactor:joined thread
+[2.193s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/mars/allex_ces_idle_interaction/install/local_setup.ps1'
+[2.194s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/mars/allex_ces_idle_interaction/install/_local_setup_util_ps1.py'
+[2.196s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/mars/allex_ces_idle_interaction/install/setup.ps1'
+[2.198s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/mars/allex_ces_idle_interaction/install/local_setup.sh'
+[2.199s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/mars/allex_ces_idle_interaction/install/_local_setup_util_sh.py'
+[2.200s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/mars/allex_ces_idle_interaction/install/setup.sh'
+[2.202s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/mars/allex_ces_idle_interaction/install/local_setup.bash'
+[2.203s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/mars/allex_ces_idle_interaction/install/setup.bash'
+[2.227s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/mars/allex_ces_idle_interaction/install/local_setup.zsh'
+[2.228s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/mars/allex_ces_idle_interaction/install/setup.zsh'

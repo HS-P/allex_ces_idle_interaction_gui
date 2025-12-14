@@ -1,0 +1,19 @@
+[1.286s] Invoking command in '/home/mars/allex_ces_idle_interaction/build/irim_control_panel_n_dashboard': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/mars/allex_ces_idle_interaction/build/irim_control_panel_n_dashboard/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/mars/allex_ces_idle_interaction/install/irim_control_panel_n_dashboard/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/mars/allex_ces_idle_interaction/build/irim_control_panel_n_dashboard/build --no-deps symlink_data
+[1.572s] running develop
+[1.730s] running egg_info
+[1.746s] writing irim_control_panel_n_dashboard.egg-info/PKG-INFO
+[1.748s] writing dependency_links to irim_control_panel_n_dashboard.egg-info/dependency_links.txt
+[1.748s] writing entry points to irim_control_panel_n_dashboard.egg-info/entry_points.txt
+[1.748s] writing requirements to irim_control_panel_n_dashboard.egg-info/requires.txt
+[1.749s] writing top-level names to irim_control_panel_n_dashboard.egg-info/top_level.txt
+[1.779s] reading manifest file 'irim_control_panel_n_dashboard.egg-info/SOURCES.txt'
+[1.780s] writing manifest file 'irim_control_panel_n_dashboard.egg-info/SOURCES.txt'
+[1.860s] running build_ext
+[1.860s] Creating /home/mars/allex_ces_idle_interaction/install/irim_control_panel_n_dashboard/lib/python3.12/site-packages/irim-control-panel-n-dashboard.egg-link (link to .)
+[1.860s] Installing control_panel_main script to /home/mars/allex_ces_idle_interaction/install/irim_control_panel_n_dashboard/lib/irim_control_panel_n_dashboard
+[1.861s] Installing foot_sw script to /home/mars/allex_ces_idle_interaction/install/irim_control_panel_n_dashboard/lib/irim_control_panel_n_dashboard
+[1.861s] Installing joint_cmd_sliders script to /home/mars/allex_ces_idle_interaction/install/irim_control_panel_n_dashboard/lib/irim_control_panel_n_dashboard
+[1.861s] 
+[1.861s] Installed /home/mars/allex_ces_idle_interaction/build/irim_control_panel_n_dashboard
+[1.861s] running symlink_data
+[1.929s] Invoked command in '/home/mars/allex_ces_idle_interaction/build/irim_control_panel_n_dashboard' returned '0': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/mars/allex_ces_idle_interaction/build/irim_control_panel_n_dashboard/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/mars/allex_ces_idle_interaction/install/irim_control_panel_n_dashboard/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/mars/allex_ces_idle_interaction/build/irim_control_panel_n_dashboard/build --no-deps symlink_data
