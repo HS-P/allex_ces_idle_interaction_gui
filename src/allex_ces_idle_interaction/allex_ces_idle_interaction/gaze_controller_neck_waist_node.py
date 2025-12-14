@@ -128,7 +128,7 @@ class GazeControllerNode(Node):
         
         # PID 제어 파라미터 (일반 추적용)
         self.kp_yaw = 1.88   # P 게인 (Yaw)
-        self.kp_pitch = 1.75 # P 게인 (Pitch)
+        self.kp_pitch = 1.5 # P 게인 (Pitch)
         self.ki_yaw = 0.12    # I 게인 (Yaw) - Steady State Error 제거용
         self.ki_pitch = 0.3  # I 게인 (Pitch)
         self.kd_yaw = 0.01   # D 게인 (Yaw) - 낮춰서 움직임 억제 감소
@@ -177,6 +177,9 @@ class GazeControllerNode(Node):
         self.hello_stable_duration = 1.85  # 조건 유지 시간 (초)
         self.hello_stable_start_time = None  # 조건 만족 시작 시간
         self.hello_reference_yaw_rad = None  # 기준 위치 (타이머 시작 시 저장)
+        
+        # 이미 HELLO를 한 track_id 저장 (중복 HELLO 방지)
+        self.hello_done_track_ids = set()
         
         self.get_logger().info("Gaze Controller Node 초기화 완료")
     
@@ -520,6 +523,10 @@ class GazeControllerNode(Node):
     
     def _check_hello_transition(self, target_track_id):
         """HELLO 상태 전환 조건 체크 (현재 위치에서 ±1도 이내로 3초 유지)"""
+        # 이미 HELLO를 한 track_id면 전환하지 않음
+        if target_track_id is not None and target_track_id in self.hello_done_track_ids:
+            return
+        
         current_time = time.monotonic()
         
         # 타이머가 시작되지 않은 상태면 현재 위치를 기준 위치로 저장
@@ -556,6 +563,14 @@ class GazeControllerNode(Node):
                 msg = String()
                 msg.data = json.dumps(request)
                 self.tracker_state_request_publisher.publish(msg)
+                
+                # HELLO를 한 track_id 저장
+                if target_track_id is not None:
+                    self.hello_done_track_ids.add(target_track_id)
+                    self.get_logger().info(
+                        f"HELLO 완료 ID 저장: track_id={target_track_id} "
+                        f"(총 {len(self.hello_done_track_ids)}개 ID)"
+                    )
                 
                 self.get_logger().info(
                     f"HELLO 전환: 기준 위치={ref_yaw_deg:.1f}도에서 "
