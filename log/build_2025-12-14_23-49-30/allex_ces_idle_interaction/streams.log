@@ -1,0 +1,36 @@
+[0.865s] Invoking command in '/home/dgx_allex_one/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/dgx_allex_one/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/dgx_allex_one/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/dgx_allex_one/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction/build --no-deps symlink_data
+[1.015s] running develop
+[1.093s] running egg_info
+[1.093s] creating allex_ces_idle_interaction.egg-info
+[1.100s] writing allex_ces_idle_interaction.egg-info/PKG-INFO
+[1.100s] writing dependency_links to allex_ces_idle_interaction.egg-info/dependency_links.txt
+[1.100s] writing entry points to allex_ces_idle_interaction.egg-info/entry_points.txt
+[1.100s] writing requirements to allex_ces_idle_interaction.egg-info/requires.txt
+[1.100s] writing top-level names to allex_ces_idle_interaction.egg-info/top_level.txt
+[1.100s] writing manifest file 'allex_ces_idle_interaction.egg-info/SOURCES.txt'
+[1.117s] reading manifest file 'allex_ces_idle_interaction.egg-info/SOURCES.txt'
+[1.117s] writing manifest file 'allex_ces_idle_interaction.egg-info/SOURCES.txt'
+[1.149s] running build_ext
+[1.150s] Creating /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/python3.12/site-packages/allex-ces-idle-interaction.egg-link (link to .)
+[1.150s] Installing allex_idle_interaction_node script to /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+[1.150s] Installing camera_test script to /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+[1.150s] Installing gaze_controller_neck_waist_node script to /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+[1.151s] Installing gui_node script to /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+[1.151s] Installing idle_interaction_gui_node script to /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+[1.151s] Installing llm_hand_gesture_clip_node script to /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+[1.151s] Installing tracking_fsm_node script to /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+[1.151s] Installing yolo_detection_node script to /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/allex_ces_idle_interaction
+[1.151s] 
+[1.151s] Installed /home/dgx_allex_one/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction
+[1.151s] running symlink_data
+[1.151s] creating /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/share/ament_index
+[1.151s] creating /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/share/ament_index/resource_index
+[1.151s] creating /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/share/ament_index/resource_index/packages
+[1.151s] symbolically linking /home/dgx_allex_one/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction/resource/allex_ces_idle_interaction -> /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/share/ament_index/resource_index/packages
+[1.151s] symbolically linking /home/dgx_allex_one/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction/package.xml -> /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/share/allex_ces_idle_interaction
+[1.151s] creating /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/share/allex_ces_idle_interaction/config
+[1.151s] symbolically linking /home/dgx_allex_one/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction/config/topics.json -> /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/share/allex_ces_idle_interaction/config
+[1.152s] symbolically linking /home/dgx_allex_one/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction/config/botsort.yaml -> /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/share/allex_ces_idle_interaction/config
+[1.152s] creating /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/share/allex_ces_idle_interaction/launch
+[1.152s] symbolically linking /home/dgx_allex_one/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction/launch/allex_idle_interaction.launch.py -> /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/share/allex_ces_idle_interaction/launch
+[1.191s] Invoked command in '/home/dgx_allex_one/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction' returned '0': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/dgx_allex_one/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/dgx_allex_one/allex_ces_idle_interaction_gui/install/allex_ces_idle_interaction/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/dgx_allex_one/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction/build --no-deps symlink_data

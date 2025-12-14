@@ -1,4 +1,4 @@
 import sys
 if sys.prefix == '/usr':
     sys.real_prefix = sys.prefix
-    sys.prefix = sys.exec_prefix = '/home/mars/allex_ces_idle_interaction/install/irim_control_panel_n_dashboard'
+    sys.prefix = sys.exec_prefix = '/home/dgx_allex_one/allex_ces_idle_interaction_gui/install/irim_control_panel_n_dashboard'

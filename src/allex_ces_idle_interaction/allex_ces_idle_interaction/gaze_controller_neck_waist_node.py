@@ -127,9 +127,9 @@ class GazeControllerNode(Node):
         self.search_increment_rad = math.radians(0.3)  # 매 프레임마다 증가할 각도 (약 0.3도)
         
         # PID 제어 파라미터 (일반 추적용)
-        self.kp_yaw = 1.6   # P 게인 (Yaw)
+        self.kp_yaw = 1.88   # P 게인 (Yaw)
         self.kp_pitch = 1.75 # P 게인 (Pitch)
-        self.ki_yaw = 0.17    # I 게인 (Yaw) - Steady State Error 제거용
+        self.ki_yaw = 0.12    # I 게인 (Yaw) - Steady State Error 제거용
         self.ki_pitch = 0.3  # I 게인 (Pitch)
         self.kd_yaw = 0.01   # D 게인 (Yaw) - 낮춰서 움직임 억제 감소
         self.kd_pitch = 0.02 # D 게인 (Pitch)
@@ -157,6 +157,12 @@ class GazeControllerNode(Node):
         self.kp_waist_tracking = 2.0  # P 게인 (Waist Yaw)
         self.ki_waist_tracking = 0.25  # I 게인 (Waist Yaw)
         self.kd_waist_tracking = 0.04  # D 게인 (Waist Yaw)
+        
+        # 허리-목 간 비선형 오프셋 파라미터 (steady state error 유지용)
+        # 목 각도가 작을수록 오프셋을 더 크게 (목이 0도 근처일 때 허리가 앞서가도록)
+        self.waist_base_scale = 1.6  # 기본 스케일 배수
+        self.waist_max_offset_rad = math.radians(15.0)  # 최대 오프셋 (8도)
+        self.waist_offset_decay_angle_rad = math.radians(20.0)  # 오프셋 감쇠 각도 (20도)
         
         # 허리 PID 제어 상태 변수
         self.integral_waist_yaw = 0.0
@@ -331,8 +337,12 @@ class GazeControllerNode(Node):
         dt = current_time - self.last_waist_update_time
         dt = max(0.001, min(dt, 0.1))
         
-        # 목표: 현재 목 각도의 125% (25% 더 가도록)
-        target_waist_yaw = self.current_yaw_rad * 1.25
+        # 목표: 비선형 스케일링 (목 각도가 작을수록 오프셋을 더 크게)
+        # 목이 0도 근처일 때 허리가 앞서가도록, 목이 크게 회전할 때는 오프셋 감소
+        base_scale = self.waist_base_scale
+        offset_scale = self.waist_max_offset_rad * math.exp(-abs(self.current_yaw_rad) / self.waist_offset_decay_angle_rad)
+        offset_direction = 1.0 if self.current_yaw_rad >= 0 else -1.0
+        target_waist_yaw = self.current_yaw_rad * base_scale + offset_scale * offset_direction
         
         # PID 제어 (3배 느린 게인)
         error_waist_yaw = target_waist_yaw - self.current_waist_yaw_rad
