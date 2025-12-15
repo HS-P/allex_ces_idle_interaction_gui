@@ -1,0 +1,26 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/yeah/ros2_ws/build/mujoco_allex",
+        "/home/yeah/ros2_ws/install/mujoco_allex/lib/python3.10/site-packages",
+        "/home/yeah/ros2_ws/install/irim_custom_msg/local/lib/python3.10/dist-packages",
+        "/home/yeah/ros2_ws/build/dynamixel_torque_control",
+        "/home/yeah/ros2_ws/install/dynamixel_torque_control/lib/python3.10/site-packages",
+        "/home/yeah/ros2_ws/install/dynamixel_sdk_custom_interfaces/local/lib/python3.10/dist-packages",
+        "/home/yeah/ros2_ws/build/button_publisher",
+        "/home/yeah/ros2_ws/install/button_publisher/lib/python3.10/site-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/yeah/ros2_ws/build/mujoco_allex",
+        "/home/yeah/ros2_ws/install/mujoco_allex/lib/python3.10/site-packages",
+        "/home/yeah/ros2_ws/install/irim_custom_msg/local/lib/python3.10/dist-packages",
+        "/home/yeah/ros2_ws/build/dynamixel_torque_control",
+        "/home/yeah/ros2_ws/install/dynamixel_torque_control/lib/python3.10/site-packages",
+        "/home/yeah/ros2_ws/install/dynamixel_sdk_custom_interfaces/local/lib/python3.10/dist-packages",
+        "/home/yeah/ros2_ws/build/button_publisher",
+        "/home/yeah/ros2_ws/install/button_publisher/lib/python3.10/site-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ]
+}

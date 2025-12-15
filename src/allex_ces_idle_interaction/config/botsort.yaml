@@ -1,0 +1,21 @@
+# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+
+# BoT-SORT tracker defaults for mode="track"
+# Docs: https://docs.ultralytics.com/modes/track/
+
+tracker_type: botsort # (str) Tracker backend: botsort|bytetrack; choose botsort to enable BoT-SORT features
+track_high_thresh: 0.2 # (float) First-stage match threshold; raise for cleaner tracks, lower to keep more (0.15 -> 0.2, 균형)
+track_low_thresh: 0.05 # (float) Second-stage threshold for low-score matches; balances recovery vs drift (0.02 -> 0.05, 균형)
+new_track_thresh: 0.4 # (float) Start a new track if no match ≥ this; higher reduces false tracks (0.3 -> 0.4, 새 트랙 생성 억제)
+track_buffer: 120 # (int) Frames to keep lost tracks alive; higher handles occlusion (약 4초 @30FPS)
+match_thresh: 0.3 # (float) Association similarity threshold (IoU/cost); tune with detector quality (0.25 -> 0.3, 기존 트랙 매칭 강화)
+fuse_score: True # (bool) Fuse detection score with motion/IoU for matching; stabilizes weak detections
+
+# BoT-SORT specifics
+gmc_method: sparseOptFlow # (str) Global motion compensation: sparseOptFlow|orb|none; helps moving camera scenes
+
+# ReID model related thresh
+proximity_thresh: 0.3 # (float) Min IoU to consider tracks proximate for ReID; higher is stricter (0.2 -> 0.3, ReID 정확도 향상)
+appearance_thresh: 0.65 # (float) Min appearance similarity for ReID; raise to avoid identity swaps (0.55 -> 0.65, ID 스위치 방지)
+with_reid: True # (bool) Enable ReID model use; needs extra model and compute
+model: auto # (str) ReID model name/path; "auto" uses detector features if available

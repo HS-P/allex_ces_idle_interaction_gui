@@ -1,0 +1,11 @@
+PySide6
+filterpy
+huggingface_hub
+lap
+numpy
+pillow
+pyyaml
+scipy
+setuptools
+transformers
+ultralytics

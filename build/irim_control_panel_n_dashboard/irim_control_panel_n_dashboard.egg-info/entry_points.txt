@@ -1,0 +1,4 @@
+[console_scripts]
+control_panel_main = irim_control_panel_n_dashboard.control_panel_main:main
+foot_sw = irim_control_panel_n_dashboard.foot_sw_node:main
+joint_cmd_sliders = irim_control_panel_n_dashboard.joint_cmd_sliders:main

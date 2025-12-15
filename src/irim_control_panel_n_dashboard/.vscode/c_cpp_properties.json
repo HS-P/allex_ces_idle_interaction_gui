@@ -1,0 +1,31 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/yeah/ros2_ws/install/humanoid_control/include/**",
+        "/home/yeah/ros2_ws/install/irim_custom_msg/include/**",
+        "/home/yeah/ros2_ws/install/dynamixel_sdk_custom_interfaces/include/**",
+        "/home/yeah/ros2_ws/install/dynamixel_sdk/include/**",
+        "/opt/ros/humble/include/**",
+        "/home/yeah/ros2_ws/src/DynamixelSDK/dynamixel_sdk/include/**",
+        "/home/yeah/ros2_ws/src/DynamixelSDK/dynamixel_sdk_examples/include/**",
+        "/home/yeah/ros2_ws/src/composition_test/include/**",
+        "/home/yeah/ros2_ws/src/humanoid_control/include/**",
+        "/home/yeah/ros2_ws/src/irim_custom_msg/include/**",
+        "/home/yeah/ros2_ws/src/master_device_dynamixel/include/**",
+        "/home/yeah/ros2_ws/src/u2d2_ros2_bridge/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}
