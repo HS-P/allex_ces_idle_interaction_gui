@@ -1,1 +1,0 @@
-/home/dgx_allex_one/allex2head/build/orbbec_camera_msgs/rosidl_typesupport_introspection_cpp/orbbec_camera_msgs/msg/detail/imu_info__rosidl_typesupport_introspection_cpp.hpp

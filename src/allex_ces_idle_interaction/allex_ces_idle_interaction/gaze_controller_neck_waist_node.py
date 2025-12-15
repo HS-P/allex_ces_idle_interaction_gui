@@ -158,11 +158,8 @@ class GazeControllerNode(Node):
         self.ki_waist_tracking = 0.1  # I 게인 (Waist Yaw)
         self.kd_waist_tracking = 0.04  # D 게인 (Waist Yaw)
         
-        # 허리-목 간 비선형 오프셋 파라미터 (steady state error 유지용)
-        # 목 각도가 작을수록 오프셋을 더 크게 (목이 0도 근처일 때 허리가 앞서가도록)
-        self.waist_base_scale = 1.6  # 기본 스케일 배수
-        self.waist_max_offset_rad = math.radians(15.0)  # 최대 오프셋 (8도)
-        self.waist_offset_decay_angle_rad = math.radians(20.0)  # 오프셋 감쇠 각도 (20도)
+        # 허리 Exponential 추종 파라미터
+        self.waist_exponential_alpha = 0.15  # Exponential 필터 계수 (0~1, 작을수록 더 부드럽고 느림)
         
         # 허리 PID 제어 상태 변수
         self.integral_waist_yaw = 0.0
@@ -336,39 +333,20 @@ class GazeControllerNode(Node):
         self.waist_publisher.publish(msg)
     
     def _waist_follow_neck(self):
-        """허리가 목 각도를 천천히 추종 (TRACKING 상태에서 사용)"""
+        """허리가 목 각도를 Exponential하게 추종 (TRACKING 상태에서 사용)"""
         current_time = time.monotonic()
         dt = current_time - self.last_waist_update_time
         dt = max(0.001, min(dt, 0.1))
         
-        # 목표: 비선형 스케일링 (목 각도가 작을수록 오프셋을 더 크게)
-        # 목이 0도 근처일 때 허리가 앞서가도록, 목이 크게 회전할 때는 오프셋 감소
-        base_scale = self.waist_base_scale
-        offset_scale = self.waist_max_offset_rad * math.exp(-abs(self.current_yaw_rad) / self.waist_offset_decay_angle_rad)
-        offset_direction = 1.0 if self.current_yaw_rad >= 0 else -1.0
-        target_waist_yaw = self.current_yaw_rad * base_scale + offset_scale * offset_direction
+        # Exponential 추종: 목 각도를 직접 따라가도록
+        target_waist_yaw = self.current_yaw_rad
         
-        # PID 제어 (3배 느린 게인)
+        # Exponential 필터 적용
         error_waist_yaw = target_waist_yaw - self.current_waist_yaw_rad
+        delta_waist_yaw = self.waist_exponential_alpha * error_waist_yaw
         
-        # P
-        p_waist = self.kp_waist_tracking * error_waist_yaw
-        
-        # I
-        self.integral_waist_yaw += error_waist_yaw * dt
-        max_integral = math.radians(30.0)
-        self.integral_waist_yaw = max(-max_integral, min(max_integral, self.integral_waist_yaw))
-        i_waist = self.ki_waist_tracking * self.integral_waist_yaw
-        
-        # D
-        d_error_waist = (error_waist_yaw - self.last_error_waist_yaw) / dt
-        d_waist = self.kd_waist_tracking * d_error_waist
-        
-        # 증분 명령 계산
-        delta_waist_yaw = p_waist + i_waist + d_waist
-        
-        # 증분 제한 (1.45배 상향)
-        max_delta = math.radians(8.5)
+        # 증분 제한
+        max_delta = math.radians(15.0)
         delta_waist_yaw = max(-max_delta, min(max_delta, delta_waist_yaw))
         
         # 새 목표 허리 각도
@@ -605,8 +583,8 @@ class GazeControllerNode(Node):
     
     def get_waist_angles(self) -> Tuple[float, float]:
         """허리 각도 반환 (현재 각도, 목표 각도)"""
-        # 목표 허리 각도는 현재 목 각도의 142% (TRACKING에서 추종 중)
-        target_waist_yaw = self.current_yaw_rad * 1.42
+        # 목표 허리 각도는 현재 목 각도와 동일 (Exponential 추종)
+        target_waist_yaw = self.current_yaw_rad
         return self.current_waist_yaw_rad, target_waist_yaw
     
     def tracking_result_callback(self, msg: String):

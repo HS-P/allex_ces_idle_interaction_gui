@@ -27,6 +27,7 @@ class RoutineController:
         self.node = node
         self.robot_name = robot_name
         self.current_routine = None
+        self.breathing_routine_running = False  # breath_rt 실행 상태 추적
         
         # HMI 명령 Publisher
         self.command_pub = node.create_publisher(
@@ -44,26 +45,25 @@ class RoutineController:
         self.command_pub.publish(msg)
         self.node.get_logger().info(f"Routine 명령 발행: {command}")
     
-    def start_idle_breathing(self):
+    def start_breathing(self):
         """IDLE 상태: 숨쉬기 루틴 시작 (무한 반복)"""
-        command = f"{self.robot_name}::ROUTINE::idle_breathing_rt::START"
-        self.current_routine = "idle_breathing_rt"
+        command = f"{self.robot_name}::ROUTINE::breath_rt::START"
+        self.current_routine = "breath_rt"
+        self.breathing_routine_running = True
         self.publish_command(command)
     
-    def start_idling_heart(self):
-        """HELLO 상태: 하트 루틴 시작 (고정)"""
-        command = f"{self.robot_name}::ROUTINE::idling_heart_rt::START"
-        self.current_routine = "idling_heart_rt"
+    def reset_and_start_heart(self):
+        """HELLO 전환 전: 현재 루틴 RESET 후 하트 루틴 시작"""
+        # 현재 루틴 RESET
+        if self.current_routine:
+            reset_command = f"{self.robot_name}::ROUTINE::{self.current_routine}::RESET"
+            self.publish_command(reset_command)
+            self.breathing_routine_running = False
+        
+        # 하트 루틴 시작
+        command = f"{self.robot_name}::ROUTINE::heart_rt::START"
+        self.current_routine = "heart_rt"
         self.publish_command(command)
-    
-    def switch_routine(self, new_routine: str):
-        """루틴 전환: 기존 루틴 자동 중단 후 새 루틴 시작"""
-        if new_routine == "idle_breathing_rt":
-            self.start_idle_breathing()
-        elif new_routine == "idling_heart_rt":
-            self.start_idling_heart()
-        else:
-            self.node.get_logger().warn(f"알 수 없는 루틴: {new_routine}")
     
     def stop_current_routine(self):
         """현재 실행 중인 루틴 중단"""
@@ -71,6 +71,7 @@ class RoutineController:
             command = f"{self.robot_name}::ROUTINE::{self.current_routine}::RESET"
             self.publish_command(command)
             self.current_routine = None
+            self.breathing_routine_running = False
 
 
 class AllexIdleInteractionNode(Node):
@@ -349,46 +350,41 @@ class AllexIdleInteractionNode(Node):
             self.get_logger().error(f"타겟 Crop 이미지 발행 실패: {e}")
     
     def _handle_state_change(self, old_state: TrackingState, new_state: TrackingState):
-        """상태 변경 시 루틴 전환 처리"""
-        # INTERACTION 상태로 전환 시 루틴 중단
-        if new_state == TrackingState.INTERACTION:
-            if self.routine_controller.current_routine:
-                self.routine_controller.stop_current_routine()
-                self.get_logger().info("INTERACTION 상태: 루틴 중단")
+        """상태 변경 시 루틴 전환 처리 (Idling 범주만 처리)"""
+        # INTERACTION은 완전히 분리 (Idling 범주에 포함되지 않음)
+        if new_state == TrackingState.INTERACTION or old_state == TrackingState.INTERACTION:
             return
         
-        # INTERACTION에서 다른 상태로 전환 시 루틴 재시작
-        if old_state == TrackingState.INTERACTION:
-            if new_state == TrackingState.HELLO:
-                self.routine_controller.switch_routine("idling_heart_rt")
-                self.get_logger().info("HELLO 상태: idling_heart_rt 시작")
-            elif new_state in (TrackingState.IDLE, TrackingState.TRACKING, TrackingState.LOST, 
-                              TrackingState.SEARCHING):
-                self.routine_controller.switch_routine("idle_breathing_rt")
-                self.get_logger().info(f"{new_state.value} 상태: idle_breathing_rt 시작")
+        # IDLE 상태 진입 시: breath_rt 시작 (한 번만, 무한 루프로 계속 돌아감)
+        if new_state == TrackingState.IDLE:
+            if not self.routine_controller.breathing_routine_running:
+                self.routine_controller.start_breathing()
+                self.get_logger().info("IDLE 상태: breath_rt 시작 (무한 루프)")
+            # 이미 실행 중이면 아무것도 하지 않음
             return
         
-        # HELLO 상태로 전환 시 하트 루틴 시작 및 루틴 발행 시간 기록
+        # HELLO 상태로 전환 시: RESET 후 heart_rt 시작
         if new_state == TrackingState.HELLO:
-            self.routine_controller.switch_routine("idling_heart_rt")
-            self.get_logger().info("HELLO 상태: idling_heart_rt 시작")
+            self.routine_controller.reset_and_start_heart()
+            self.get_logger().info("HELLO 상태: breath_rt RESET 후 heart_rt 시작")
             # tracking_fsm_node에서 hello_routine_sent_time을 설정하므로 여기서는 루틴만 시작
             return
         
-        # HELLO에서 다른 상태로 전환 시 숨쉬기 루틴으로 전환
-        if old_state == TrackingState.HELLO:
-            if new_state in (TrackingState.IDLE, TrackingState.TRACKING, TrackingState.LOST, 
-                            TrackingState.SEARCHING):
-                self.routine_controller.switch_routine("idle_breathing_rt")
-                self.get_logger().info(f"{new_state.value} 상태: idle_breathing_rt 시작")
+        # HELLO에서 SEARCHING으로 전환 시: breath_rt 재시작
+        if old_state == TrackingState.HELLO and new_state == TrackingState.SEARCHING:
+            self.routine_controller.start_breathing()
+            self.get_logger().info("HELLO → SEARCHING: breath_rt 재시작")
             return
         
-        # IDLE, TRACKING, LOST, SEARCHING 상태들 간 전환 시
-        if new_state in (TrackingState.IDLE, TrackingState.TRACKING, TrackingState.LOST, 
-                        TrackingState.SEARCHING):
-            if self.routine_controller.current_routine != "idle_breathing_rt":
-                self.routine_controller.switch_routine("idle_breathing_rt")
-                self.get_logger().info(f"{new_state.value} 상태: idle_breathing_rt 시작")
+        # TRACKING, LOST, SEARCHING 상태들 간 전환 시
+        # breath_rt는 계속 돌아가도록 유지 (아무것도 하지 않음)
+        if new_state in (TrackingState.TRACKING, TrackingState.LOST, TrackingState.SEARCHING):
+            # breath_rt가 꺼져있으면만 시작 (혹시 모를 상황 대비)
+            if not self.routine_controller.breathing_routine_running:
+                self.routine_controller.start_breathing()
+                self.get_logger().info(f"{new_state.value} 상태: breath_rt 시작 (상태 복구)")
+            # 이미 실행 중이면 아무것도 하지 않음
+            return
     
     def _manual_control_callback(self, msg: String):
         """Manual 제어 콜백 - GUI에서 오는 명령 처리"""
@@ -404,7 +400,9 @@ class AllexIdleInteractionNode(Node):
                 self.is_running = True
                 manual_mode = command.get('manual', False)
                 tracker_command['manual'] = manual_mode
-                self.routine_controller.switch_routine("idle_breathing_rt")
+                # IDLE 상태로 시작하므로 breath_rt 시작
+                if not self.routine_controller.breathing_routine_running:
+                    self.routine_controller.start_breathing()
                 self.previous_state = TrackingState.IDLE
                 self.get_logger().info(f"RUN 시작: {'Manual' if manual_mode else 'Auto'} 모드")
             

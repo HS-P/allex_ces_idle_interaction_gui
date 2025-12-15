@@ -1,1 +1,0 @@
-/home/dgx_allex_one/allex2head/build/orbbec_camera_msgs/ament_cmake_core/orbbec_camera_msgsConfig.cmake

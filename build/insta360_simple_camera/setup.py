@@ -1,1 +1,0 @@
-/home/dgx_allex_one/allex2head/src/insta360_simple_camera/setup.py

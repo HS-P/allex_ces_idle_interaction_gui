@@ -1,1 +1,0 @@
-/home/dgx_allex_one/allex2head/src/camera_node/setup.py

@@ -1,1 +1,0 @@
-/home/dgx_allex_one/allex2head/src/OrbbecSDK_ROS2/orbbec_camera/examples/net_camera/multi_net_camera.launch.py
