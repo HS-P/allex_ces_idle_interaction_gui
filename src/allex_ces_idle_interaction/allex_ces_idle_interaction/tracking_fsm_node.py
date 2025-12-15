@@ -148,7 +148,7 @@ class TrackingFSMNode(Node):
         
         # HELLO 상태를 위한 변수들
         self.hello_routine_sent_time: Optional[float] = None  # HELLO 루틴 발행 시간
-        self.hello_feedback_delay = 0.1  # 루틴 발행 후 피드백 확인 대기 시간 (초)
+        self.hello_feedback_delay = 1.0  # 루틴 발행 후 피드백 확인 최소 대기 시간 (초) - 핸드 명령 전달 대기
         self.current_hand_state: Optional[int] = None  # 현재 HAND 상태 (4: READY, 5: RUNNING)
         self.hello_routine_sent = False  # HELLO 루틴 발행 여부
         
@@ -462,7 +462,7 @@ class TrackingFSMNode(Node):
                     if self.hello_routine_sent and self.hello_routine_sent_time is not None:
                         elapsed_time = current_time_check - self.hello_routine_sent_time
                         
-                        # 0.1초 후부터 피드백 확인
+                        # 최소 0.2초 대기 후 피드백 확인 (핸드에 명령이 전달될 시간 확보)
                         if elapsed_time >= self.hello_feedback_delay:
                             # HAND 상태가 READY(4)로 바뀌면 SEARCHING으로 전이
                             if self.current_hand_state == 4:  # READY
@@ -473,7 +473,8 @@ class TrackingFSMNode(Node):
                                 self.hello_routine_sent_time = None
                                 self.current_hand_state = None
                                 self.get_logger().info(
-                                    f"HELLO 완료: HAND 상태 READY → SEARCHING 상태로 전환"
+                                    f"HELLO 완료: HAND 상태 READY → SEARCHING 상태로 전환 "
+                                    f"(경과 시간: {elapsed_time:.2f}초)"
                                 )
         
         # 추적 객체 생성
@@ -532,7 +533,8 @@ class TrackingFSMNode(Node):
         
         if frame is not None:
             self.latest_frame = frame
-            self.latest_frame_shape = frame.shape
+            # frame_shape는 (height, width) 형태로 저장 (channels 제외)
+            self.latest_frame_shape = (frame.shape[0], frame.shape[1])
     
     def detection_callback(self, msg: String) -> None:
         """Detection 결과 콜백 - FSM 처리"""

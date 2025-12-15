@@ -7,7 +7,6 @@ ALLEX Idle Interaction 총괄 노드
 """
 import time
 import json
-import random
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, Duration
@@ -29,13 +28,6 @@ class RoutineController:
         self.robot_name = robot_name
         self.current_routine = None
         
-        # HELLO 상태에서 사용할 루틴 리스트 (랜덤 선택)
-        self.hello_routines = [
-            "idling_heart_rt",
-            # 여기에 추가 HELLO 루틴들을 추가하세요
-            # 예: "idling_wave_rt", "idling_bow_rt" 등
-        ]
-        
         # HMI 명령 Publisher
         self.command_pub = node.create_publisher(
             String,
@@ -44,7 +36,6 @@ class RoutineController:
         )
         
         node.get_logger().info(f"RoutineController 초기화 완료 (로봇: {robot_name})")
-        node.get_logger().info(f"HELLO 루틴 {len(self.hello_routines)}개: {self.hello_routines}")
     
     def publish_command(self, command: str):
         """명령을 토픽으로 발행"""
@@ -60,20 +51,16 @@ class RoutineController:
         self.publish_command(command)
     
     def start_idling_heart(self):
-        """HELLO 상태: 랜덤하게 선택된 HELLO 루틴 시작"""
-        # HELLO 루틴 리스트에서 랜덤 선택
-        selected_routine = random.choice(self.hello_routines)
-        command = f"{self.robot_name}::ROUTINE::{selected_routine}::START"
-        self.current_routine = selected_routine
+        """HELLO 상태: 하트 루틴 시작 (고정)"""
+        command = f"{self.robot_name}::ROUTINE::idling_heart_rt::START"
+        self.current_routine = "idling_heart_rt"
         self.publish_command(command)
-        self.node.get_logger().info(f"HELLO 루틴 랜덤 선택: {selected_routine}")
     
     def switch_routine(self, new_routine: str):
         """루틴 전환: 기존 루틴 자동 중단 후 새 루틴 시작"""
         if new_routine == "idle_breathing_rt":
             self.start_idle_breathing()
-        elif new_routine == "idling_heart_rt" or new_routine in self.hello_routines:
-            # HELLO 루틴은 랜덤 선택
+        elif new_routine == "idling_heart_rt":
             self.start_idling_heart()
         else:
             self.node.get_logger().warn(f"알 수 없는 루틴: {new_routine}")

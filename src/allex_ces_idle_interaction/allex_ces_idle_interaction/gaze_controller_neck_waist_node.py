@@ -153,9 +153,9 @@ class GazeControllerNode(Node):
         self.current_waist_yaw_rad = 0.0  # 현재 허리 각도 (라디안, 절대 좌표)
         self.last_waist_position_update_time = 0.0
         
-        # TRACKING 상태에서 허리 추종용 PID 게인 (속도 1.45배 상향)
-        self.kp_waist_tracking = 2.0  # P 게인 (Waist Yaw)
-        self.ki_waist_tracking = 0.25  # I 게인 (Waist Yaw)
+        # TRACKING 상태에서 허리 추종용 PID 게인 (진동 방지를 위해 P 게인 낮춤)
+        self.kp_waist_tracking = 1.2  # P 게인 (Waist Yaw) - 진동 방지
+        self.ki_waist_tracking = 0.1  # I 게인 (Waist Yaw)
         self.kd_waist_tracking = 0.04  # D 게인 (Waist Yaw)
         
         # 허리-목 간 비선형 오프셋 파라미터 (steady state error 유지용)
@@ -177,6 +177,7 @@ class GazeControllerNode(Node):
         self.hello_stable_duration = 1.85  # 조건 유지 시간 (초)
         self.hello_stable_start_time = None  # 조건 만족 시작 시간
         self.hello_reference_yaw_rad = None  # 기준 위치 (타이머 시작 시 저장)
+        self.previous_state = None  # 이전 상태 추적 (TRACKING 진입 감지용)
         
         # 이미 HELLO를 한 track_id 저장 (중복 HELLO 방지)
         self.hello_done_track_ids = set()
@@ -521,7 +522,7 @@ class GazeControllerNode(Node):
         self.hello_stable_start_time = None
         self.hello_reference_yaw_rad = None
     
-    def _check_hello_transition(self, target_track_id):
+    def _check_hello_transition(self, target_track_id, current_state):
         """HELLO 상태 전환 조건 체크 (현재 위치에서 ±1도 이내로 3초 유지)"""
         # 이미 HELLO를 한 track_id면 전환하지 않음
         if target_track_id is not None and target_track_id in self.hello_done_track_ids:
@@ -529,10 +530,19 @@ class GazeControllerNode(Node):
         
         current_time = time.monotonic()
         
-        # 타이머가 시작되지 않은 상태면 현재 위치를 기준 위치로 저장
-        if self.hello_stable_start_time is None:
+        # TRACKING 상태로 전환되었을 때만 타이머 시작 (이전 상태가 TRACKING이 아니었을 때)
+        if self.previous_state != TrackingState.TRACKING:
+            # TRACKING 상태로 새로 진입했으므로 타이머 시작
             self.hello_stable_start_time = current_time
             self.hello_reference_yaw_rad = self.current_yaw_rad
+            self.get_logger().debug(
+                f"HELLO 체크 시작: TRACKING 상태 진입, 기준 위치={math.degrees(self.hello_reference_yaw_rad):.1f}도"
+            )
+        
+        # 타이머가 시작되지 않았으면 체크하지 않음 (안전장치)
+        if self.hello_stable_start_time is None:
+            self.previous_state = current_state
+            return
         
         # 기준 위치에서 현재 위치까지의 차이 계산
         position_diff_deg = abs(math.degrees(self.current_yaw_rad - self.hello_reference_yaw_rad))
@@ -581,6 +591,9 @@ class GazeControllerNode(Node):
             # 기준 위치에서 ±5도 벗어나면 타이머 리셋 및 새 기준 위치 설정
             self.hello_stable_start_time = current_time
             self.hello_reference_yaw_rad = self.current_yaw_rad
+        
+        # 이전 상태 업데이트
+        self.previous_state = current_state
     
     def get_current_angles(self) -> Tuple[float, float]:
         """현재 목 각도 반환"""
@@ -623,7 +636,13 @@ class GazeControllerNode(Node):
             
             # TRACKING 상태에서 HELLO 전환 조건 체크
             if state == TrackingState.TRACKING:
-                self._check_hello_transition(target_info.track_id)
+                self._check_hello_transition(target_info.track_id, state)
+            else:
+                # TRACKING 상태가 아니면 타이머 리셋 및 이전 상태 업데이트
+                if self.previous_state == TrackingState.TRACKING:
+                    # TRACKING에서 다른 상태로 전환되었으므로 타이머 리셋
+                    self._reset_hello_check()
+                self.previous_state = state
             
             self._update_control(target_info, frame_width=frame_width, frame_height=frame_height)
             
