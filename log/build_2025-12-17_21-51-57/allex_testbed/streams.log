@@ -1,0 +1,20 @@
+[0.978s] Invoking command in '/home/dgx_allex_one/allex_ces_idle_interaction_gui/build/allex_testbed': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/dgx_allex_one/allex_ces_idle_interaction_gui/build/allex_testbed/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/dgx_allex_one/allex_ces_idle_interaction_gui/install/allex_testbed/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/dgx_allex_one/allex_ces_idle_interaction_gui/build/allex_testbed/build --no-deps symlink_data
+[1.135s] running develop
+[1.227s] running egg_info
+[1.234s] writing allex_testbed.egg-info/PKG-INFO
+[1.234s] writing dependency_links to allex_testbed.egg-info/dependency_links.txt
+[1.234s] writing entry points to allex_testbed.egg-info/entry_points.txt
+[1.234s] writing requirements to allex_testbed.egg-info/requires.txt
+[1.234s] writing top-level names to allex_testbed.egg-info/top_level.txt
+[1.252s] reading manifest file 'allex_testbed.egg-info/SOURCES.txt'
+[1.252s] writing manifest file 'allex_testbed.egg-info/SOURCES.txt'
+[1.284s] running build_ext
+[1.285s] Creating /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/allex_testbed/lib/python3.12/site-packages/allex-testbed.egg-link (link to .)
+[1.286s] Installing gaze_controller_testbed_node script to /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/allex_testbed/lib/allex_testbed
+[1.286s] Installing testbed_gaze_tracking_gui_node script to /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/allex_testbed/lib/allex_testbed
+[1.286s] Installing testbed_gaze_tracking_node script to /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/allex_testbed/lib/allex_testbed
+[1.286s] Installing testbed_gui_node script to /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/allex_testbed/lib/allex_testbed
+[1.286s] 
+[1.286s] Installed /home/dgx_allex_one/allex_ces_idle_interaction_gui/build/allex_testbed
+[1.286s] running symlink_data
+[1.310s] Invoked command in '/home/dgx_allex_one/allex_ces_idle_interaction_gui/build/allex_testbed' returned '0': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/dgx_allex_one/allex_ces_idle_interaction_gui/build/allex_testbed/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/dgx_allex_one/allex_ces_idle_interaction_gui/install/allex_testbed/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/dgx_allex_one/allex_ces_idle_interaction_gui/build/allex_testbed/build --no-deps symlink_data

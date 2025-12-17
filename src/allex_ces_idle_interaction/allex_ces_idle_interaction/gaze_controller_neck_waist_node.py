@@ -51,12 +51,12 @@ class GazeControllerNode(Node):
             10
         )
         
-        # 목 위치 Subscriber (현재 위치 파악용)
+        # 목 위치 Subscriber (현재 위치 파악용) - BEST_EFFORT QoS 사용
         self.neck_position_subscription = self.create_subscription(
             Float64MultiArray,
             '/robot_outbound_data/theOne_neck/joint_positions_deg',
             self._neck_position_callback,
-            10
+            qos_profile
         )
         
         # 허리 명령 Publisher
@@ -66,12 +66,12 @@ class GazeControllerNode(Node):
             10
         )
         
-        # 허리 위치 Subscriber (현재 위치 파악용)
+        # 허리 위치 Subscriber (현재 위치 파악용) - BEST_EFFORT QoS 사용
         self.waist_position_subscription = self.create_subscription(
             Float64MultiArray,
             '/robot_outbound_data/theOne_waist/joint_positions_deg',
             self._waist_position_callback,
-            10
+            qos_profile
         )
         
         # 목 각도 발행 (Tracker 노드에서 사용)
@@ -127,12 +127,12 @@ class GazeControllerNode(Node):
         self.search_increment_rad = math.radians(0.3)  # 매 프레임마다 증가할 각도 (약 0.3도)
         
         # PID 제어 파라미터 (일반 추적용)
-        self.kp_yaw = 1.88   # P 게인 (Yaw)
-        self.kp_pitch = 1.5 # P 게인 (Pitch)
-        self.ki_yaw = 0.12    # I 게인 (Yaw) - Steady State Error 제거용
+        self.kp_yaw = 1.0   # P 게인 (Yaw)
+        self.kp_pitch = 1.4 # P 게인 (Pitch)
+        self.ki_yaw = 0.02    # I 게인 (Yaw) - Steady State Error 제거용
         self.ki_pitch = 0.3  # I 게인 (Pitch)
-        self.kd_yaw = 0.01   # D 게인 (Yaw) - 낮춰서 움직임 억제 감소
-        self.kd_pitch = 0.02 # D 게인 (Pitch)
+        self.kd_yaw = 0.005   # D 게인 (Yaw) - 낮춰서 움직임 억제 감소
+        self.kd_pitch = 0.01 # D 게인 (Pitch)
         
         # SEARCHING 상태용 낮은 게인 (천천히 움직임)
         self.kp_yaw_searching = 0.7   # P 게인 (Yaw) - 검색 시 / IDLE 시
@@ -154,12 +154,12 @@ class GazeControllerNode(Node):
         self.last_waist_position_update_time = 0.0
         
         # TRACKING 상태에서 허리 추종용 PID 게인 (진동 방지를 위해 P 게인 낮춤)
-        self.kp_waist_tracking = 1.2  # P 게인 (Waist Yaw) - 진동 방지
-        self.ki_waist_tracking = 0.1  # I 게인 (Waist Yaw)
-        self.kd_waist_tracking = 0.04  # D 게인 (Waist Yaw)
+        self.kp_waist_tracking = 1.5  # P 게인 (Waist Yaw) - 진동 방지
+        self.ki_waist_tracking = 0.15  # I 게인 (Waist Yaw)
+        self.kd_waist_tracking = 0.05  # D 게인 (Waist Yaw)
         
         # 허리 Exponential 추종 파라미터
-        self.waist_exponential_alpha = 0.15  # Exponential 필터 계수 (0~1, 작을수록 더 부드럽고 느림)
+        self.waist_exponential_alpha = 0.5  # Exponential 필터 계수 (0~1, 작을수록 더 부드럽고 느림)
         
         # 허리 PID 제어 상태 변수
         self.integral_waist_yaw = 0.0
@@ -189,6 +189,11 @@ class GazeControllerNode(Node):
             self.current_pitch_rad = math.radians(pitch_deg)
             self.current_yaw_rad = math.radians(yaw_deg)
             self.last_position_update_time = time.monotonic()
+            # 디버깅: 처음 몇 번만 로그 (너무 많이 찍히지 않도록)
+            if self.last_position_update_time < 2.0:  # 처음 2초간만
+                self.get_logger().debug(
+                    f"목 위치 수신: pitch={pitch_deg:.2f}°, yaw={yaw_deg:.2f}°"
+                )
         else:
             self.get_logger().warn(
                 f"Invalid neck position message: data length={len(msg.data)} (expected >= 2)"
@@ -338,8 +343,8 @@ class GazeControllerNode(Node):
         dt = current_time - self.last_waist_update_time
         dt = max(0.001, min(dt, 0.1))
         
-        # Exponential 추종: 목 각도를 직접 따라가도록
-        target_waist_yaw = self.current_yaw_rad
+        # Exponential 추종: 목의 목표 각도 + 현재 각도
+        target_waist_yaw = self.target_yaw_rad + self.current_yaw_rad
         
         # Exponential 필터 적용
         error_waist_yaw = target_waist_yaw - self.current_waist_yaw_rad
@@ -583,8 +588,8 @@ class GazeControllerNode(Node):
     
     def get_waist_angles(self) -> Tuple[float, float]:
         """허리 각도 반환 (현재 각도, 목표 각도)"""
-        # 목표 허리 각도는 현재 목 각도와 동일 (Exponential 추종)
-        target_waist_yaw = self.current_yaw_rad
+        # 목표 허리 각도는 목의 목표 각도 + 현재 각도 (Exponential 추종)
+        target_waist_yaw = self.target_yaw_rad + self.current_yaw_rad
         return self.current_waist_yaw_rad, target_waist_yaw
     
     def tracking_result_callback(self, msg: String):
