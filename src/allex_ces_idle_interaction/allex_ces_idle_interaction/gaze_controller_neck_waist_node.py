@@ -415,16 +415,6 @@ class GazeControllerNode(Node):
                 
                 return yaw_rad, pitch_rad
             
-            case TrackingState.INTERACTION:
-                # INTERACTION 모드: BB Box만 따고 목 명령 전송 안 함
-                self.searching_start_time = None
-                self.search_phase = 0
-                self._reset_waist_pid()
-                self._reset_hello_check()
-                
-                # 목 명령 전송 없이 현재 위치 유지
-                return self.current_yaw_rad, self.current_pitch_rad
-            
             case TrackingState.LOST:
                 # LOST 상태: 현재 위치 유지, 명령 전송 안 함 (떨림 방지)
                 self.searching_start_time = None

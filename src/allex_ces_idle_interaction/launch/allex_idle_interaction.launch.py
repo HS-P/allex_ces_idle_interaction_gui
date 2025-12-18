@@ -23,9 +23,6 @@ def generate_launch_description():
     tracker_state_request_topic = LaunchConfiguration('tracker_state_request_topic', default='/allex_camera/tracker_state_request')
     neck_angle_topic = LaunchConfiguration('neck_angle_topic', default='/allex_camera/neck_angle')
     manual_control_topic = LaunchConfiguration('manual_control_topic', default='/allex_camera/manual_control')
-    llm_response_topic = LaunchConfiguration('llm_response_topic', default='/llm/response')
-    llm_control_topic = LaunchConfiguration('llm_control_topic', default='/llm/control')
-    llm_status_topic = LaunchConfiguration('llm_status_topic', default='/llm/status')
     
     # # 1. Camera Publisher Node (카메라 이미지 발행)
     # camera_publisher_node = Node(
@@ -96,26 +93,11 @@ def generate_launch_description():
         }],
     )
     
-    # 6. LLM Hand Gesture CLIP Node (LLM 판단)
-    llm_hand_gesture_clip_node = Node(
-        package='allex_ces_idle_interaction',
-        executable='llm_hand_gesture_clip_node',
-        name='llm_hand_gesture_clip_node',
-        output='screen',
-        parameters=[{
-            'target_crop_topic': target_crop_topic,
-            'llm_response_topic': llm_response_topic,
-            'llm_control_topic': llm_control_topic,
-            'llm_status_topic': llm_status_topic,
-        }],
-    )
-    
     return LaunchDescription([
         # camera_publisher_node,
         yolo_detection_node,
         tracking_fsm_node,
         gaze_controller_node,
         allex_idle_interaction_node,
-        llm_hand_gesture_clip_node,
     ])
 

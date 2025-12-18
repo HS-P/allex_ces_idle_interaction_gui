@@ -192,7 +192,6 @@ class AllexIdleInteractionNode(Node):
         # 상태 관리
         self.previous_state = TrackingState.IDLE
         self.is_running = False
-        self.interaction_mode = False
         
         # 최신 추적 결과 저장
         self.latest_tracking_result = None
@@ -236,15 +235,6 @@ class AllexIdleInteractionNode(Node):
             if current_state != self.previous_state:
                 self._handle_state_change(self.previous_state, current_state)
                 self.previous_state = current_state
-            
-            # 타겟 Crop 이미지 발행 (Interaction Mode에서만)
-            if self.interaction_mode and self.latest_frame is not None:
-                target_info_data = data.get('target_info', {})
-                tracked_objects_data = data.get('tracked_objects', [])
-                target_track_id = target_info_data.get('track_id')
-                
-                if target_track_id is not None:
-                    self._publish_target_crop(self.latest_frame, tracked_objects_data, target_track_id)
             
             # GUI용 추적 데이터 발행 (목/허리 각도 정보 포함)
             self._publish_tracking_data(data)
@@ -390,9 +380,6 @@ class AllexIdleInteractionNode(Node):
     
     def _handle_state_change(self, old_state: TrackingState, new_state: TrackingState):
         """상태 변경 시 루틴 전환 처리 (Idling 범주만 처리)"""
-        # INTERACTION은 완전히 분리 (Idling 범주에 포함되지 않음)
-        if new_state == TrackingState.INTERACTION or old_state == TrackingState.INTERACTION:
-            return
         
         # IDLE 상태 진입 시: idle_breathing_rt 시작 (한 번만, 무한 루프로 계속 돌아감)
         if new_state == TrackingState.IDLE:
@@ -484,15 +471,6 @@ class AllexIdleInteractionNode(Node):
                 if target_id is not None:
                     tracker_command['target_id'] = target_id
                     self.get_logger().info(f"타겟 변경: {target_id}")
-            
-            elif cmd_type == 'set_interaction_mode':
-                enabled = command.get('enabled', False)
-                self.interaction_mode = enabled
-                tracker_command['enabled'] = enabled
-                if enabled:
-                    self.get_logger().info("Interaction Mode 활성화")
-                else:
-                    self.get_logger().info("IDLE Mode 활성화")
             
             # Tracker에 명령 전송
             tracker_msg = String()

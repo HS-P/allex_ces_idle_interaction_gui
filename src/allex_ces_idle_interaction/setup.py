@@ -31,7 +31,7 @@ launch_data_files = [
 
 setup(
     name=package_name,
-    version='1.2.0',
+    version='1.7.0',
     packages=find_packages(exclude=['test']),
     data_files=[
         ('share/ament_index/resource_index/packages',
@@ -42,7 +42,7 @@ setup(
     zip_safe=True,
     maintainer='yeah2',
     maintainer_email='yeah2@todo.todo',
-    description='Person Tracking Control System with LLM Integration',
+    description='Person Tracking Control System',
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
@@ -52,7 +52,6 @@ setup(
             'tracking_fsm_node = allex_ces_idle_interaction.tracking_fsm_node:main',
             'gaze_controller_neck_waist_node = allex_ces_idle_interaction.gaze_controller_neck_waist_node:main',
             'idle_interaction_gui_node = allex_ces_idle_interaction.idle_interaction_gui_node:main',
-            'llm_hand_gesture_clip_node = allex_ces_idle_interaction.llm_hand_gesture_clip_node:main',
             'gui_node = allex_ces_idle_interaction.idle_interaction_gui_node:main',
             'camera_test = allex_ces_idle_interaction.camera_test:main',
         ],

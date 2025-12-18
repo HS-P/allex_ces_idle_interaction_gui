@@ -37,7 +37,6 @@ class TrackingState(Enum):
     LOST = "lost"          # 추적 대상 놓침 (잠시 대기)
     SEARCHING = "searching" # 주변 두리번대기 (대상 선택)
     HELLO = "hello"        # 인사 제스처 (손 흔들기)
-    INTERACTION = "interaction" # 인터렉션
 
 
 class TrackingFSMNode(Node):
@@ -123,8 +122,6 @@ class TrackingFSMNode(Node):
         # Manual 모드 지원
         self.manual_mode = False  # True면 상태 자동 전이 비활성화
         
-        # Interaction 모드 지원 (True: 타겟 자동 선택 활성화, False: IDLE 모드)
-        self.interaction_mode = False
         
         # 타겟이 명시적으로 설정되었는지 표시 (상태 머신이 덮어쓰지 않도록)
         self.target_explicitly_set = False
@@ -148,7 +145,7 @@ class TrackingFSMNode(Node):
         
         # HELLO 상태를 위한 변수들
         self.hello_routine_sent_time: Optional[float] = None  # HELLO 루틴 발행 시간
-        self.hello_feedback_delay = 1.0  # 루틴 발행 후 피드백 확인 최소 대기 시간 (초) - 핸드 명령 전달 대기
+        self.hello_feedback_delay = 1.5  # 루틴 발행 후 피드백 확인 최소 대기 시간 (초) - 루틴 시작 후 0.5초 여유 확보
         self.current_hand_state: Optional[int] = None  # 현재 HAND 상태 (4: READY, 5: RUNNING)
         self.hello_routine_sent = False  # HELLO 루틴 발행 여부
         
@@ -228,19 +225,6 @@ class TrackingFSMNode(Node):
         """Manual 모드 설정"""
         self.manual_mode = enabled
     
-    def set_interaction_mode(self, enabled: bool) -> None:
-        """Interaction 모드 설정"""
-        self.interaction_mode = enabled
-        self.reset_timers()
-        
-        if enabled:
-            self.state = TrackingState.INTERACTION
-            self.target_track_id = None
-            self.target_explicitly_set = False
-        else:
-            self.state = TrackingState.IDLE
-            self.target_track_id = None
-            self.target_explicitly_set = False
     
     def reset_timers(self) -> None:
         """모든 타이머 및 안정성 관련 변수 초기화"""
@@ -316,8 +300,8 @@ class TrackingFSMNode(Node):
             return [], target_info
         
         # 타겟이 존재하면 상태 업데이트
-        if target_exists and self.state not in (TrackingState.INTERACTION, TrackingState.HELLO):
-            if self.state not in (TrackingState.TRACKING, TrackingState.INTERACTION, TrackingState.HELLO):
+        if target_exists and self.state != TrackingState.HELLO:
+            if self.state != TrackingState.TRACKING and self.state != TrackingState.HELLO:
                 self.state = TrackingState.TRACKING
             self.lost_frames = 0
         
@@ -331,26 +315,23 @@ class TrackingFSMNode(Node):
                         if self.target_selected_time is None:
                             self.target_selected_time = current_time
                     elif not self.manual_mode:
+                        # Auto Mode: 타겟이 없으면 자동으로 가장 가까운 사람 선택
                         if self.target_track_id is None:
                             closest_id = self._find_closest_person(detections, frame_shape, current_time, current_target_id=self.target_track_id)
                             if closest_id is not None:
                                 self.target_track_id = closest_id
                                 self.state = TrackingState.TRACKING
                                 self.lost_frames = 0
-                                self.target_explicitly_set = False
+                                self.target_explicitly_set = False  # Auto Mode에서는 항상 False
                                 self.target_selected_time = current_time  # 타겟 선택 시간 기록
                         elif target_exists:
                             self.state = TrackingState.TRACKING
                             self.lost_frames = 0
+                            # Auto Mode에서는 target_explicitly_set을 False로 유지
+                            if self.target_explicitly_set:
+                                self.target_explicitly_set = False
                             if self.target_selected_time is None:
                                 self.target_selected_time = current_time
-                
-                case TrackingState.INTERACTION:
-                    if self.target_track_id is None or not target_exists:
-                        closest_id = self._find_closest_person(detections, frame_shape, current_time, current_target_id=self.target_track_id)
-                        if closest_id is not None:
-                            self.target_track_id = closest_id
-                            self.target_explicitly_set = False
                 
                 case TrackingState.TRACKING:
                     # 타겟이 존재하면 타겟 선택 시간 업데이트 (타겟 유지 중)
@@ -380,10 +361,15 @@ class TrackingFSMNode(Node):
                     if target_exists:
                         self.state = TrackingState.TRACKING
                         self.lost_frames = 0
+                        # Auto Mode에서는 target_explicitly_set을 False로 유지
+                        if not self.manual_mode and self.target_explicitly_set:
+                            self.target_explicitly_set = False
                     else:
                         self.lost_frames += 1
                         if self.lost_frames >= self.max_lost_frames:
-                            if self.target_track_id is None or not self.target_explicitly_set:
+                            # Auto Mode에서는 항상 SEARCHING으로 전환 (새 타겟 자동 선택)
+                            # Manual Mode에서는 target_explicitly_set이 False일 때만 SEARCHING으로 전환
+                            if self.target_track_id is None or not self.target_explicitly_set or not self.manual_mode:
                                 if self.target_track_id is not None:
                                     # SEARCHING 전환 시 마지막 위치는 유지 (같은 사람을 찾기 위해)
                                     # target_track_id만 None으로 설정
@@ -661,23 +647,16 @@ class TrackingFSMNode(Node):
                     self.get_logger().error(f"잘못된 상태: {state_str}")
             
             elif cmd_type == 'set_target':
-                target_id = command.get('target_id')
-                if target_id is not None:
-                    self.set_target(int(target_id))
-                    if self.interaction_mode:
-                        self.state = TrackingState.INTERACTION
-                    else:
+                # Manual 모드에서만 타겟 변경 허용
+                if self.manual_mode:
+                    target_id = command.get('target_id')
+                    if target_id is not None:
+                        self.set_target(int(target_id))
                         self.state = TrackingState.TRACKING
-                    self.lost_frames = 0
-                    self.get_logger().info(f"타겟 변경: {self.target_track_id}")
-            
-            elif cmd_type == 'set_interaction_mode':
-                enabled = command.get('enabled', False)
-                self.set_interaction_mode(enabled)
-                if enabled:
-                    self.get_logger().info("Interaction Mode 활성화")
+                        self.lost_frames = 0
+                        self.get_logger().info(f"타겟 변경: {self.target_track_id}")
                 else:
-                    self.get_logger().info("IDLE Mode 활성화")
+                    self.get_logger().warn("Auto Mode에서는 타겟 변경이 허용되지 않습니다.")
                     
         except json.JSONDecodeError as e:
             self.get_logger().error(f"제어 명령 파싱 실패: {e}")

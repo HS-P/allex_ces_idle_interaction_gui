@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """
 GUI Node - GUI를 관리하고 여러 Topic을 동적으로 구독하는 통합 Node
-v1.2.0 - PySide6 사용, LLM Publisher 제어 기능 추가
+v1.7.0 - PySide6 사용
 
 시스템 구조:
 - SPARK 1 PC: Camera Publisher (카메라 + YOLO 추적)
-- SPARK 2 PC: LLM Publisher (CLIP 추론, RUN/STOP 대기)
-- Laptop: GUI (이 노드) - IDLE/Interaction 모드 전환
+- Laptop: GUI (이 노드)
 """
 import os
 import sys
@@ -114,7 +113,6 @@ class GuiSignals(QObject):
     state_changed = Signal(str)
     update_target_buttons = Signal()
     update_topic_buttons = Signal()
-    llm_result_received = Signal(str, dict, float)  # best_label, probs, hz
 
 
 class GuiNode(Node, QMainWindow):
@@ -144,13 +142,7 @@ class GuiNode(Node, QMainWindow):
         self.center_zone_duration = 5.0
         
         # GUI 모드 관리
-        self.interaction_mode = False
         self.is_running = False
-        
-        # LLM 관련 상태
-        self.llm_subscribed = False
-        self.llm_running = False
-        self.llm_status = {'running': False, 'hz': 0.0, 'device': 'unknown'}
         
         # CLIP 결과 저장
         self.clip_best_label = "idle"
@@ -180,8 +172,6 @@ class GuiNode(Node, QMainWindow):
         # 시그널 연결
         self.signals.update_target_buttons.connect(self._update_target_buttons)
         self.signals.update_topic_buttons.connect(self._update_topic_buttons)
-        self.signals.llm_result_received.connect(self._on_llm_result_received)
-        
         # Camera Publisher 데이터 구독
         self._setup_camera_subscription()
         
@@ -192,24 +182,13 @@ class GuiNode(Node, QMainWindow):
             10
         )
         
-        # LLM 제어 Publisher
-        self.llm_control_publisher = self.create_publisher(
-            String,
-            self._get_topic_name('llm', 'control'),
-            10
-        )
-        
-        # Launch 후 자동으로 LLM 토픽 구독
-        self.subscribe_llm_topics()
-        self.get_logger().info("LLM 토픽 자동 구독 완료 (Launch 후)")
-        
         # 타이머로 주기적으로 정보 업데이트
         self.update_timer = QTimer()
         self.update_timer.timeout.connect(self.update_info)
         self.update_timer.start(50)  # 20Hz 업데이트
         
         self.get_logger().info("=" * 60)
-        self.get_logger().info("GUI Node v1.2.0 초기화 완료!")
+        self.get_logger().info("GUI Node v1.7.0 초기화 완료!")
         self.get_logger().info(f"토픽 설정 파일: {self.topic_config_path}")
         self.get_logger().info("=" * 60)
     
@@ -360,131 +339,11 @@ class GuiNode(Node, QMainWindow):
                 "robot": {
                     "waist_position": {"name": "/robot_outbound_data/theOne_waist/joint_positions_deg", "type": "std_msgs/Float64MultiArray"}
                 },
-                "llm": {
-                    "response": {"name": "/llm/response", "type": "std_msgs/String"},
-                    "control": {"name": "/llm/control", "type": "std_msgs/String"},
-                    "status": {"name": "/llm/status", "type": "std_msgs/String"}
-                }
             }
-    
-    def subscribe_llm_topics(self) -> bool:
-        """LLM 관련 토픽 구독 시작"""
-        try:
-            qos_profile = QoSProfile(
-                depth=10,
-                reliability=ReliabilityPolicy.BEST_EFFORT,
-                deadline=Duration(seconds=0, nanoseconds=0),
-            )
-            
-            # LLM 응답 토픽 구독
-            response_topic = self._get_topic_name('llm', 'response')
-            if response_topic and response_topic not in self.topic_subscriptions:
-                subscription = self.create_subscription(
-                    String,
-                    response_topic,
-                    self._llm_response_callback,
-                    qos_profile
-                )
-                self.topic_subscriptions[response_topic] = {
-                    'subscription': subscription,
-                    'type': 'std_msgs/String',
-                    'enabled': True
-                }
-                self.get_logger().info(f"LLM 응답 토픽 구독 시작: {response_topic}")
-            
-            # LLM 상태 토픽 구독
-            status_topic = self._get_topic_name('llm', 'status')
-            if status_topic and status_topic not in self.topic_subscriptions:
-                subscription = self.create_subscription(
-                    String,
-                    status_topic,
-                    self._llm_status_callback,
-                    10
-                )
-                self.topic_subscriptions[status_topic] = {
-                    'subscription': subscription,
-                    'type': 'std_msgs/String',
-                    'enabled': True
-                }
-                self.get_logger().info(f"LLM 상태 토픽 구독 시작: {status_topic}")
-            
-            self.llm_subscribed = True
-            return True
-            
-        except Exception as e:
-            self.get_logger().error(f"LLM 토픽 구독 실패: {e}")
-            return False
-    
-    def unsubscribe_llm_topics(self) -> bool:
-        """LLM 관련 토픽 구독 해제"""
-        try:
-            response_topic = self._get_topic_name('llm', 'response')
-            status_topic = self._get_topic_name('llm', 'status')
-            
-            for topic in [response_topic, status_topic]:
-                if topic in self.topic_subscriptions:
-                    del self.topic_subscriptions[topic]
-                    self.get_logger().info(f"LLM 토픽 구독 해제: {topic}")
-            
-            self.llm_subscribed = False
-            return True
-        except Exception as e:
-            self.get_logger().error(f"LLM 토픽 구독 해제 실패: {e}")
-            return False
-    
-    def _llm_response_callback(self, msg: String) -> None:
-        """LLM 응답 메시지 콜백"""
-        try:
-            data = json.loads(msg.data)
-            best = data.get("best", "idle")
-            probs = data.get("probs", {})
-            hz = data.get("hz", 0.0)
-            
-            # 시그널로 메인 쓰레드에 전달
-            self.signals.llm_result_received.emit(best, probs, hz)
-            
-        except Exception as e:
-            self.get_logger().error(f"LLM 응답 파싱 실패: {e}")
-    
-    def _llm_status_callback(self, msg: String) -> None:
-        """LLM 상태 메시지 콜백"""
-        try:
-            data = json.loads(msg.data)
-            self.llm_status = data
-            self.llm_running = data.get('running', False)
-            
-            # 상태 표시 업데이트 (Interaction Mode일 때만)
-            if hasattr(self, 'llm_status_label') and self.interaction_mode:
-                if self.llm_running:
-                    hz = data.get('hz', 0.0)
-                    device = data.get('device', 'unknown')
-                    self.llm_status_label.setText(f"🟢 LLM: 추론 중 ({hz:.1f} Hz, {device})")
-                    self.llm_status_label.setStyleSheet("font-size: 11pt; color: #81c784;")
-                else:
-                    self.llm_status_label.setText("🟡 LLM: 대기 중 (토픽 구독 중)")
-                    self.llm_status_label.setStyleSheet("font-size: 11pt; color: #ffa726;")
-        except Exception as e:
-            self.get_logger().warn(f"LLM 상태 파싱 실패: {e}")
-    
-    def _on_llm_result_received(self, best_label: str, probs: dict, hz: float):
-        """LLM 결과 수신 시 호출 (메인 쓰레드)"""
-        self.clip_best_label = best_label
-        self.clip_probs = probs
-        self.clip_hz = hz
-    
-    def send_llm_control(self, command: str):
-        """LLM Publisher에 제어 명령 전송"""
-        try:
-            msg = String()
-            msg.data = json.dumps({'type': command})
-            self.llm_control_publisher.publish(msg)
-            self.get_logger().info(f"LLM 제어 명령 전송: {command}")
-        except Exception as e:
-            self.get_logger().error(f"LLM 제어 명령 전송 실패: {e}")
     
     def init_ui(self):
         """UI 초기화"""
-        self.setWindowTitle("Person Tracking Control Panel v1.2.0")
+        self.setWindowTitle("Person Tracking Control Panel v1.7.0")
         screen = QApplication.primaryScreen().geometry()
         self.setGeometry(0, 0, screen.width(), screen.height())
         
@@ -501,29 +360,6 @@ class GuiNode(Node, QMainWindow):
         left_panel = QWidget()
         left_layout = QVBoxLayout()
         left_panel.setLayout(left_layout)
-        
-        # Interaction/IDLE Mode 선택 그룹
-        interaction_group = QGroupBox("시스템 모드")
-        interaction_layout = QHBoxLayout()
-        
-        self.interaction_btn = QPushButton("Interaction Mode")
-        self.interaction_btn.setCheckable(True)
-        self.interaction_btn.setChecked(False)
-        self.interaction_btn.setMinimumHeight(50)
-        self.interaction_btn.setStyleSheet("font-size: 14pt; font-weight: bold; background-color: #E0E0E0;")
-        self.interaction_btn.clicked.connect(lambda: self.set_interaction_mode(True))
-        
-        self.idle_btn = QPushButton("IDLE Mode")
-        self.idle_btn.setCheckable(True)
-        self.idle_btn.setChecked(True)
-        self.idle_btn.setMinimumHeight(50)
-        self.idle_btn.setStyleSheet("font-size: 14pt; font-weight: bold; background-color: #90EE90;")
-        self.idle_btn.clicked.connect(lambda: self.set_interaction_mode(False))
-        
-        interaction_layout.addWidget(self.interaction_btn)
-        interaction_layout.addWidget(self.idle_btn)
-        interaction_group.setLayout(interaction_layout)
-        left_layout.addWidget(interaction_group)
         
         # IDLE Mode 제어 그룹
         self.idle_control_group = QGroupBox("IDLE Mode 제어")
@@ -581,28 +417,6 @@ class GuiNode(Node, QMainWindow):
         state_layout.addLayout(state_select_layout)
         self.state_group.setLayout(state_layout)
         left_layout.addWidget(self.state_group)
-        
-        # Interaction Mode 제어 그룹 (초기에는 숨김)
-        self.interaction_control_group = QGroupBox("Interaction Mode 제어")
-        interaction_control_layout = QVBoxLayout()
-        
-        # LLM 상태 표시
-        self.llm_status_label = QLabel("🟡 LLM: 대기 중 (토픽 구독 중)")
-        self.llm_status_label.setStyleSheet("font-size: 11pt; color: #ffa726;")
-        interaction_control_layout.addWidget(self.llm_status_label)
-        
-        # Interaction RUN 버튼
-        self.interaction_run_btn = QPushButton("RUN (Interaction)")
-        self.interaction_run_btn.setCheckable(True)
-        self.interaction_run_btn.setChecked(False)
-        self.interaction_run_btn.setMinimumHeight(60)
-        self.interaction_run_btn.setStyleSheet("font-size: 16pt; font-weight: bold; background-color: #E0E0E0; color: black;")
-        self.interaction_run_btn.clicked.connect(self.on_interaction_run_clicked)
-        interaction_control_layout.addWidget(self.interaction_run_btn)
-        
-        self.interaction_control_group.setLayout(interaction_control_layout)
-        self.interaction_control_group.setVisible(False)
-        left_layout.addWidget(self.interaction_control_group)
         
         top_layout.addWidget(left_panel, 1)
         
@@ -803,64 +617,6 @@ class GuiNode(Node, QMainWindow):
         
         self.get_logger().info(f"초기화 완료: 타겟 버튼={len(self.target_buttons)}개")
     
-    def set_interaction_mode(self, interaction: bool):
-        """Interaction/IDLE Mode 설정"""
-        if self.is_running:
-            self.run_btn.setChecked(False)
-            self.interaction_run_btn.setChecked(False)
-            self.is_running = False
-            self.run_btn.setText("RUN")
-            self.run_btn.setStyleSheet("font-size: 16pt; font-weight: bold; background-color: #E0E0E0; color: black;")
-            self.interaction_run_btn.setText("RUN (Interaction)")
-            self.interaction_run_btn.setStyleSheet("font-size: 16pt; font-weight: bold; background-color: #E0E0E0; color: black;")
-            self._send_manual_control({'type': 'stop'})
-        
-        self.interaction_mode = interaction
-        if interaction:
-            self.interaction_btn.setChecked(True)
-            self.idle_btn.setChecked(False)
-            self.interaction_btn.setStyleSheet("font-size: 14pt; font-weight: bold; background-color: #90EE90;")
-            self.idle_btn.setStyleSheet("font-size: 14pt; font-weight: bold; background-color: #E0E0E0;")
-            
-            # IDLE Mode 제어 숨기기
-            self.idle_control_group.setVisible(False)
-            self.state_group.setVisible(False)
-            
-            # Interaction Mode 제어 표시
-            self.interaction_control_group.setVisible(True)
-            self.clip_result_group.setVisible(True)
-            
-            self._send_manual_control({
-                'type': 'set_interaction_mode',
-                'enabled': True
-            })
-            self.get_logger().info("Interaction Mode 선택됨")
-        else:
-            self.interaction_btn.setChecked(False)
-            self.idle_btn.setChecked(True)
-            self.interaction_btn.setStyleSheet("font-size: 14pt; font-weight: bold; background-color: #E0E0E0;")
-            self.idle_btn.setStyleSheet("font-size: 14pt; font-weight: bold; background-color: #90EE90;")
-            
-            # Interaction Mode 제어 숨기기
-            self.interaction_control_group.setVisible(False)
-            self.clip_result_group.setVisible(False)
-            
-            # IDLE Mode 제어 표시
-            self.idle_control_group.setVisible(True)
-            self.state_group.setVisible(True)
-            
-            # LLM 추론 중지 (구독은 유지)
-            if self.llm_subscribed:
-                self.send_llm_control('stop')
-                self.llm_status_label.setText("🟡 LLM: 대기 중 (토픽 구독 중)")
-                self.llm_status_label.setStyleSheet("font-size: 11pt; color: #ffa726;")
-            
-            self._send_manual_control({
-                'type': 'set_interaction_mode',
-                'enabled': False
-            })
-            self.get_logger().info("IDLE Mode 선택됨")
-    
     def on_run_clicked(self):
         """RUN 버튼 클릭 이벤트 (IDLE Mode)"""
         if self.run_btn.isChecked():
@@ -880,42 +636,6 @@ class GuiNode(Node, QMainWindow):
             self.run_btn.setStyleSheet("font-size: 16pt; font-weight: bold; background-color: #E0E0E0; color: black;")
             self._send_manual_control({'type': 'stop'})
             self.get_logger().info("RUN 중지: IDLE 상태로 전환")
-    
-    def on_interaction_run_clicked(self):
-        """RUN 버튼 클릭 이벤트 (Interaction Mode)"""
-        if self.interaction_run_btn.isChecked():
-            self.is_running = True
-            self.interaction_run_btn.setText("STOP (Interaction)")
-            self.interaction_run_btn.setStyleSheet("font-size: 16pt; font-weight: bold; background-color: #90EE90; color: black;")
-            
-            # 추적 시작
-            self._send_manual_control({
-                'type': 'run',
-                'manual': False
-            })
-            
-            # LLM 추론 시작 (자동)
-            if self.llm_subscribed:
-                self.send_llm_control('run')
-                self.llm_status_label.setText("🟢 LLM: 추론 중")
-                self.llm_status_label.setStyleSheet("font-size: 11pt; color: #81c784;")
-            
-            self.get_logger().info("RUN 시작: Interaction Mode (BB Box 추적 + LLM 추론)")
-        else:
-            self.is_running = False
-            self.interaction_run_btn.setText("RUN (Interaction)")
-            self.interaction_run_btn.setStyleSheet("font-size: 16pt; font-weight: bold; background-color: #E0E0E0; color: black;")
-            
-            # 추적 중지
-            self._send_manual_control({'type': 'stop'})
-            
-            # LLM 추론 중지 (자동)
-            if self.llm_subscribed:
-                self.send_llm_control('stop')
-                self.llm_status_label.setText("🟡 LLM: 대기 중 (토픽 구독 중)")
-                self.llm_status_label.setStyleSheet("font-size: 11pt; color: #ffa726;")
-            
-            self.get_logger().info("RUN 중지: Interaction Mode 종료 (LLM 추론 중지)")
     
     def set_mode(self, manual: bool):
         """운영 모드 설정 (Auto/Manual)"""
@@ -1040,7 +760,6 @@ class GuiNode(Node, QMainWindow):
             'LOST': 'orange',
             'SEARCHING': 'yellow',
             'HELLO': 'cyan',
-            'INTERACTION': 'blue'
         }
         color = state_colors.get(state_str, 'black')
         self.state_label.setStyleSheet(f"font-weight: bold; font-size: 14pt; color: {color};")
@@ -1124,15 +843,7 @@ class GuiNode(Node, QMainWindow):
         else:
             self.objects_info_label.setText("추적 객체 없음")
         
-        # CLIP 결과 업데이트 (Interaction Mode에서만)
-        if self.interaction_mode and self.llm_subscribed:
-            self.clip_label_display.setText(self.clip_best_label.upper())
-            self.clip_hz_label.setText(f"{self.clip_hz:.1f} Hz")
-            
-            for name in CLIP_LABELS:
-                prob = self.clip_probs.get(name, 0.0)
-                self.clip_label_bars[name].setValue(int(prob))
-                self.clip_percent_labels[name].setText(f"{prob:.1f}%")
+        # CLIP 결과 업데이트 (LLM 제거로 인해 비활성화)
         
         # 타겟 버튼 업데이트
         self._update_target_buttons()
@@ -1143,10 +854,6 @@ class GuiNode(Node, QMainWindow):
     
     def closeEvent(self, event):
         """창 닫기 이벤트"""
-        # LLM Stop 명령 전송
-        if self.llm_subscribed:
-            self.send_llm_control('stop')
-        
         self.update_timer.stop()
         event.accept()
 

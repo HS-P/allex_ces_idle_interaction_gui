@@ -1,0 +1,2 @@
+/usr/lib/python3/dist-packages/setuptools/command/easy_install.py:363: UserWarning: Unbuilt egg for irim-control-panel-n-dashboard [unknown version] (/home/dgx_allex_one/allex_ces_idle_interaction_gui/build/irim_control_panel_n_dashboard)
+  self.local_index = Environment(self.shadow_path + sys.path)

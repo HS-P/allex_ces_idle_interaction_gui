@@ -6,7 +6,6 @@ allex_ces_idle_interaction/allex_idle_interaction_node.py
 allex_ces_idle_interaction/camera_test.py
 allex_ces_idle_interaction/gaze_controller_neck_waist_node.py
 allex_ces_idle_interaction/idle_interaction_gui_node.py
-allex_ces_idle_interaction/llm_hand_gesture_clip_node.py
 allex_ces_idle_interaction/tracking_fsm_node.py
 allex_ces_idle_interaction/yolo_detection_node.py
 allex_ces_idle_interaction.egg-info/PKG-INFO
