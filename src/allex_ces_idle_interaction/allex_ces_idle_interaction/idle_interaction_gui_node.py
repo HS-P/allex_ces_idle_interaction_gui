@@ -780,12 +780,32 @@ class GuiNode(Node, QMainWindow):
             
             elif cmd_type == 'set_mode':
                 manual_mode = command.get('manual', False)
-                # AUTO/MANUAL 버튼 상태 강제 업데이트
+                # AUTO/MANUAL 버튼 상태 강제 업데이트 (직접 UI 업데이트)
                 current_manual_state = self.manual_btn.isChecked()
                 if manual_mode != current_manual_state:
-                    # 상태가 다르면 업데이트 (set_mode 호출 시 자동으로 UI 업데이트됨)
-                    self.set_mode(manual_mode)
-                    self.get_logger().info(f"[GUI] 키보드/조이스틱 명령: {'MANUAL' if manual_mode else 'AUTO'} 모드로 업데이트")
+                    # 모드 변경 전, 실행 중이었다면 먼저 STOP
+                    if self.is_running:
+                        self.is_running = False
+                        self.run_btn.setChecked(False)
+                        self.run_btn.setText("RUN")
+                        self.run_btn.setStyleSheet("font-size: 16pt; font-weight: bold; background-color: #E0E0E0; color: black;")
+                        self.get_logger().info(f"[GUI] 모드 변경: 기존 RUN 상태 STOP")
+                    
+                    # UI 직접 업데이트 (명령 전송 없이)
+                    if manual_mode:
+                        self.manual_btn.setChecked(True)
+                        self.auto_btn.setChecked(False)
+                        self.manual_btn.setStyleSheet("font-size: 12pt; font-weight: bold; background-color: #90EE90; color: black;")
+                        self.auto_btn.setStyleSheet("font-size: 12pt; font-weight: bold; background-color: #E0E0E0; color: black;")
+                        self.state_combo.setEnabled(True)
+                    else:
+                        self.manual_btn.setChecked(False)
+                        self.auto_btn.setChecked(True)
+                        self.manual_btn.setStyleSheet("font-size: 12pt; font-weight: bold; background-color: #E0E0E0; color: black;")
+                        self.auto_btn.setStyleSheet("font-size: 12pt; font-weight: bold; background-color: #90EE90; color: black;")
+                        self.state_combo.setEnabled(False)
+                    
+                    self.get_logger().info(f"[GUI] 키보드/조이스틱 명령: {'MANUAL' if manual_mode else 'AUTO'} 모드로 업데이트 완료")
                 else:
                     # 상태가 같아도 시각적으로 확인되도록 로그 출력
                     self.get_logger().debug(f"[GUI] 이미 {'MANUAL' if manual_mode else 'AUTO'} 모드입니다")
