@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 GUI Node - GUI를 관리하고 여러 Topic을 동적으로 구독하는 통합 Node
-v1.7.0 - PySide6 사용
+v1.8.0 - PySide6 사용
 
 시스템 구조:
 - SPARK 1 PC: Camera Publisher (카메라 + YOLO 추적)
@@ -113,6 +113,8 @@ class GuiSignals(QObject):
     state_changed = Signal(str)
     update_target_buttons = Signal()
     update_topic_buttons = Signal()
+    update_mode_ui = Signal(bool)  # Manual/Auto 모드 UI 업데이트 (외부 명령 수신 시)
+    update_run_ui = Signal(bool)  # RUN/STOP UI 업데이트 (외부 명령 수신 시)
 
 
 class GuiNode(Node, QMainWindow):
@@ -172,6 +174,8 @@ class GuiNode(Node, QMainWindow):
         # 시그널 연결
         self.signals.update_target_buttons.connect(self._update_target_buttons)
         self.signals.update_topic_buttons.connect(self._update_topic_buttons)
+        self.signals.update_mode_ui.connect(self._on_mode_ui_update)
+        self.signals.update_run_ui.connect(self._on_run_ui_update)
         # Camera Publisher 데이터 구독
         self._setup_camera_subscription()
         
@@ -196,7 +200,7 @@ class GuiNode(Node, QMainWindow):
         self.update_timer.start(50)  # 20Hz 업데이트
         
         self.get_logger().info("=" * 60)
-        self.get_logger().info("GUI Node v1.7.0 초기화 완료!")
+        self.get_logger().info("GUI Node v1.8.0 초기화 완료!")
         self.get_logger().info(f"토픽 설정 파일: {self.topic_config_path}")
         self.get_logger().info("=" * 60)
     
@@ -371,7 +375,7 @@ class GuiNode(Node, QMainWindow):
     
     def init_ui(self):
         """UI 초기화"""
-        self.setWindowTitle("Person Tracking Control Panel v1.7.0")
+        self.setWindowTitle("Person Tracking Control Panel v1.8.0")
         screen = QApplication.primaryScreen().geometry()
         self.setGeometry(0, 0, screen.width(), screen.height())
         
@@ -759,61 +763,73 @@ class GuiNode(Node, QMainWindow):
             command = json.loads(msg.data)
             cmd_type = command.get('type')
             
-            # 조이스틱에서 온 명령이면 GUI UI 업데이트
+            # Qt 시그널로 메인 스레드에서 UI 업데이트 (스레드 안전)
             if cmd_type == 'run' or cmd_type == 'start':
-                # RUN 버튼 상태 업데이트
-                if not self.run_btn.isChecked():
-                    self.run_btn.setChecked(True)
-                    self.run_btn.setText("STOP")
-                    self.run_btn.setStyleSheet("font-size: 16pt; font-weight: bold; background-color: #90EE90; color: black;")
-                    self.is_running = True
-                    self.get_logger().info("[GUI] 조이스틱 명령: RUN 상태로 업데이트")
+                manual_mode = command.get('manual', False)
+                self.get_logger().info(f"[GUI] 외부 명령 수신: RUN ({'MANUAL' if manual_mode else 'AUTO'})")
+                self.signals.update_run_ui.emit(True)  # True = RUN
             
             elif cmd_type == 'stop':
-                # STOP 버튼 상태 업데이트
-                if self.run_btn.isChecked():
-                    self.run_btn.setChecked(False)
-                    self.run_btn.setText("RUN")
-                    self.run_btn.setStyleSheet("font-size: 16pt; font-weight: bold; background-color: #E0E0E0; color: black;")
-                    self.is_running = False
-                    self.get_logger().info("[GUI] 조이스틱 명령: STOP 상태로 업데이트")
+                self.get_logger().info("[GUI] 외부 명령 수신: STOP")
+                self.signals.update_run_ui.emit(False)  # False = STOP
             
             elif cmd_type == 'set_mode':
                 manual_mode = command.get('manual', False)
-                # AUTO/MANUAL 버튼 상태 강제 업데이트 (직접 UI 업데이트)
-                current_manual_state = self.manual_btn.isChecked()
-                if manual_mode != current_manual_state:
-                    # 모드 변경 전, 실행 중이었다면 먼저 STOP
-                    if self.is_running:
-                        self.is_running = False
-                        self.run_btn.setChecked(False)
-                        self.run_btn.setText("RUN")
-                        self.run_btn.setStyleSheet("font-size: 16pt; font-weight: bold; background-color: #E0E0E0; color: black;")
-                        self.get_logger().info(f"[GUI] 모드 변경: 기존 RUN 상태 STOP")
-                    
-                    # UI 직접 업데이트 (명령 전송 없이)
-                    if manual_mode:
-                        self.manual_btn.setChecked(True)
-                        self.auto_btn.setChecked(False)
-                        self.manual_btn.setStyleSheet("font-size: 12pt; font-weight: bold; background-color: #90EE90; color: black;")
-                        self.auto_btn.setStyleSheet("font-size: 12pt; font-weight: bold; background-color: #E0E0E0; color: black;")
-                        self.state_combo.setEnabled(True)
-                    else:
-                        self.manual_btn.setChecked(False)
-                        self.auto_btn.setChecked(True)
-                        self.manual_btn.setStyleSheet("font-size: 12pt; font-weight: bold; background-color: #E0E0E0; color: black;")
-                        self.auto_btn.setStyleSheet("font-size: 12pt; font-weight: bold; background-color: #90EE90; color: black;")
-                        self.state_combo.setEnabled(False)
-                    
-                    self.get_logger().info(f"[GUI] 키보드/조이스틱 명령: {'MANUAL' if manual_mode else 'AUTO'} 모드로 업데이트 완료")
-                else:
-                    # 상태가 같아도 시각적으로 확인되도록 로그 출력
-                    self.get_logger().debug(f"[GUI] 이미 {'MANUAL' if manual_mode else 'AUTO'} 모드입니다")
+                self.get_logger().info(f"[GUI] 외부 명령 수신: 모드 변경 → {'MANUAL' if manual_mode else 'AUTO'}")
+                self.signals.update_mode_ui.emit(manual_mode)  # True = Manual, False = Auto
                         
         except json.JSONDecodeError as e:
             self.get_logger().error(f"Manual 제어 명령 파싱 실패: {e}")
         except Exception as e:
             self.get_logger().error(f"Manual 제어 명령 처리 실패: {e}")
+    
+    def _on_mode_ui_update(self, manual_mode: bool):
+        """모드 UI 업데이트 슬롯 (메인 스레드에서 실행)"""
+        current_manual_state = self.manual_btn.isChecked()
+        if manual_mode == current_manual_state:
+            self.get_logger().debug(f"[GUI] 이미 {'MANUAL' if manual_mode else 'AUTO'} 모드입니다")
+            return
+        
+        # 모드 변경 전, 실행 중이었다면 먼저 STOP
+        if self.is_running:
+            self.is_running = False
+            self.run_btn.setChecked(False)
+            self.run_btn.setText("RUN")
+            self.run_btn.setStyleSheet("font-size: 16pt; font-weight: bold; background-color: #E0E0E0; color: black;")
+            self.get_logger().info(f"[GUI] 모드 변경: 기존 RUN 상태 STOP")
+        
+        # UI 업데이트 (메인 스레드에서 실행되므로 안전)
+        if manual_mode:
+            self.manual_btn.setChecked(True)
+            self.auto_btn.setChecked(False)
+            self.manual_btn.setStyleSheet("font-size: 12pt; font-weight: bold; background-color: #90EE90; color: black;")
+            self.auto_btn.setStyleSheet("font-size: 12pt; font-weight: bold; background-color: #E0E0E0; color: black;")
+            self.state_combo.setEnabled(True)
+        else:
+            self.manual_btn.setChecked(False)
+            self.auto_btn.setChecked(True)
+            self.manual_btn.setStyleSheet("font-size: 12pt; font-weight: bold; background-color: #E0E0E0; color: black;")
+            self.auto_btn.setStyleSheet("font-size: 12pt; font-weight: bold; background-color: #90EE90; color: black;")
+            self.state_combo.setEnabled(False)
+        
+        self.get_logger().info(f"[GUI] 모드 UI 업데이트 완료: {'MANUAL' if manual_mode else 'AUTO'}")
+    
+    def _on_run_ui_update(self, is_running: bool):
+        """RUN/STOP UI 업데이트 슬롯 (메인 스레드에서 실행)"""
+        if is_running:
+            if not self.run_btn.isChecked():
+                self.is_running = True
+                self.run_btn.setChecked(True)
+                self.run_btn.setText("STOP")
+                self.run_btn.setStyleSheet("font-size: 16pt; font-weight: bold; background-color: #90EE90; color: black;")
+                self.get_logger().info("[GUI] RUN UI 업데이트 완료")
+        else:
+            if self.run_btn.isChecked():
+                self.is_running = False
+                self.run_btn.setChecked(False)
+                self.run_btn.setText("RUN")
+                self.run_btn.setStyleSheet("font-size: 16pt; font-weight: bold; background-color: #E0E0E0; color: black;")
+                self.get_logger().info("[GUI] STOP UI 업데이트 완료")
     
     def _update_target_buttons(self):
         """타겟 버튼 업데이트"""

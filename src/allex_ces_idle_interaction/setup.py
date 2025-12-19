@@ -31,7 +31,7 @@ launch_data_files = [
 
 setup(
     name=package_name,
-    version='1.7.0',
+    version='1.8.0',
     packages=find_packages(exclude=['test']),
     data_files=[
         ('share/ament_index/resource_index/packages',
