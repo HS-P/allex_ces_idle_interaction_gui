@@ -182,6 +182,14 @@ class GuiNode(Node, QMainWindow):
             10
         )
         
+        # Manual 제어 구독 (조이스틱 명령 수신 시 GUI 업데이트)
+        self.manual_control_subscription = self.create_subscription(
+            String,
+            self._get_topic_name('camera', 'manual_control'),
+            self._manual_control_received_callback,
+            10
+        )
+        
         # 타이머로 주기적으로 정보 업데이트
         self.update_timer = QTimer()
         self.update_timer.timeout.connect(self.update_info)
@@ -708,6 +716,48 @@ class GuiNode(Node, QMainWindow):
             self.manual_control_publisher.publish(msg)
         except Exception as e:
             self.get_logger().error(f"Manual 제어 명령 전송 실패: {e}")
+    
+    def _manual_control_received_callback(self, msg: String):
+        """Manual 제어 명령 수신 (조이스틱 등에서 온 명령 처리)"""
+        try:
+            command = json.loads(msg.data)
+            cmd_type = command.get('type')
+            
+            # 조이스틱에서 온 명령이면 GUI UI 업데이트
+            if cmd_type == 'run' or cmd_type == 'start':
+                # RUN 버튼 상태 업데이트
+                if not self.run_btn.isChecked():
+                    self.run_btn.setChecked(True)
+                    self.run_btn.setText("STOP")
+                    self.run_btn.setStyleSheet("font-size: 16pt; font-weight: bold; background-color: #90EE90; color: black;")
+                    self.is_running = True
+                    self.get_logger().info("[GUI] 조이스틱 명령: RUN 상태로 업데이트")
+            
+            elif cmd_type == 'stop':
+                # STOP 버튼 상태 업데이트
+                if self.run_btn.isChecked():
+                    self.run_btn.setChecked(False)
+                    self.run_btn.setText("RUN")
+                    self.run_btn.setStyleSheet("font-size: 16pt; font-weight: bold; background-color: #E0E0E0; color: black;")
+                    self.is_running = False
+                    self.get_logger().info("[GUI] 조이스틱 명령: STOP 상태로 업데이트")
+            
+            elif cmd_type == 'set_mode':
+                manual_mode = command.get('manual', False)
+                # AUTO/MANUAL 버튼 상태 업데이트
+                if manual_mode:
+                    if not self.manual_btn.isChecked():
+                        self.set_mode(True)
+                        self.get_logger().info("[GUI] 조이스틱 명령: MANUAL 모드로 업데이트")
+                else:
+                    if not self.auto_btn.isChecked():
+                        self.set_mode(False)
+                        self.get_logger().info("[GUI] 조이스틱 명령: AUTO 모드로 업데이트")
+                        
+        except json.JSONDecodeError as e:
+            self.get_logger().error(f"Manual 제어 명령 파싱 실패: {e}")
+        except Exception as e:
+            self.get_logger().error(f"Manual 제어 명령 처리 실패: {e}")
     
     def _update_target_buttons(self):
         """타겟 버튼 업데이트"""

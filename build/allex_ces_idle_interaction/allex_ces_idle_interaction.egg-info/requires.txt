@@ -4,6 +4,7 @@ huggingface_hub
 lap
 numpy
 pillow
+pynput
 pyyaml
 scipy
 setuptools

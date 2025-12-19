@@ -148,9 +148,15 @@ class TrackingFSMNode(Node):
         self.hello_feedback_delay = 1.5  # 루틴 발행 후 피드백 확인 최소 대기 시간 (초) - 루틴 시작 후 0.5초 여유 확보
         self.current_hand_state: Optional[int] = None  # 현재 HAND 상태 (4: READY, 5: RUNNING)
         self.hello_routine_sent = False  # HELLO 루틴 발행 여부
+        # 이미 HELLO를 한 track_id 저장 (타겟 선택 시 제외)
+        self.hello_done_track_ids = set()
         
         # 실행 상태 플래그
         self.is_running = False
+        
+        # IDLE State 진입 시간 기록 (5초 동안 사람 탐지 비활성화)
+        self.idle_entrance_time = None
+        self.idle_detection_cooldown = 5.0  # IDLE 진입 후 5초간 사람 탐지 비활성화
         
         # 성능 모니터링
         self.frame_count = 0
@@ -172,7 +178,8 @@ class TrackingFSMNode(Node):
             return None
         
         # 현재 타겟이 존재하는 경우, 그 타겟을 우선적으로 반환 (타겟 안정성 유지)
-        if current_target_id is not None:
+        # 단, HELLO 완료 ID는 제외
+        if current_target_id is not None and current_target_id not in self.hello_done_track_ids:
             for det in detections:
                 if det['track_id'] == current_target_id:
                     # 현재 타겟이 존재하면 그대로 반환 (타겟 변경 방지)
@@ -190,12 +197,16 @@ class TrackingFSMNode(Node):
         # 사라진 track_id 제거 (메모리 관리)
         disappeared_ids = set(self.track_id_first_seen.keys()) - current_frame_ids
         for track_id in disappeared_ids:
-            del self.track_id_first_seen[track_id]
+            if track_id in self.track_id_first_seen:
+                del self.track_id_first_seen[track_id]
         
-        # 최소 지속 시간 이상인 객체만 필터링
+        # 최소 지속 시간 이상이고 HELLO 완료 ID가 아닌 객체만 필터링
         valid_detections = []
         for det in detections:
             track_id = det['track_id']
+            # HELLO 완료 ID는 제외
+            if track_id in self.hello_done_track_ids:
+                continue
             if track_id in self.track_id_first_seen:
                 duration = current_time - self.track_id_first_seen[track_id]
                 if duration >= self.min_target_duration:
@@ -230,11 +241,16 @@ class TrackingFSMNode(Node):
         """모든 타이머 및 안정성 관련 변수 초기화"""
         self.lost_frames = 0
         self.target_selected_time = None
+        # IDLE 진입 시간도 초기화 (다시 IDLE로 진입할 때 새로 기록)
+        self.idle_entrance_time = None
     
     def set_state(self, state: TrackingState, target_track_id: Optional[int] = None) -> None:
         """Manual 모드에서 상태를 수동으로 설정"""
         if state == TrackingState.IDLE:
             self.reset_timers()
+            # IDLE State 진입 시간 기록
+            self.idle_entrance_time = time.monotonic()
+            self.get_logger().info(f"IDLE State 진입: {self.idle_detection_cooldown}초간 사람 탐지 비활성화")
 
         # HELLO 전환 요청은 Auto 모드에서도 허용 (Controller에서 수신)
         if state == TrackingState.HELLO:
@@ -270,8 +286,10 @@ class TrackingFSMNode(Node):
         current_time = time.monotonic()
         
         # 타겟이 설정되어 있으면 현재 프레임에 존재하는지 확인
+        # 단, HELLO를 한 번 완료한 타겟은 존재하지 않는 것으로 처리 (더 이상 추적하지 않음)
         target_exists = (
             self.target_track_id is not None and
+            self.target_track_id not in self.hello_done_track_ids and
             any(det['track_id'] == self.target_track_id for det in detections)
         )
         
@@ -309,15 +327,28 @@ class TrackingFSMNode(Node):
         if not self.manual_mode:
             match self.state:
                 case TrackingState.IDLE:
+                    # IDLE State 진입 시간 초기화 (처음 IDLE 진입 시)
+                    if self.idle_entrance_time is None:
+                        self.idle_entrance_time = current_time
+                        self.get_logger().info(f"IDLE State 진입: {self.idle_detection_cooldown}초간 사람 탐지 비활성화")
+                    
+                    # IDLE 진입 후 5초 이내인지 확인
+                    time_since_idle = current_time - self.idle_entrance_time
+                    is_in_cooldown = time_since_idle < self.idle_detection_cooldown
+                    
                     if self.target_explicitly_set and target_exists:
+                        # Manual 모드에서 명시적으로 타겟 설정된 경우는 cooldown 무시
                         self.state = TrackingState.TRACKING
                         self.lost_frames = 0
                         if self.target_selected_time is None:
                             self.target_selected_time = current_time
-                    elif not self.manual_mode:
-                        # Auto Mode: 타겟이 없으면 자동으로 가장 가까운 사람 선택
+                    elif not self.manual_mode and not is_in_cooldown:
+                        # Auto Mode: 타겟이 없으면 자동으로 가장 가까운 사람 선택 (HELLO 완료 ID 제외)
+                        # 단, IDLE 진입 후 5초가 지나야만 탐지 활성화
                         if self.target_track_id is None:
-                            closest_id = self._find_closest_person(detections, frame_shape, current_time, current_target_id=self.target_track_id)
+                            # HELLO 완료 ID 제외
+                            valid_detections = [det for det in detections if det['track_id'] not in self.hello_done_track_ids]
+                            closest_id = self._find_closest_person(valid_detections, frame_shape, current_time, current_target_id=self.target_track_id)
                             if closest_id is not None:
                                 self.target_track_id = closest_id
                                 self.state = TrackingState.TRACKING
@@ -334,6 +365,18 @@ class TrackingFSMNode(Node):
                                 self.target_selected_time = current_time
                 
                 case TrackingState.TRACKING:
+                    # 현재 타겟이 HELLO 완료 ID이면 LOST로 전환
+                    if self.target_track_id is not None and self.target_track_id in self.hello_done_track_ids:
+                        self.get_logger().info(
+                            f"TRACKING: 타겟 ID={self.target_track_id}는 HELLO 완료 ID이므로 LOST로 전환"
+                        )
+                        self.target_track_id = None
+                        self.target_explicitly_set = False
+                        self.state = TrackingState.LOST
+                        self.lost_frames = 0
+                        # target_exists는 이미 False가 되므로 아래 조건은 실행되지 않음
+                        return [], target_info
+                    
                     # 타겟이 존재하면 타겟 선택 시간 업데이트 (타겟 유지 중)
                     if target_exists and self.target_track_id is not None:
                         if self.target_selected_time is None:
@@ -358,12 +401,22 @@ class TrackingFSMNode(Node):
                             self.lost_frames = 0
                 
                 case TrackingState.LOST:
+                    # target_exists는 이미 hello_done_track_ids를 체크하므로,
+                    # HELLO 완료 ID는 자동으로 제외됨
                     if target_exists:
                         self.state = TrackingState.TRACKING
                         self.lost_frames = 0
                         # Auto Mode에서는 target_explicitly_set을 False로 유지
                         if not self.manual_mode and self.target_explicitly_set:
                             self.target_explicitly_set = False
+                    elif self.target_track_id is not None and self.target_track_id in self.hello_done_track_ids:
+                        # 현재 타겟이 HELLO 완료 ID이면 타겟을 None으로 설정하고 LOST 상태 유지
+                        # (다음 SEARCHING에서 다른 타겟 선택)
+                        self.get_logger().info(
+                            f"LOST: 타겟 ID={self.target_track_id}는 HELLO 완료 ID이므로 타겟 해제"
+                        )
+                        self.target_track_id = None
+                        self.target_explicitly_set = False
                     else:
                         self.lost_frames += 1
                         if self.lost_frames >= self.max_lost_frames:
@@ -383,20 +436,40 @@ class TrackingFSMNode(Node):
                         target_found = False
                         if (self.target_track_id is not None and 
                             self.target_selected_time is not None):
-                            elapsed_since_selection = current_time - self.target_selected_time
-                            if elapsed_since_selection < self.target_lock_duration:
-                                # 기존 타겟이 다시 나타났는지 확인
-                                if any(det['track_id'] == self.target_track_id for det in detections):
-                                    # 기존 타겟이 다시 나타남 - TRACKING으로 복귀
-                                    self.state = TrackingState.TRACKING
-                                    self.lost_frames = 0
-                                    target_found = True
-                                    self.get_logger().info(
-                                        f"타겟 lock 중 기존 타겟 재발견: ID={self.target_track_id}"
-                                    )
+                            # 기존 타겟이 HELLO 완료 ID이면 무시
+                            if self.target_track_id not in self.hello_done_track_ids:
+                                elapsed_since_selection = current_time - self.target_selected_time
+                                if elapsed_since_selection < self.target_lock_duration:
+                                    # 기존 타겟이 다시 나타났는지 확인 (HELLO 완료 ID 제외)
+                                    if any(det['track_id'] == self.target_track_id and 
+                                           det['track_id'] not in self.hello_done_track_ids 
+                                           for det in detections):
+                                        # 기존 타겟이 다시 나타남 - TRACKING으로 복귀
+                                        self.state = TrackingState.TRACKING
+                                        self.lost_frames = 0
+                                        target_found = True
+                                        self.get_logger().info(
+                                            f"타겟 lock 중 기존 타겟 재발견: ID={self.target_track_id}"
+                                        )
+                            else:
+                                # 기존 타겟이 HELLO 완료 ID이면 타겟 해제
+                                self.target_track_id = None
+                                self.target_explicitly_set = False
                         
                         # 기존 타겟을 찾지 못했으면 새로운 타겟 선택
                         if not target_found:
+                            # HELLO를 한 타겟은 제외하고 선택
+                            valid_detections = [det for det in detections if det['track_id'] not in self.hello_done_track_ids]
+                            
+                            if not valid_detections:
+                                # 모든 후보가 HELLO를 한 경우, 타겟을 선정하지 않음
+                                self.get_logger().info(
+                                    f"SEARCHING: 모든 후보가 HELLO 완료 ID임 (총 {len(detections)}개). "
+                                    f"타겟 선정 건너뜀."
+                                )
+                                # 타겟을 선정하지 않고 SEARCHING 상태 유지
+                                closest_id = None
+                            
                             # 마지막 타겟 위치를 우선 고려하여 같은 위치 근처의 사람 선택
                             closest_id = None
                             if self.last_target_position is not None:
@@ -407,7 +480,7 @@ class TrackingFSMNode(Node):
                                 best_id = None
                                 min_weighted_dist = float('inf')
                                 
-                                for det in detections:
+                                for det in valid_detections:
                                     px, py = det['centroid']
                                     # 마지막 타겟 위치와의 거리 (가중치 1.0)
                                     dist_to_last = np.sqrt((px - last_x)**2 + (py - last_y)**2)
@@ -425,12 +498,12 @@ class TrackingFSMNode(Node):
                                     closest_id = best_id
                                     self.get_logger().info(
                                         f"SEARCHING: 마지막 위치 우선 선택 ID={closest_id}, "
-                                        f"거리={min_weighted_dist:.1f}"
+                                        f"거리={min_weighted_dist:.1f} (HELLO 완료 ID 제외)"
                                     )
                             
-                            # 마지막 위치 정보가 없으면 기존 로직 사용
-                            if closest_id is None:
-                                closest_id = self._find_closest_person(detections, frame_shape, current_time, current_target_id=self.target_track_id)
+                            # 마지막 위치 정보가 없으면 기존 로직 사용 (HELLO 완료 ID 제외)
+                            if closest_id is None and valid_detections:
+                                closest_id = self._find_closest_person(valid_detections, frame_shape, current_time, current_target_id=self.target_track_id)
                             
                             if closest_id is not None:
                                 self.target_track_id = closest_id
@@ -452,6 +525,14 @@ class TrackingFSMNode(Node):
                         if elapsed_time >= self.hello_feedback_delay:
                             # HAND 상태가 READY(4)로 바뀌면 SEARCHING으로 전이
                             if self.current_hand_state == 4:  # READY
+                                # HELLO를 한 track_id 저장 (더 이상 타겟으로 선택하지 않음)
+                                if self.target_track_id is not None:
+                                    self.hello_done_track_ids.add(self.target_track_id)
+                                    self.get_logger().info(
+                                        f"HELLO 완료 ID 저장: track_id={self.target_track_id} "
+                                        f"(총 {len(self.hello_done_track_ids)}개 ID, 이제 타겟으로 선택되지 않음)"
+                                    )
+                                
                                 self.state = TrackingState.SEARCHING
                                 self.target_track_id = None
                                 self.target_explicitly_set = False

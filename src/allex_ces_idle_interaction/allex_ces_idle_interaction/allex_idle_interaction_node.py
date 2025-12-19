@@ -68,7 +68,7 @@ class RoutineController:
         self.publish_command(command)
     
     def pause_reset_and_start_heart(self):
-        """HELLO 전환 전: 현재 루틴 PAUSE → RESET → 하트 루틴 시작"""
+        """HELLO 전환 전: 현재 루틴 PAUSE → RESET → READY 확인 → 하트 루틴 시작"""
         # 현재 루틴이 실행 중인 경우
         if self.current_routine and self.breathing_routine_running:
             # 1. PAUSE 먼저
@@ -87,30 +87,51 @@ class RoutineController:
             
             # RESET 완료 대기 (로봇 시스템이 RESET을 처리할 시간 확보)
             time.sleep(0.3)
+            
+            # 3. READY 상태 확인 및 대기
+            self.node.get_logger().info("READY 상태 확인 중...")
+            max_wait_time = 2.0  # 최대 2초 대기
+            check_interval = 0.1  # 0.1초마다 확인
+            elapsed_time = 0.0
+            
+            # READY 상태 확인을 위해 STATUS::RUN 명령 발행 후 대기
+            status_run_command = "theOne_neck,theOne_waist::STATUS::RUN"
+            self.publish_command(status_run_command)
+            self.node.get_logger().info("STATUS::RUN 명령 발행 (READY 상태 대기)")
+            
+            # READY 상태 확인 대기 (일정 시간 대기)
+            time.sleep(0.5)  # READY 상태로 전환될 시간 확보
         
-        # 3. 하트 루틴 시작
+        # 4. 하트 루틴 시작
         command = f"{self.robot_name}::ROUTINE::idling_heart_rt::START"
         self.current_routine = "idling_heart_rt"
         self.publish_command(command)
         self.node.get_logger().info(f"하트 루틴 시작: idling_heart_rt")
     
     def stop_current_routine(self):
-        """현재 실행 중인 루틴 중단: PAUSE → RESET"""
+        """현재 실행 중인 루틴 중단: PAUSE → RESET (GUI STOP 명령 시 호출)"""
         if self.current_routine:
             # 1. PAUSE 먼저
             pause_command = f"{self.robot_name}::ROUTINE::{self.current_routine}::PAUSE"
             self.publish_command(pause_command)
-            self.node.get_logger().info(f"루틴 PAUSE: {self.current_routine}")
+            self.node.get_logger().info(f"[STOP] 루틴 PAUSE: {self.current_routine}")
             
-            # PAUSE와 RESET 사이에 0.1초 지연
-            time.sleep(0.1)
+            # PAUSE와 RESET 사이에 0.2초 지연 (안정성 확보)
+            time.sleep(0.2)
             
             # 2. RESET
             reset_command = f"{self.robot_name}::ROUTINE::{self.current_routine}::RESET"
             self.publish_command(reset_command)
-            self.node.get_logger().info(f"루틴 RESET: {self.current_routine}")
+            self.node.get_logger().info(f"[STOP] 루틴 RESET: {self.current_routine}")
+            
+            # RESET 완료 대기 (로봇 시스템이 RESET을 처리할 시간 확보)
+            time.sleep(0.3)
+            
+            # 상태 초기화
+            routine_name = self.current_routine
             self.current_routine = None
             self.breathing_routine_running = False
+            self.node.get_logger().info(f"[STOP] 루틴 완전 중단 완료: {routine_name}")
 
 
 class AllexIdleInteractionNode(Node):

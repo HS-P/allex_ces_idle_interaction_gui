@@ -4,5 +4,6 @@ camera_test = allex_ces_idle_interaction.camera_test:main
 gaze_controller_neck_waist_node = allex_ces_idle_interaction.gaze_controller_neck_waist_node:main
 gui_node = allex_ces_idle_interaction.idle_interaction_gui_node:main
 idle_interaction_gui_node = allex_ces_idle_interaction.idle_interaction_gui_node:main
+joystick_control_node = allex_ces_idle_interaction.joystick_control_node:main
 tracking_fsm_node = allex_ces_idle_interaction.tracking_fsm_node:main
 yolo_detection_node = allex_ces_idle_interaction.yolo_detection_node:main
