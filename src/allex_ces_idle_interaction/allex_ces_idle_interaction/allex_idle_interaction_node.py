@@ -146,8 +146,9 @@ class RoutineController:
         # 4. 악수 루틴 시작
         command = f"{self.robot_name}::ROUTINE::idling_handshake_rt::START"
         self.current_routine = "idling_handshake_rt"
+        # breathing_routine_running은 idle_breathing_rt 전용이므로 여기서는 설정하지 않음
         self.publish_command(command)
-        self.node.get_logger().info(f"악수 루틴 시작: idling_handshake_rt")
+        self.node.get_logger().info(f"악수 루틴 시작: idling_handshake_rt (명령 발행 완료)")
     
     def stop_current_routine(self):
         """현재 실행 중인 루틴 중단: PAUSE → RESET → STOP (GUI STOP 명령 시 호출)"""

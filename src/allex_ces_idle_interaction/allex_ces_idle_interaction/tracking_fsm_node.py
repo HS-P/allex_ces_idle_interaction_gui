@@ -107,11 +107,12 @@ class TrackingFSMNode(Node):
             1  # 최신 메시지만 유지하여 지연 최소화
         )
         
-        # HAND 피드백 구독 (HELLO/HANDSHAKE 상태에서 사용)
-        self.hand_feedback_subscription = self.create_subscription(
-            Int32MultiArray,
-            '/robot_outbound_data/Hand_L_ring_wir/articulation_now',
-            self._hand_feedback_callback,
+        # 루틴 상태 피드백 구독 (HELLO/HANDSHAKE 상태에서 사용)
+        # /debug/routine 토픽을 구독하여 루틴 실행 상태 확인
+        self.routine_status_subscription = self.create_subscription(
+            String,
+            "/debug/routine",
+            self._routine_status_callback,
             10
         )
         
@@ -180,7 +181,8 @@ class TrackingFSMNode(Node):
         self.handshake_routine_sent_time: Optional[float] = None  # HANDSHAKE 루틴 발행 시간
         self.hello_feedback_delay = 1.5  # 루틴 발행 후 피드백 확인 최소 대기 시간 (초) - 루틴 시작 후 0.5초 여유 확보
         self.handshake_feedback_delay = 1.5  # HANDSHAKE도 동일
-        self.current_hand_state: Optional[int] = None  # 현재 HAND 상태 (4: READY, 5: RUNNING)
+        self.current_routine_running = False  # 루틴 실행 중 여부 (True: 실행 중, False: 종료/비어있음)
+        self.last_routine_status_time: Optional[float] = None  # 마지막 루틴 상태 수신 시간
         self.hello_routine_sent = False  # HELLO 루틴 발행 여부
         self.handshake_routine_sent = False  # HANDSHAKE 루틴 발행 여부
         # 이미 HELLO/HANDSHAKE를 한 track_id 저장 (타겟 선택 시 제외)
@@ -343,9 +345,9 @@ class TrackingFSMNode(Node):
             )
             return [], target_info
         
-        # 타겟이 존재하면 상태 업데이트
-        if target_exists and self.state != TrackingState.HELLO:
-            if self.state != TrackingState.TRACKING and self.state != TrackingState.HELLO:
+        # 타겟이 존재하면 상태 업데이트 (HELLO/HANDSHAKE 상태에서는 전환하지 않음)
+        if target_exists and self.state != TrackingState.HELLO and self.state != TrackingState.HANDSHAKE:
+            if self.state != TrackingState.TRACKING:
                 self.state = TrackingState.TRACKING
             self.lost_frames = 0
         
@@ -529,18 +531,45 @@ class TrackingFSMNode(Node):
                                 self.target_selected_time = current_time  # 새 타겟 선택 시간 기록
                 
                 case TrackingState.HELLO:
-                    # HELLO 상태: 루틴 발행 후 HAND 피드백 모니터링
+                    # HELLO 상태: 루틴 발행 후 루틴 종료 모니터링
                     current_time_check = time.monotonic()
                     
+                    # 디버깅: HELLO 상태 진입 시 상세 정보
+                    if not self.hello_routine_sent:
+                        self.get_logger().warn(
+                            f"[HELLO 디버깅] 루틴이 아직 발행되지 않음: "
+                            f"hello_routine_sent={self.hello_routine_sent}, "
+                            f"hello_routine_sent_time={self.hello_routine_sent_time}"
+                        )
+                    
                     # 루틴이 아직 발행되지 않았으면 발행 (allex_idle_interaction_node에서 처리)
-                    # 여기서는 피드백만 모니터링
+                    # 여기서는 루틴 상태만 모니터링
                     if self.hello_routine_sent and self.hello_routine_sent_time is not None:
                         elapsed_time = current_time_check - self.hello_routine_sent_time
                         
-                        # 최소 0.2초 대기 후 피드백 확인 (핸드에 명령이 전달될 시간 확보)
+                        # 디버깅: 주기적으로 상태 로그 (0.5초마다)
+                        if not hasattr(self, '_last_hello_monitor_log_time'):
+                            self._last_hello_monitor_log_time = 0
+                        if current_time_check - self._last_hello_monitor_log_time > 0.5:
+                            last_status_str = f"{self.last_routine_status_time:.2f}초 전" if self.last_routine_status_time else "수신 없음"
+                            self.get_logger().info(
+                                f"[HELLO 모니터링] 경과={elapsed_time:.2f}초/{self.hello_feedback_delay}초, "
+                                f"루틴 실행 중={self.current_routine_running}, "
+                                f"마지막 상태 수신={last_status_str}, "
+                                f"target_track_id={self.target_track_id}"
+                            )
+                            self._last_hello_monitor_log_time = current_time_check
+                        
+                        # 최소 대기 시간 경과 후 루틴 종료 확인 (명령이 전달될 시간 확보)
                         if elapsed_time >= self.hello_feedback_delay:
-                            # HAND 상태가 READY(4)로 바뀌면 SEARCHING으로 전이
-                            if self.current_hand_state == 4:  # READY
+                            # 디버깅: 조건 확인 상세 로그
+                            self.get_logger().info(
+                                f"[HELLO 조건 체크] 경과 시간 충족: {elapsed_time:.2f}초 >= {self.hello_feedback_delay}초, "
+                                f"루틴 실행 중={self.current_routine_running}"
+                            )
+                            
+                            # 루틴이 종료되었으면 (실행 중이 아니면) SEARCHING으로 전이
+                            if not self.current_routine_running:
                                 # HELLO를 한 track_id 저장 (더 이상 타겟으로 선택하지 않음)
                                 if self.target_track_id is not None:
                                     self.hello_done_track_ids.add(self.target_track_id)
@@ -554,25 +583,68 @@ class TrackingFSMNode(Node):
                                 self.target_explicitly_set = False
                                 self.hello_routine_sent = False
                                 self.hello_routine_sent_time = None
-                                self.current_hand_state = None
+                                self.current_routine_running = False
                                 self.get_logger().info(
-                                    f"HELLO 완료: HAND 상태 READY → SEARCHING 상태로 전환 "
+                                    f"HELLO 완료: 루틴 종료 → SEARCHING 상태로 전환 "
                                     f"(경과 시간: {elapsed_time:.2f}초)"
                                 )
+                            else:
+                                # 루틴이 아직 실행 중인 경우
+                                self.get_logger().info(
+                                    f"[HELLO 대기 중] 루틴이 아직 실행 중: "
+                                    f"current_routine_running={self.current_routine_running}"
+                                )
+                        else:
+                            # 아직 대기 시간이 지나지 않음
+                            self.get_logger().debug(
+                                f"[HELLO 대기 중] 경과 시간 부족: {elapsed_time:.2f}초 < {self.hello_feedback_delay}초"
+                            )
+                    else:
+                        # hello_routine_sent가 False이거나 hello_routine_sent_time이 None
+                        self.get_logger().debug(
+                            f"[HELLO 대기 중] 루틴 발행 정보 부족: "
+                            f"hello_routine_sent={self.hello_routine_sent}, "
+                            f"hello_routine_sent_time={self.hello_routine_sent_time}"
+                        )
                 
                 case TrackingState.HANDSHAKE:
-                    # HANDSHAKE 상태: 루틴 발행 후 HAND 피드백 모니터링 (HELLO와 동일)
+                    # HANDSHAKE 상태: 루틴 발행 후 루틴 종료 모니터링 (HELLO와 동일)
                     current_time_check = time.monotonic()
                     
-                    # 루틴이 아직 발행되지 않았으면 발행 (allex_idle_interaction_node에서 처리)
-                    # 여기서는 피드백만 모니터링
+                    # 루틴이 아직 발행되지 않았으면 경고 로그
+                    if not self.handshake_routine_sent:
+                        self.get_logger().warn(
+                            f"[HANDSHAKE 디버깅] 루틴이 아직 발행되지 않음: "
+                            f"handshake_routine_sent={self.handshake_routine_sent}, "
+                            f"handshake_routine_sent_time={self.handshake_routine_sent_time}"
+                        )
+                    
                     if self.handshake_routine_sent and self.handshake_routine_sent_time is not None:
                         elapsed_time = current_time_check - self.handshake_routine_sent_time
                         
-                        # 최소 0.2초 대기 후 피드백 확인 (핸드에 명령이 전달될 시간 확보)
+                        # 디버깅: 주기적으로 상태 로그 (0.5초마다)
+                        if not hasattr(self, '_last_handshake_monitor_log_time'):
+                            self._last_handshake_monitor_log_time = 0
+                        if current_time_check - self._last_handshake_monitor_log_time > 0.5:
+                            last_status_str = f"{self.last_routine_status_time:.2f}초 전" if self.last_routine_status_time else "수신 없음"
+                            self.get_logger().info(
+                                f"[HANDSHAKE 모니터링] 경과={elapsed_time:.2f}초/{self.handshake_feedback_delay}초, "
+                                f"루틴 실행 중={self.current_routine_running}, "
+                                f"마지막 상태 수신={last_status_str}, "
+                                f"target_track_id={self.target_track_id}"
+                            )
+                            self._last_handshake_monitor_log_time = current_time_check
+                        
+                        # 최소 대기 시간 경과 후 루틴 종료 확인 (명령이 전달될 시간 확보)
                         if elapsed_time >= self.handshake_feedback_delay:
-                            # HAND 상태가 READY(4)로 바뀌면 SEARCHING으로 전이
-                            if self.current_hand_state == 4:  # READY
+                            # 디버깅: 조건 확인 상세 로그
+                            self.get_logger().info(
+                                f"[HANDSHAKE 조건 체크] 경과 시간 충족: {elapsed_time:.2f}초 >= {self.handshake_feedback_delay}초, "
+                                f"루틴 실행 중={self.current_routine_running}"
+                            )
+                            
+                            # 루틴이 종료되었으면 (실행 중이 아니면) SEARCHING으로 전이
+                            if not self.current_routine_running:
                                 # HANDSHAKE를 한 track_id 저장 (더 이상 타겟으로 선택하지 않음)
                                 if self.target_track_id is not None:
                                     self.hello_done_track_ids.add(self.target_track_id)
@@ -586,11 +658,29 @@ class TrackingFSMNode(Node):
                                 self.target_explicitly_set = False
                                 self.handshake_routine_sent = False
                                 self.handshake_routine_sent_time = None
-                                self.current_hand_state = None
+                                self.current_routine_running = False
                                 self.get_logger().info(
-                                    f"HANDSHAKE 완료: HAND 상태 READY → SEARCHING 상태로 전환 "
+                                    f"HANDSHAKE 완료: 루틴 종료 → SEARCHING 상태로 전환 "
                                     f"(경과 시간: {elapsed_time:.2f}초)"
                                 )
+                            else:
+                                # 루틴이 아직 실행 중인 경우
+                                self.get_logger().info(
+                                    f"[HANDSHAKE 대기 중] 루틴이 아직 실행 중: "
+                                    f"current_routine_running={self.current_routine_running}"
+                                )
+                        else:
+                            # 아직 대기 시간이 지나지 않음
+                            self.get_logger().debug(
+                                f"[HANDSHAKE 대기 중] 경과 시간 부족: {elapsed_time:.2f}초 < {self.handshake_feedback_delay}초"
+                            )
+                    else:
+                        # handshake_routine_sent가 False이거나 handshake_routine_sent_time이 None
+                        self.get_logger().debug(
+                            f"[HANDSHAKE 대기 중] 루틴 발행 정보 부족: "
+                            f"handshake_routine_sent={self.handshake_routine_sent}, "
+                            f"handshake_routine_sent_time={self.handshake_routine_sent_time}"
+                        )
         
         # 추적 객체 생성
         tracked_objects: List[TrackedObject] = []
@@ -850,25 +940,31 @@ class TrackingFSMNode(Node):
                     if state == TrackingState.HELLO:
                         self.hello_routine_sent_time = time.monotonic()
                         self.hello_routine_sent = True
-                        self.current_hand_state = None  # 초기화
+                        self.current_routine_running = True  # 루틴 시작 시 실행 중으로 가정
                         self.get_logger().info(
                             f"HELLO 상태로 전환: 루틴 발행 시간 기록, "
-                            f"{self.hello_feedback_delay}초 후 HAND 피드백 확인 시작"
+                            f"{self.hello_feedback_delay}초 후 루틴 종료 확인 시작"
                         )
                     elif state == TrackingState.HANDSHAKE:
                         self.handshake_routine_sent_time = time.monotonic()
                         self.handshake_routine_sent = True
-                        self.current_hand_state = None  # 초기화
+                        self.current_routine_running = True  # 루틴 시작 시 실행 중으로 가정
                         self.get_logger().info(
                             f"HANDSHAKE 상태로 전환: 루틴 발행 시간 기록, "
-                            f"{self.handshake_feedback_delay}초 후 HAND 피드백 확인 시작"
+                            f"{self.handshake_feedback_delay}초 후 루틴 종료 확인 시작"
                         )
                     
                     if target_id is not None:
                         self.target_track_id = int(target_id)
-                        self.target_explicitly_set = True
+                        # Auto 모드에서는 target_explicitly_set을 False로 유지
+                        # Manual 모드에서만 True로 설정
+                        self.target_explicitly_set = self.manual_mode
                     
-                    self.get_logger().info(f"Depth 기반 상태 전환: {target_state_str} → {self.state.value}")
+                    self.get_logger().info(
+                        f"Depth 기반 상태 전환: {target_state_str} → {self.state.value} "
+                        f"(모드: {'Manual' if self.manual_mode else 'Auto'}, "
+                        f"target_explicitly_set={self.target_explicitly_set})"
+                    )
                 except (KeyError, AttributeError) as e:
                     self.get_logger().error(f"잘못된 상태: {target_state_str}")
                 return
@@ -887,18 +983,18 @@ class TrackingFSMNode(Node):
                 if state == TrackingState.HELLO:
                     self.hello_routine_sent_time = time.monotonic()
                     self.hello_routine_sent = True
-                    self.current_hand_state = None  # 초기화
+                    self.current_routine_running = True  # 루틴 시작 시 실행 중으로 가정
                     self.get_logger().info(
                         f"HELLO 상태로 전환: 루틴 발행 시간 기록, "
-                        f"{self.hello_feedback_delay}초 후 HAND 피드백 확인 시작"
+                        f"{self.hello_feedback_delay}초 후 루틴 종료 확인 시작"
                     )
                 elif state == TrackingState.HANDSHAKE:
                     self.handshake_routine_sent_time = time.monotonic()
                     self.handshake_routine_sent = True
-                    self.current_hand_state = None  # 초기화
+                    self.current_routine_running = True  # 루틴 시작 시 실행 중으로 가정
                     self.get_logger().info(
                         f"HANDSHAKE 상태로 전환: 루틴 발행 시간 기록, "
-                        f"{self.handshake_feedback_delay}초 후 HAND 피드백 확인 시작"
+                        f"{self.handshake_feedback_delay}초 후 루틴 종료 확인 시작"
                     )
                 
                 if target_id is not None:
@@ -917,21 +1013,56 @@ class TrackingFSMNode(Node):
         except Exception as e:
             self.get_logger().error(f"상태 변경 요청 처리 실패: {e}")
     
-    def _hand_feedback_callback(self, msg: Int32MultiArray):
-        """HAND 피드백 콜백 - HELLO/HANDSHAKE 상태에서 사용"""
+    def _routine_status_callback(self, msg: String):
+        """루틴 상태 피드백 콜백 - /debug/routine 토픽에서 루틴 실행 상태 확인"""
         try:
-            if len(msg.data) >= 2:
-                # 두 번째 인자가 HAND 상태 (4: READY, 5: RUNNING)
-                hand_state = int(msg.data[1])
-                self.current_hand_state = hand_state
+            data = json.loads(msg.data)
+            self.last_routine_status_time = time.monotonic()
+            
+            # 루틴이 비어있는지 확인 (루틴 종료 상태)
+            nodes = data.get("nodes", [])
+            if not nodes or len(nodes) == 0:
+                self.current_routine_running = False
+                if self.state == TrackingState.HELLO or self.state == TrackingState.HANDSHAKE:
+                    self.get_logger().info(
+                        f"[루틴 상태 수신] 루틴이 비어있음 (종료됨), "
+                        f"현재 State={self.state.value}"
+                    )
+                return
+            
+            # 루트 노드 찾기 (parent == -1)
+            root_node = None
+            for node in nodes:
+                if node.get("parent") == -1:
+                    root_node = node
+                    break
+            
+            if root_node:
+                status = root_node.get("status")
+                # status: 0=IDLE, 1=RUNNING, 2=SUCCESS, 3=FAILURE
+                is_running = (status == 1)  # RUNNING인 경우만 실행 중으로 판단
+                self.current_routine_running = is_running
                 
                 if self.state == TrackingState.HELLO or self.state == TrackingState.HANDSHAKE:
-                    self.get_logger().debug(
-                        f"HAND 피드백: 상태={hand_state} "
-                        f"(4: READY, 5: RUNNING), State={self.state.value}"
+                    status_str = {0: "IDLE", 1: "RUNNING", 2: "SUCCESS", 3: "FAILURE"}.get(status, f"Unknown({status})")
+                    self.get_logger().info(
+                        f"[루틴 상태 수신] 루트 노드 상태={status_str} ({status}), "
+                        f"루틴 실행 중={is_running}, "
+                        f"현재 State={self.state.value}, "
+                        f"노드 이름={root_node.get('name', 'Unknown')}"
                     )
+            else:
+                # 루트 노드를 찾을 수 없으면 루틴이 없는 것으로 간주
+                self.current_routine_running = False
+                if self.state == TrackingState.HELLO or self.state == TrackingState.HANDSHAKE:
+                    self.get_logger().warn(
+                        f"[루틴 상태 수신] 루트 노드를 찾을 수 없음 (루틴 종료로 간주), "
+                        f"현재 State={self.state.value}"
+                    )
+        except json.JSONDecodeError as e:
+            self.get_logger().warn(f"루틴 상태 피드백 JSON 파싱 실패: {e}")
         except Exception as e:
-            self.get_logger().warn(f"HAND 피드백 파싱 실패: {e}")
+            self.get_logger().warn(f"루틴 상태 피드백 처리 실패: {e}")
     
     def _camera_info_callback(self, msg: CameraInfo):
         """카메라 정보 콜백 - 캘리브레이션 파라미터 저장"""
