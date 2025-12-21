@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 GUI Node - GUI를 관리하고 여러 Topic을 동적으로 구독하는 통합 Node
-v1.8.0 - PySide6 사용
+v1.8.1 - PySide6 사용
 
 시스템 구조:
 - SPARK 1 PC: Camera Publisher (카메라 + YOLO 추적)
@@ -200,7 +200,7 @@ class GuiNode(Node, QMainWindow):
         self.update_timer.start(50)  # 20Hz 업데이트
         
         self.get_logger().info("=" * 60)
-        self.get_logger().info("GUI Node v1.8.0 초기화 완료!")
+        self.get_logger().info("GUI Node v1.8.1 초기화 완료!")
         self.get_logger().info(f"토픽 설정 파일: {self.topic_config_path}")
         self.get_logger().info("=" * 60)
     
@@ -375,7 +375,7 @@ class GuiNode(Node, QMainWindow):
     
     def init_ui(self):
         """UI 초기화"""
-        self.setWindowTitle("Person Tracking Control Panel v1.8.0")
+        self.setWindowTitle("Person Tracking Control Panel v1.8.1")
         screen = QApplication.primaryScreen().geometry()
         self.setGeometry(0, 0, screen.width(), screen.height())
         
@@ -439,7 +439,7 @@ class GuiNode(Node, QMainWindow):
         state_select_layout.addWidget(QLabel("State 선택:"))
         
         self.state_combo = QComboBox()
-        self.state_combo.addItems(["IDLE", "TRACKING", "LOST", "SEARCHING", "HELLO"])
+        self.state_combo.addItems(["IDLE", "TRACKING", "LOST", "SEARCHING", "HELLO", "HANDSHAKE"])
         self.state_combo.setMinimumHeight(40)
         self.state_combo.setStyleSheet("font-size: 12pt;")
         self.state_combo.currentTextChanged.connect(self.on_state_changed)
@@ -882,6 +882,7 @@ class GuiNode(Node, QMainWindow):
             'LOST': 'orange',
             'SEARCHING': 'yellow',
             'HELLO': 'cyan',
+            'HANDSHAKE': 'magenta',
         }
         color = state_colors.get(state_str, 'black')
         self.state_label.setStyleSheet(f"font-weight: bold; font-size: 14pt; color: {color};")

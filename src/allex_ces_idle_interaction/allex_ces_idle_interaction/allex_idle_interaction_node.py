@@ -108,8 +108,49 @@ class RoutineController:
         self.publish_command(command)
         self.node.get_logger().info(f"하트 루틴 시작: idling_heart_rt")
     
+    def pause_reset_and_start_handshake(self):
+        """HANDSHAKE 전환 전: 현재 루틴 PAUSE → RESET → READY 확인 → 악수 루틴 시작"""
+        # 현재 루틴이 실행 중인 경우
+        if self.current_routine and self.breathing_routine_running:
+            # 1. PAUSE 먼저
+            pause_command = f"{self.robot_name}::ROUTINE::{self.current_routine}::PAUSE"
+            self.publish_command(pause_command)
+            self.node.get_logger().info(f"루틴 PAUSE: {self.current_routine}")
+            
+            # PAUSE와 RESET 사이에 0.1초 지연
+            time.sleep(0.2)
+            
+            # 2. RESET
+            reset_command = f"{self.robot_name}::ROUTINE::{self.current_routine}::RESET"
+            self.publish_command(reset_command)
+            self.node.get_logger().info(f"루틴 RESET: {self.current_routine}")
+            self.breathing_routine_running = False
+            
+            # RESET 완료 대기 (로봇 시스템이 RESET을 처리할 시간 확보)
+            time.sleep(0.3)
+            
+            # 3. READY 상태 확인 및 대기
+            self.node.get_logger().info("READY 상태 확인 중...")
+            max_wait_time = 2.0  # 최대 2초 대기
+            check_interval = 0.1  # 0.1초마다 확인
+            elapsed_time = 0.0
+            
+            # READY 상태 확인을 위해 STATUS::RUN 명령 발행 후 대기
+            status_run_command = "theOne_neck,theOne_waist::STATUS::RUN"
+            self.publish_command(status_run_command)
+            self.node.get_logger().info("STATUS::RUN 명령 발행 (READY 상태 대기)")
+            
+            # READY 상태 확인 대기 (일정 시간 대기)
+            time.sleep(0.5)  # READY 상태로 전환될 시간 확보
+        
+        # 4. 악수 루틴 시작
+        command = f"{self.robot_name}::ROUTINE::idling_handshake_rt::START"
+        self.current_routine = "idling_handshake_rt"
+        self.publish_command(command)
+        self.node.get_logger().info(f"악수 루틴 시작: idling_handshake_rt")
+    
     def stop_current_routine(self):
-        """현재 실행 중인 루틴 중단: PAUSE → RESET (GUI STOP 명령 시 호출)"""
+        """현재 실행 중인 루틴 중단: PAUSE → RESET → STOP (GUI STOP 명령 시 호출)"""
         if self.current_routine:
             # 1. PAUSE 먼저
             pause_command = f"{self.robot_name}::ROUTINE::{self.current_routine}::PAUSE"
@@ -126,6 +167,14 @@ class RoutineController:
             
             # RESET 완료 대기 (로봇 시스템이 RESET을 처리할 시간 확보)
             time.sleep(0.3)
+            
+            # 3. STOP 명령 (루틴 완전 중단)
+            stop_command = f"{self.robot_name}::ROUTINE::{self.current_routine}::STOP"
+            self.publish_command(stop_command)
+            self.node.get_logger().info(f"[STOP] 루틴 STOP: {self.current_routine}")
+            
+            # STOP 명령 처리 대기
+            time.sleep(0.1)
             
             # 상태 초기화
             routine_name = self.current_routine
@@ -426,8 +475,15 @@ class AllexIdleInteractionNode(Node):
             # tracking_fsm_node에서 hello_routine_sent_time을 설정하므로 여기서는 루틴만 시작
             return
         
-        # HELLO에서 SEARCHING으로 전환 시: idle_breathing_rt 재시작
-        if old_state == TrackingState.HELLO and new_state == TrackingState.SEARCHING:
+        # HANDSHAKE 상태로 전환 시: PAUSE → RESET → handshake_rt 시작
+        if new_state == TrackingState.HANDSHAKE:
+            self.routine_controller.pause_reset_and_start_handshake()
+            self.get_logger().info("HANDSHAKE 상태: idle_breathing_rt PAUSE → RESET → idling_handshake_rt 시작")
+            # tracking_fsm_node에서 handshake_routine_sent_time을 설정하므로 여기서는 루틴만 시작
+            return
+        
+        # HELLO/HANDSHAKE에서 SEARCHING으로 전환 시: idle_breathing_rt 재시작
+        if (old_state == TrackingState.HELLO or old_state == TrackingState.HANDSHAKE) and new_state == TrackingState.SEARCHING:
             # 이미 실행 중이 아닐 때만 시작 (중복 시작 방지)
             if not self.routine_controller.breathing_routine_running:
                 self.routine_controller.start_breathing()

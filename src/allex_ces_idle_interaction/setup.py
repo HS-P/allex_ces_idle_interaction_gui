@@ -31,7 +31,7 @@ launch_data_files = [
 
 setup(
     name=package_name,
-    version='1.8.0',
+    version='1.8.1',
     packages=find_packages(exclude=['test']),
     data_files=[
         ('share/ament_index/resource_index/packages',
@@ -55,6 +55,7 @@ setup(
             'gui_node = allex_ces_idle_interaction.idle_interaction_gui_node:main',
             'joystick_control_node = allex_ces_idle_interaction.joystick_control_node:main',
             'camera_test = allex_ces_idle_interaction.camera_test:main',
+            'camera_depth_checker_node = allex_ces_idle_interaction.camera_depth_checker_node:main',
         ],
     },
 )

@@ -1,5 +1,6 @@
 [console_scripts]
 allex_idle_interaction_node = allex_ces_idle_interaction.allex_idle_interaction_node:main
+camera_depth_checker_node = allex_ces_idle_interaction.camera_depth_checker_node:main
 camera_test = allex_ces_idle_interaction.camera_test:main
 gaze_controller_neck_waist_node = allex_ces_idle_interaction.gaze_controller_neck_waist_node:main
 gui_node = allex_ces_idle_interaction.idle_interaction_gui_node:main

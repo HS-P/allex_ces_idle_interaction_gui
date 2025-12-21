@@ -8,11 +8,12 @@ import json
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, Duration
-from sensor_msgs.msg import CompressedImage
+from sensor_msgs.msg import CompressedImage, Image, CameraInfo
 from std_msgs.msg import String
 from std_msgs.msg import Int32MultiArray
 import cv2
 import numpy as np
+from cv_bridge import CvBridge
 from typing import List, Optional, Dict, Tuple
 from collections import namedtuple
 from enum import Enum
@@ -37,6 +38,7 @@ class TrackingState(Enum):
     LOST = "lost"          # 추적 대상 놓침 (잠시 대기)
     SEARCHING = "searching" # 주변 두리번대기 (대상 선택)
     HELLO = "hello"        # 인사 제스처 (손 흔들기)
+    HANDSHAKE = "handshake" # 악수 제스처
 
 
 class TrackingFSMNode(Node):
@@ -105,13 +107,43 @@ class TrackingFSMNode(Node):
             1  # 최신 메시지만 유지하여 지연 최소화
         )
         
-        # HAND 피드백 구독 (HELLO 상태에서 사용)
+        # HAND 피드백 구독 (HELLO/HANDSHAKE 상태에서 사용)
         self.hand_feedback_subscription = self.create_subscription(
             Int32MultiArray,
             '/robot_outbound_data/Hand_L_ring_wir/articulation_now',
             self._hand_feedback_callback,
             10
         )
+        
+        # Depth 이미지 구독 (HANDSHAKE/HELLO 분기 판단용)
+        self.declare_parameter('depth_image_topic', '/camera/depth/image_raw')
+        self.declare_parameter('camera_info_topic', '/camera/color/camera_info')
+        depth_image_topic = self.get_parameter('depth_image_topic').get_parameter_value().string_value
+        camera_info_topic = self.get_parameter('camera_info_topic').get_parameter_value().string_value
+        
+        self.depth_image_subscription = self.create_subscription(
+            Image,
+            depth_image_topic,
+            self._depth_image_callback,
+            qos_profile,
+        )
+        
+        # 카메라 정보 구독 (캘리브레이션 파라미터)
+        self.camera_info_subscription = self.create_subscription(
+            CameraInfo,
+            camera_info_topic,
+            self._camera_info_callback,
+            10
+        )
+        
+        self.cv_bridge = CvBridge()
+        self.camera_info = None  # CameraInfo 저장
+        self.latest_depth_image = None  # 최신 depth 이미지 저장
+        
+        self.get_logger().info(f"Depth 이미지 구독 시작: {depth_image_topic}")
+        
+        # 타겟의 Depth 정보 저장 (track_id -> depth_m)
+        self.target_depth_map: Dict[int, float] = {}  # track_id -> depth in meters
         
         # 추적 상태 관리
         self.state = TrackingState.IDLE
@@ -143,20 +175,19 @@ class TrackingFSMNode(Node):
         self.latest_frame = None
         self.latest_frame_shape = None
         
-        # HELLO 상태를 위한 변수들
+        # HELLO/HANDSHAKE 상태를 위한 변수들
         self.hello_routine_sent_time: Optional[float] = None  # HELLO 루틴 발행 시간
+        self.handshake_routine_sent_time: Optional[float] = None  # HANDSHAKE 루틴 발행 시간
         self.hello_feedback_delay = 1.5  # 루틴 발행 후 피드백 확인 최소 대기 시간 (초) - 루틴 시작 후 0.5초 여유 확보
+        self.handshake_feedback_delay = 1.5  # HANDSHAKE도 동일
         self.current_hand_state: Optional[int] = None  # 현재 HAND 상태 (4: READY, 5: RUNNING)
         self.hello_routine_sent = False  # HELLO 루틴 발행 여부
-        # 이미 HELLO를 한 track_id 저장 (타겟 선택 시 제외)
+        self.handshake_routine_sent = False  # HANDSHAKE 루틴 발행 여부
+        # 이미 HELLO/HANDSHAKE를 한 track_id 저장 (타겟 선택 시 제외)
         self.hello_done_track_ids = set()
         
         # 실행 상태 플래그
         self.is_running = False
-        
-        # IDLE State 진입 시간 기록 (5초 동안 사람 탐지 비활성화)
-        self.idle_entrance_time = None
-        self.idle_detection_cooldown = 5.0  # IDLE 진입 후 5초간 사람 탐지 비활성화
         
         # 성능 모니터링
         self.frame_count = 0
@@ -241,19 +272,14 @@ class TrackingFSMNode(Node):
         """모든 타이머 및 안정성 관련 변수 초기화"""
         self.lost_frames = 0
         self.target_selected_time = None
-        # IDLE 진입 시간도 초기화 (다시 IDLE로 진입할 때 새로 기록)
-        self.idle_entrance_time = None
     
     def set_state(self, state: TrackingState, target_track_id: Optional[int] = None) -> None:
         """Manual 모드에서 상태를 수동으로 설정"""
         if state == TrackingState.IDLE:
             self.reset_timers()
-            # IDLE State 진입 시간 기록
-            self.idle_entrance_time = time.monotonic()
-            self.get_logger().info(f"IDLE State 진입: {self.idle_detection_cooldown}초간 사람 탐지 비활성화")
 
-        # HELLO 전환 요청은 Auto 모드에서도 허용 (Controller에서 수신)
-        if state == TrackingState.HELLO:
+        # HELLO/HANDSHAKE 전환 요청은 Auto 모드에서도 허용 (Controller에서 수신)
+        if state == TrackingState.HELLO or state == TrackingState.HANDSHAKE:
             self.state = state
             if target_track_id is not None:
                 self.target_track_id = int(target_track_id)
@@ -327,24 +353,14 @@ class TrackingFSMNode(Node):
         if not self.manual_mode:
             match self.state:
                 case TrackingState.IDLE:
-                    # IDLE State 진입 시간 초기화 (처음 IDLE 진입 시)
-                    if self.idle_entrance_time is None:
-                        self.idle_entrance_time = current_time
-                        self.get_logger().info(f"IDLE State 진입: {self.idle_detection_cooldown}초간 사람 탐지 비활성화")
-                    
-                    # IDLE 진입 후 5초 이내인지 확인
-                    time_since_idle = current_time - self.idle_entrance_time
-                    is_in_cooldown = time_since_idle < self.idle_detection_cooldown
-                    
                     if self.target_explicitly_set and target_exists:
-                        # Manual 모드에서 명시적으로 타겟 설정된 경우는 cooldown 무시
+                        # Manual 모드에서 명시적으로 타겟 설정된 경우
                         self.state = TrackingState.TRACKING
                         self.lost_frames = 0
                         if self.target_selected_time is None:
                             self.target_selected_time = current_time
-                    elif not self.manual_mode and not is_in_cooldown:
+                    elif not self.manual_mode:
                         # Auto Mode: 타겟이 없으면 자동으로 가장 가까운 사람 선택 (HELLO 완료 ID 제외)
-                        # 단, IDLE 진입 후 5초가 지나야만 탐지 활성화
                         if self.target_track_id is None:
                             # HELLO 완료 ID 제외
                             valid_detections = [det for det in detections if det['track_id'] not in self.hello_done_track_ids]
@@ -543,6 +559,38 @@ class TrackingFSMNode(Node):
                                     f"HELLO 완료: HAND 상태 READY → SEARCHING 상태로 전환 "
                                     f"(경과 시간: {elapsed_time:.2f}초)"
                                 )
+                
+                case TrackingState.HANDSHAKE:
+                    # HANDSHAKE 상태: 루틴 발행 후 HAND 피드백 모니터링 (HELLO와 동일)
+                    current_time_check = time.monotonic()
+                    
+                    # 루틴이 아직 발행되지 않았으면 발행 (allex_idle_interaction_node에서 처리)
+                    # 여기서는 피드백만 모니터링
+                    if self.handshake_routine_sent and self.handshake_routine_sent_time is not None:
+                        elapsed_time = current_time_check - self.handshake_routine_sent_time
+                        
+                        # 최소 0.2초 대기 후 피드백 확인 (핸드에 명령이 전달될 시간 확보)
+                        if elapsed_time >= self.handshake_feedback_delay:
+                            # HAND 상태가 READY(4)로 바뀌면 SEARCHING으로 전이
+                            if self.current_hand_state == 4:  # READY
+                                # HANDSHAKE를 한 track_id 저장 (더 이상 타겟으로 선택하지 않음)
+                                if self.target_track_id is not None:
+                                    self.hello_done_track_ids.add(self.target_track_id)
+                                    self.get_logger().info(
+                                        f"HANDSHAKE 완료 ID 저장: track_id={self.target_track_id} "
+                                        f"(총 {len(self.hello_done_track_ids)}개 ID, 이제 타겟으로 선택되지 않음)"
+                                    )
+                                
+                                self.state = TrackingState.SEARCHING
+                                self.target_track_id = None
+                                self.target_explicitly_set = False
+                                self.handshake_routine_sent = False
+                                self.handshake_routine_sent_time = None
+                                self.current_hand_state = None
+                                self.get_logger().info(
+                                    f"HANDSHAKE 완료: HAND 상태 READY → SEARCHING 상태로 전환 "
+                                    f"(경과 시간: {elapsed_time:.2f}초)"
+                                )
         
         # 추적 객체 생성
         tracked_objects: List[TrackedObject] = []
@@ -618,6 +666,9 @@ class TrackingFSMNode(Node):
             
             # 프레임 크기 가져오기
             frame_shape = self.latest_frame_shape if self.latest_frame_shape else (720, 1280)
+            
+            # Depth 값 추출 및 저장 (frame_shape 전달)
+            self._extract_depth_from_detection(detections, frame_shape)
             
             # FSM 처리
             tracked_objects, target_info = self._process_fsm(
@@ -748,9 +799,82 @@ class TrackingFSMNode(Node):
         """상태 변경 요청 콜백 (Controller 노드에서 발행)"""
         try:
             request = json.loads(msg.data)
-            state_str = request.get('state', 'idle')
+            request_type = request.get('type', 'set_state')
             target_id = request.get('target_id', None)
             
+            # hello_transition_ready: 위치 안정성 체크 완료, depth 기반 분기 판단 필요
+            if request_type == 'hello_transition_ready':
+                if target_id is None:
+                    self.get_logger().warn("hello_transition_ready: target_id가 없습니다.")
+                    return
+                
+                target_track_id = int(target_id)
+                
+                # Depth 값 확인하여 HELLO 또는 HANDSHAKE 결정
+                target_state_str = 'hello'  # 기본값
+                target_depth = None
+                
+                # 1순위: 저장된 map에서 조회
+                if target_track_id in self.target_depth_map:
+                    target_depth = self.target_depth_map[target_track_id]
+                    self.get_logger().info(
+                        f"[Depth 분기 체크] 저장된 map에서 조회: track_id={target_track_id}, "
+                        f"depth={target_depth:.3f}m, 기준=1.2m"
+                    )
+                
+                if target_depth is not None:
+                    if target_depth <= 1.2:  # 1.2m 이내면 HANDSHAKE
+                        target_state_str = 'handshake'
+                        self.get_logger().info(
+                            f"Depth 기반 분기: track_id={target_track_id}, "
+                            f"depth={target_depth:.3f}m ({target_depth*1000:.1f}mm, ≤1.2m) → HANDSHAKE"
+                        )
+                    else:
+                        self.get_logger().info(
+                            f"Depth 기반 분기: track_id={target_track_id}, "
+                            f"depth={target_depth:.3f}m ({target_depth*1000:.1f}mm, >1.2m) → HELLO"
+                        )
+                else:
+                    self.get_logger().warn(
+                        f"[Depth 분기 체크] Depth 정보 없음: track_id={target_track_id}, "
+                        f"저장된 track_ids={list(self.target_depth_map.keys())}, "
+                        f"depth 이미지={'있음' if self.latest_depth_image is not None else '없음'}, 기본값 HELLO 사용"
+                    )
+                
+                # 결정된 상태로 전환
+                try:
+                    state = TrackingState[target_state_str.upper()]
+                    self.state = state
+                    
+                    # HELLO/HANDSHAKE 상태로 전환 시 변수 초기화 (매번 리셋)
+                    if state == TrackingState.HELLO:
+                        self.hello_routine_sent_time = time.monotonic()
+                        self.hello_routine_sent = True
+                        self.current_hand_state = None  # 초기화
+                        self.get_logger().info(
+                            f"HELLO 상태로 전환: 루틴 발행 시간 기록, "
+                            f"{self.hello_feedback_delay}초 후 HAND 피드백 확인 시작"
+                        )
+                    elif state == TrackingState.HANDSHAKE:
+                        self.handshake_routine_sent_time = time.monotonic()
+                        self.handshake_routine_sent = True
+                        self.current_hand_state = None  # 초기화
+                        self.get_logger().info(
+                            f"HANDSHAKE 상태로 전환: 루틴 발행 시간 기록, "
+                            f"{self.handshake_feedback_delay}초 후 HAND 피드백 확인 시작"
+                        )
+                    
+                    if target_id is not None:
+                        self.target_track_id = int(target_id)
+                        self.target_explicitly_set = True
+                    
+                    self.get_logger().info(f"Depth 기반 상태 전환: {target_state_str} → {self.state.value}")
+                except (KeyError, AttributeError) as e:
+                    self.get_logger().error(f"잘못된 상태: {target_state_str}")
+                return
+            
+            # 기존 set_state 요청 처리
+            state_str = request.get('state', 'idle')
             try:
                 state = TrackingState[state_str.upper()]
                 
@@ -759,7 +883,7 @@ class TrackingFSMNode(Node):
                 # 상태 변경 (manual_mode 체크 없이)
                 self.state = state
                 
-                # HELLO 상태로 전환 시 변수 초기화 (매번 리셋)
+                # HELLO/HANDSHAKE 상태로 전환 시 변수 초기화 (매번 리셋)
                 if state == TrackingState.HELLO:
                     self.hello_routine_sent_time = time.monotonic()
                     self.hello_routine_sent = True
@@ -767,6 +891,14 @@ class TrackingFSMNode(Node):
                     self.get_logger().info(
                         f"HELLO 상태로 전환: 루틴 발행 시간 기록, "
                         f"{self.hello_feedback_delay}초 후 HAND 피드백 확인 시작"
+                    )
+                elif state == TrackingState.HANDSHAKE:
+                    self.handshake_routine_sent_time = time.monotonic()
+                    self.handshake_routine_sent = True
+                    self.current_hand_state = None  # 초기화
+                    self.get_logger().info(
+                        f"HANDSHAKE 상태로 전환: 루틴 발행 시간 기록, "
+                        f"{self.handshake_feedback_delay}초 후 HAND 피드백 확인 시작"
                     )
                 
                 if target_id is not None:
@@ -786,20 +918,107 @@ class TrackingFSMNode(Node):
             self.get_logger().error(f"상태 변경 요청 처리 실패: {e}")
     
     def _hand_feedback_callback(self, msg: Int32MultiArray):
-        """HAND 피드백 콜백 - HELLO 상태에서 사용"""
+        """HAND 피드백 콜백 - HELLO/HANDSHAKE 상태에서 사용"""
         try:
             if len(msg.data) >= 2:
                 # 두 번째 인자가 HAND 상태 (4: READY, 5: RUNNING)
                 hand_state = int(msg.data[1])
                 self.current_hand_state = hand_state
                 
-                if self.state == TrackingState.HELLO:
+                if self.state == TrackingState.HELLO or self.state == TrackingState.HANDSHAKE:
                     self.get_logger().debug(
                         f"HAND 피드백: 상태={hand_state} "
-                        f"(4: READY, 5: RUNNING)"
+                        f"(4: READY, 5: RUNNING), State={self.state.value}"
                     )
         except Exception as e:
             self.get_logger().warn(f"HAND 피드백 파싱 실패: {e}")
+    
+    def _camera_info_callback(self, msg: CameraInfo):
+        """카메라 정보 콜백 - 캘리브레이션 파라미터 저장"""
+        if self.camera_info is None:  # 한 번만 저장
+            self.camera_info = msg
+            self.get_logger().info(f"카메라 정보 수신: 해상도={msg.width}x{msg.height}")
+    
+    def _depth_image_callback(self, msg: Image):
+        """Depth 이미지 콜백 - 최신 depth 이미지 저장"""
+        try:
+            # 16UC1 형식의 depth 이미지를 numpy 배열로 변환
+            depth_image = self.cv_bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
+            self.latest_depth_image = depth_image
+            self.latest_depth_image_shape = (depth_image.shape[0], depth_image.shape[1])  # (height, width)
+        except Exception as e:
+            self.get_logger().warn(f"Depth 이미지 변환 실패: {e}")
+    
+    def _extract_depth_from_detection(self, detections: List[Dict], frame_shape: tuple) -> None:
+        """Detection 결과에서 depth 값을 추출하여 저장
+        
+        Args:
+            detections: Detection 결과 리스트
+            frame_shape: Color 이미지 프레임 크기 (height, width)
+        """
+        if self.latest_depth_image is None:
+            return  # depth 이미지가 없으면 스킵
+        
+        depth_image = self.latest_depth_image
+        depth_shape = self.latest_depth_image_shape
+        
+        if depth_shape is None:
+            return
+        
+        # Color 이미지와 Depth 이미지의 해상도 차이 계산
+        color_height, color_width = frame_shape
+        depth_height, depth_width = depth_shape
+        
+        scale_x = depth_width / color_width
+        scale_y = depth_height / color_height
+        
+        for det in detections:
+            track_id = det.get('track_id')
+            centroid = det.get('centroid')
+            bbox = det.get('bbox')
+            
+            if track_id is None or centroid is None or bbox is None:
+                continue
+            
+            centroid_x, centroid_y = centroid
+            
+            # Color 이미지 좌표를 Depth 이미지 좌표로 변환
+            depth_center_x = int(centroid_x * scale_x)
+            depth_center_y = int(centroid_y * scale_y)
+            
+            # 중심점 주변 작은 영역 (5x5 픽셀)에서 depth 값 샘플링
+            half_size = 2
+            x_min = max(0, depth_center_x - half_size)
+            x_max = min(depth_image.shape[1], depth_center_x + half_size + 1)
+            y_min = max(0, depth_center_y - half_size)
+            y_max = min(depth_image.shape[0], depth_center_y + half_size + 1)
+            
+            depth_roi = depth_image[y_min:y_max, x_min:x_max]
+            valid_depths = depth_roi[depth_roi > 0]  # 0은 무효한 depth
+            
+            if len(valid_depths) == 0:
+                continue  # 유효한 depth가 없으면 스킵
+            
+            # 중앙값 사용 (노이즈에 강함)
+            depth_value = np.median(valid_depths)
+            
+            # Depth 단위: RealSense의 경우 보통 mm 단위이므로 m로 변환
+            depth_m = depth_value / 1000.0  # mm -> m
+            
+            # 저장
+            old_depth = self.target_depth_map.get(track_id)
+            self.target_depth_map[track_id] = depth_m
+            
+            # 디버깅: depth 값 업데이트 로그 (값이 변경되었을 때만)
+            if old_depth is None or abs(old_depth - depth_m) > 0.1:  # 새 값이거나 10cm 이상 변경 시
+                self.get_logger().info(
+                    f"[Depth 추출] track_id={track_id}, "
+                    f"depth={depth_m:.3f}m ({depth_m*1000:.1f}mm), "
+                    f"color_centroid=({centroid_x:.1f}, {centroid_y:.1f}), "
+                    f"depth_centroid=({depth_center_x}, {depth_center_y}), "
+                    f"scale=({scale_x:.3f}, {scale_y:.3f}), "
+                    f"color_shape={frame_shape}, depth_shape={depth_shape}"
+                )
 
 
 def main(args=None):
