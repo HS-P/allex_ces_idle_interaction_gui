@@ -33,7 +33,8 @@ TargetInfo = namedtuple('TargetInfo', [
 
 class TrackingState(Enum):
     """추적 상태"""
-    IDLE = "idle"           # 초기 대상 선택
+    IDLE = "idle"           # 영자세로 돌아가기 (10초 동안 아무것도 안 함)
+    WAITING = "waiting"     # 타겟 찾기 (기존 IDLE의 타겟 찾기 로직)
     TRACKING = "tracking"   # 추적 중
     LOST = "lost"          # 추적 대상 놓침 (잠시 대기)
     SEARCHING = "searching" # 주변 두리번대기 (대상 선택)
@@ -193,6 +194,10 @@ class TrackingFSMNode(Node):
         # 실행 상태 플래그
         self.is_running = False
         
+        # IDLE 상태 타이머 (영자세로 돌아가기만 하는 시간)
+        self.idle_start_time: Optional[float] = None  # IDLE 상태 진입 시간
+        self.idle_duration = 10.0  # IDLE 상태 유지 시간 (초) - 10초 동안 영자세로 돌아가기만
+        
         # 성능 모니터링
         self.frame_count = 0
         self.last_log_time = time.monotonic()
@@ -281,6 +286,9 @@ class TrackingFSMNode(Node):
         """Manual 모드에서 상태를 수동으로 설정"""
         if state == TrackingState.IDLE:
             self.reset_timers()
+            self.idle_start_time = time.monotonic()  # IDLE 상태 진입 시간 기록
+        elif state == TrackingState.WAITING:
+            self.idle_start_time = None  # WAITING 진입 시 IDLE 타이머 초기화
 
         # HELLO/HANDSHAKE 전환 요청은 Auto 모드에서도 허용 (Controller에서 수신)
         if state == TrackingState.HELLO or state == TrackingState.HANDSHAKE:
@@ -357,13 +365,29 @@ class TrackingFSMNode(Node):
         if not self.manual_mode:
             match self.state:
                 case TrackingState.IDLE:
+                    # IDLE 상태: 영자세로 돌아가기만 함 (10초 동안 아무것도 안 함)
+                    # IDLE 진입 시간 초기화 (아직 초기화되지 않았으면)
+                    if self.idle_start_time is None:
+                        self.idle_start_time = current_time
+                        self.get_logger().info(f"IDLE 상태 진입: {self.idle_duration}초 동안 영자세로 돌아가기만 수행")
+                    
+                    # 10초가 지나면 WAITING으로 전이
+                    elapsed_time = current_time - self.idle_start_time
+                    if elapsed_time >= self.idle_duration:
+                        self.state = TrackingState.WAITING
+                        self.idle_start_time = None
+                        self.get_logger().info(f"IDLE -> WAITING 전이: {self.idle_duration}초 경과")
+                    # IDLE 상태에서는 타겟 찾기 하지 않음 (영자세로 돌아가기만)
+                
+                case TrackingState.WAITING:
+                    # WAITING 상태: 타겟 찾기 (기존 IDLE의 타겟 찾기 로직)
                     if self.target_explicitly_set and target_exists:
                         # Manual 모드에서 명시적으로 타겟 설정된 경우
                         self.state = TrackingState.TRACKING
                         self.lost_frames = 0
                         if self.target_selected_time is None:
                             self.target_selected_time = current_time
-                    elif not self.manual_mode:
+                    else:
                         # Auto Mode: 타겟이 없으면 자동으로 가장 가까운 사람 선택 (HELLO 완료 ID 제외)
                         if self.target_track_id is None:
                             # HELLO 완료 ID 제외
