@@ -949,20 +949,20 @@ class TrackingFSMNode(Node):
                     target_depth = self.target_depth_map[target_track_id]
                     self.get_logger().info(
                         f"[Depth 분기 체크] 저장된 map에서 조회: track_id={target_track_id}, "
-                        f"depth={target_depth:.3f}m, 기준=1.2m"
+                        f"depth={target_depth:.3f}m, 기준=1.5m"
                     )
                 
                 if target_depth is not None:
-                    if target_depth <= 1.2:  # 1.2m 이내면 HANDSHAKE
+                    if target_depth <= 1.5:  # 1.5m 이내면 HANDSHAKE
                         target_state_str = 'handshake'
                         self.get_logger().info(
                             f"Depth 기반 분기: track_id={target_track_id}, "
-                            f"depth={target_depth:.3f}m ({target_depth*1000:.1f}mm, ≤1.2m) → HANDSHAKE"
+                            f"depth={target_depth:.3f}m ({target_depth*1000:.1f}mm, ≤1.5m) → HANDSHAKE"
                         )
                     else:
                         self.get_logger().info(
                             f"Depth 기반 분기: track_id={target_track_id}, "
-                            f"depth={target_depth:.3f}m ({target_depth*1000:.1f}mm, >1.2m) → HELLO"
+                            f"depth={target_depth:.3f}m ({target_depth*1000:.1f}mm, >1.5m) → HELLO"
                         )
                 else:
                     self.get_logger().warn(

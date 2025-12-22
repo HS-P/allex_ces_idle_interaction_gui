@@ -151,37 +151,47 @@ class RoutineController:
         self.node.get_logger().info(f"악수 루틴 시작: idling_handshake_rt (명령 발행 완료)")
     
     def stop_current_routine(self):
-        """현재 실행 중인 루틴 중단: PAUSE → RESET → STOP (GUI STOP 명령 시 호출)"""
-        if self.current_routine:
+        """현재 실행 중인 루틴 중단: PAUSE → RESET → STOP (GUI STOP 명령 시 호출)
+        추적 중인 루틴(current_routine)을 우선 사용 (idle_breathing_rt 등), 없으면 actual_running_routine 사용"""
+        # 추적 중인 루틴 우선 사용 (idle_breathing_rt 등 사용자가 관리하는 루틴)
+        # 없으면 실제 실행 중인 루틴 사용
+        routine_to_stop = self.current_routine if self.current_routine else self.node.actual_running_routine
+        
+        if routine_to_stop:
+            self.node.get_logger().info(f"[STOP] 루틴 중단 시작: {routine_to_stop} (추적 중: {self.current_routine}, 실제 실행 중: {self.node.actual_running_routine})")
+            
             # 1. PAUSE 먼저
-            pause_command = f"{self.robot_name}::ROUTINE::{self.current_routine}::PAUSE"
+            pause_command = f"{self.robot_name}::ROUTINE::{routine_to_stop}::PAUSE"
             self.publish_command(pause_command)
-            self.node.get_logger().info(f"[STOP] 루틴 PAUSE: {self.current_routine}")
+            self.node.get_logger().info(f"[STOP] 루틴 PAUSE: {routine_to_stop}")
             
             # PAUSE와 RESET 사이에 0.2초 지연 (안정성 확보)
             time.sleep(0.2)
             
             # 2. RESET
-            reset_command = f"{self.robot_name}::ROUTINE::{self.current_routine}::RESET"
+            reset_command = f"{self.robot_name}::ROUTINE::{routine_to_stop}::RESET"
             self.publish_command(reset_command)
-            self.node.get_logger().info(f"[STOP] 루틴 RESET: {self.current_routine}")
+            self.node.get_logger().info(f"[STOP] 루틴 RESET: {routine_to_stop}")
             
             # RESET 완료 대기 (로봇 시스템이 RESET을 처리할 시간 확보)
             time.sleep(0.3)
             
             # 3. STOP 명령 (루틴 완전 중단)
-            stop_command = f"{self.robot_name}::ROUTINE::{self.current_routine}::STOP"
+            stop_command = f"{self.robot_name}::ROUTINE::{routine_to_stop}::STOP"
             self.publish_command(stop_command)
-            self.node.get_logger().info(f"[STOP] 루틴 STOP: {self.current_routine}")
+            self.node.get_logger().info(f"[STOP] 루틴 STOP: {routine_to_stop}")
             
             # STOP 명령 처리 대기
             time.sleep(0.1)
             
             # 상태 초기화
-            routine_name = self.current_routine
+            routine_name = routine_to_stop
             self.current_routine = None
             self.breathing_routine_running = False
+            self.node.actual_running_routine = None
             self.node.get_logger().info(f"[STOP] 루틴 완전 중단 완료: {routine_name}")
+        else:
+            self.node.get_logger().warn(f"[STOP] 중단할 루틴이 없음 (추적 중: {self.current_routine}, 실제 실행 중: {self.node.actual_running_routine})")
 
 
 class AllexIdleInteractionNode(Node):
@@ -257,6 +267,17 @@ class AllexIdleInteractionNode(Node):
             10
         )
         
+        # /debug/routine 토픽 구독 (현재 실행 중인 루틴 추적용)
+        self.routine_status_subscription = self.create_subscription(
+            String,
+            "/debug/routine",
+            self._routine_status_callback,
+            10
+        )
+        
+        # 현재 실행 중인 루틴 이름 추적 (실제 실행 중인 루틴)
+        self.actual_running_routine = None  # 실제 실행 중인 루틴 이름
+        
         # RoutineController 초기화
         self.routine_controller = RoutineController(self, robot_name="X")
         
@@ -278,6 +299,45 @@ class AllexIdleInteractionNode(Node):
         self.get_logger().info("ALLEX Idle Interaction Node 초기화 완료")
         self.get_logger().info("대기 중: RUN 명령을 기다립니다...")
     
+    def _routine_status_callback(self, msg: String):
+        """루틴 상태 피드백 콜백 - /debug/routine 토픽에서 실제 실행 중인 루틴 추적"""
+        try:
+            data = json.loads(msg.data)
+            
+            # 루틴이 비어있는지 확인 (루틴 종료 상태)
+            nodes = data.get("nodes", [])
+            if not nodes or len(nodes) == 0:
+                self.actual_running_routine = None
+                return
+            
+            # 루트 노드 찾기 (parent == -1)
+            root_node = None
+            for node in nodes:
+                if node.get("parent") == -1:
+                    root_node = node
+                    break
+            
+            if root_node:
+                status = root_node.get("status")
+                routine_name = root_node.get("name", "")
+                
+                # status: 0=IDLE, 1=RUNNING, 2=SUCCESS, 3=FAILURE
+                if status == 1:  # RUNNING인 경우만 실행 중으로 판단
+                    # 루틴 이름에서 실제 루틴 이름 추출 (예: "idling_handshake_rt", "idling_heart_rt", "idle_breathing_rt")
+                    if routine_name:
+                        self.actual_running_routine = routine_name
+                else:
+                    # RUNNING이 아니면 실행 중이 아님
+                    self.actual_running_routine = None
+            else:
+                # 루트 노드를 찾을 수 없으면 루틴이 없는 것으로 간주
+                self.actual_running_routine = None
+                
+        except json.JSONDecodeError as e:
+            self.get_logger().warn(f"루틴 상태 피드백 JSON 파싱 실패: {e}")
+        except Exception as e:
+            self.get_logger().warn(f"루틴 상태 피드백 처리 실패: {e}")
+    
     def image_callback(self, msg: CompressedImage) -> None:
         """이미지 콜백 - 타겟 Crop 이미지 발행용으로 저장"""
         if not self.is_running:
@@ -296,15 +356,24 @@ class AllexIdleInteractionNode(Node):
             data = json.loads(msg.data)
             self.latest_tracking_result = data
             
-            # 상태 변경 감지 및 루틴 전환 처리
-            state_str = data.get('state', 'idle')
-            try:
-                current_state = TrackingState[state_str.upper()]
-            except (KeyError, AttributeError):
-                current_state = TrackingState.IDLE
-            
-            if current_state != self.previous_state:
-                self._handle_state_change(self.previous_state, current_state)
+            # 상태 변경 감지 및 루틴 전환 처리 (RUN 중일 때만)
+            if self.is_running:
+                state_str = data.get('state', 'idle')
+                try:
+                    current_state = TrackingState[state_str.upper()]
+                except (KeyError, AttributeError):
+                    current_state = TrackingState.IDLE
+                
+                if current_state != self.previous_state:
+                    self._handle_state_change(self.previous_state, current_state)
+                    self.previous_state = current_state
+            else:
+                # RUN 중이 아니면 상태만 업데이트 (루틴 전환은 하지 않음)
+                state_str = data.get('state', 'idle')
+                try:
+                    current_state = TrackingState[state_str.upper()]
+                except (KeyError, AttributeError):
+                    current_state = TrackingState.IDLE
                 self.previous_state = current_state
             
             # GUI용 추적 데이터 발행 (목/허리 각도 정보 포함)

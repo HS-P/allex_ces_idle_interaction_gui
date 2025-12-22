@@ -130,6 +130,8 @@ class GazeControllerNode(Node):
         self.last_neck_delta_yaw = 0.0  # 마지막 PID 제어 증분
         self.last_neck_delta_pitch = 0.0
         self.smoothing_alpha = 0.3  # Exponential smoothing 계수 (0~1, 작을수록 더 부드럽지만 느림)
+        self.last_sent_neck_delta_yaw = 0.0  # 마지막으로 실제 전송한 목 증분 (추가 스무딩용)
+        self.last_sent_neck_delta_pitch = 0.0  # 마지막으로 실제 전송한 목 증분 (추가 스무딩용)
         
         # 전체 시선각 스무딩용 (부드러운 움직임을 위해)
         self.last_desired_total_yaw = None  # 마지막 목표 전체 시선각
@@ -155,9 +157,9 @@ class GazeControllerNode(Node):
         self.kd_yaw = 0.0   # D 게인 (Yaw) - 낮춰서 움직임 억제 감소
         self.kd_pitch = 0.01 # D 게인 (Pitch)
         
-        # SEARCHING 상태용 매우 낮은 게인 (매우 천천히 움직임)
-        self.kp_yaw_searching = 0.3   # P 게인 (Yaw) - 검색 시 매우 느리게
-        self.kp_pitch_searching = 0.3 # P 게인 (Pitch) - 검색 시 매우 느리게
+        # SEARCHING 상태용 게인 (목을 더 빠르게)
+        self.kp_yaw_searching = 0.45   # P 게인 (Yaw) - 검색 시 (더 빠르게: 0.33 -> 0.45)
+        self.kp_pitch_searching = 0.45 # P 게인 (Pitch) - 검색 시 (더 빠르게: 0.33 -> 0.45)
         self.ki_yaw_searching = 0.02  # I 게인 (Yaw) - 검색 시
         self.ki_pitch_searching = 0.02 # I 게인 (Pitch) - 검색 시
         self.kd_yaw_searching = 0.01  # D 게인 (Yaw) - 검색 시
@@ -178,27 +180,28 @@ class GazeControllerNode(Node):
         self.kp_waist_tracking = 1.5 # P 게인 (Waist Yaw) - 진동 방지
         
         # 허리 지연 파라미터 (Exponential smoothing 시간 상수, 초)
-        # 목표지점 도달까지 30% 더 빠르게: tau를 30% 줄임 (1.5 -> 1.0)
-        self.tau_waist = 1.0  # TRACKING용 느린 지연 (30% 더 빠른 도달)
-        self.tau_waist_searching = 2.5  # SEARCHING 모드용 매우 느린 지연 (부드러운 움직임)
-        self.max_delta_waist_tracking = math.radians(0.1)  # TRACKING 모드 허리 최대 변화량 (GUI에서 제어 가능)
+        # 허리 40% 빠르게: tau를 40% 줄임
+        self.tau_waist = 0.3  # TRACKING용 지연 (40% 빠르게: 0.5 -> 0.3)
+        self.tau_waist_searching = 1.95  # SEARCHING 모드용 지연 (40% 빠르게: 3.5 -> 2.1)
+        self.max_delta_waist_tracking = math.radians(0.58)  # TRACKING 모드 허리 최대 변화량 (초당 16.5도: 0.55도/프레임, 30Hz 기준, 10% 증가)
         
         # 허리 제어 상태 변수
         self.last_waist_update_time = time.monotonic()
         self.last_waist_command = None  # 마지막으로 보낸 허리 명령 각도 (절대각, None이면 초기화 필요)
+        self.last_sent_waist_command = None  # 마지막으로 실제 전송한 허리 명령 각도 (추가 스무딩용)
         
         # TRACKING 초기 빠른 추적용 변수
         self.tracking_start_time = None  # 현재 track_id로 추적 시작 시간
         self.current_track_id = None  # 현재 추적 중인 track_id
-        self.initial_tracking_duration = 5.0  # 초기 빠른 추적 시간 (초)
-        self.initial_tracking_max_delta = math.radians(3.5)  # 초기 추적 시 최대 변화량 (3.5도/프레임)
+        self.initial_tracking_duration = 1.5  # 초기 빠른 추적 시간 (초)
+        self.initial_tracking_max_delta = math.radians(1.5)  # 초기 추적 시 최대 변화량 (초당 45도: 1.5도/프레임, 30Hz 기준)
         
         # 실행 상태 플래그
         self.is_running = False
         
-        # HELLO 전환 조건 변수 (현재 위치에서 ±1도 이내로 1초 유지)
-        self.hello_position_threshold_deg = 1.5  # 기준 위치에서 ±1도 이내
-        self.hello_stable_duration = 2.0  # 조건 유지 시간 (초)
+        # HELLO 전환 조건 변수 (현재 위치에서 ±2도 이내로 1초 유지)
+        self.hello_position_threshold_deg = 2.0  # 기준 위치에서 ±2도 이내
+        self.hello_stable_duration = 1.45  # 조건 유지 시간 (초)
         self.hello_stable_start_time = None  # 조건 만족 시작 시간
         self.hello_reference_yaw_rad = None  # 기준 위치 (타이머 시작 시 저장)
         self.previous_state = None  # 이전 상태 추적 (TRACKING 진입 감지용)
@@ -397,11 +400,32 @@ class GazeControllerNode(Node):
         return delta_yaw_rad, delta_pitch_rad
     
     def _send_waist_command(self, absolute_waist_yaw_rad: float):
-        """허리 명령 전송"""
+        """허리 명령 전송 (작은 변화에 대한 추가 스무딩 적용)"""
         absolute_waist_yaw_rad = max(self.waist_yaw_min, min(self.waist_yaw_max, absolute_waist_yaw_rad))
+        
+        # 작은 각도 변화에 대한 추가 스무딩 (끊김 방지)
+        if self.last_sent_waist_command is not None:
+            delta = abs(absolute_waist_yaw_rad - self.last_sent_waist_command)
+            # 작은 변화 (약 0.5도 이하)에 대해 더 부드럽게 처리
+            small_change_threshold = math.radians(0.5)  # 약 0.5도
+            if delta < small_change_threshold:
+                # 작은 변화는 더 강한 스무딩 적용 (0.25 = 25%만 반영, 더 부드럽게)
+                smoothing_alpha = 0.25
+                absolute_waist_yaw_rad = self.last_sent_waist_command + smoothing_alpha * (absolute_waist_yaw_rad - self.last_sent_waist_command)
+            else:
+                # 큰 변화는 중간 스무딩 (0.55 = 55% 반영, 약간 더 부드럽게)
+                smoothing_alpha = 0.55
+                absolute_waist_yaw_rad = self.last_sent_waist_command + smoothing_alpha * (absolute_waist_yaw_rad - self.last_sent_waist_command)
+        
+        # 각도 제한 재적용
+        absolute_waist_yaw_rad = max(self.waist_yaw_min, min(self.waist_yaw_max, absolute_waist_yaw_rad))
+        
         msg = Float64MultiArray()
         msg.data = [float(absolute_waist_yaw_rad), 0.0]  # [yaw, pitch] 순서
         self.waist_publisher.publish(msg)
+        
+        # 마지막 전송 명령 업데이트
+        self.last_sent_waist_command = absolute_waist_yaw_rad
     
     def _waist_follow_total(self, desired_total_yaw: float, searching_mode: bool = False) -> float:
         """허리가 전체 시선각(desired_total_yaw)을 느리게 추종
@@ -416,6 +440,7 @@ class GazeControllerNode(Node):
         current_time = time.monotonic()
         dt = current_time - self.last_waist_update_time
         dt = max(0.001, min(dt, 0.1))
+        
         
         # SEARCHING 모드에서는 허리 각도를 ±65도로 제한 (탐색 범위 제한)
         if searching_mode:
@@ -437,8 +462,8 @@ class GazeControllerNode(Node):
             # waist_cmd = last_waist_command + alpha * (desired_total - last_waist_command)
             smoothed_waist_yaw = self.last_waist_command + alpha * (desired_total_yaw - self.last_waist_command)
             
-            # Rate limit: 증분 제한 (너무 급격한 변화 방지, SEARCHING은 매우 느리게)
-            max_delta = math.radians(2.0)  # SEARCHING 모드: 매우 느린 속도 (초당 약 2도, 30Hz 기준)
+            # Rate limit: 증분 제한 (스무딩은 증가했지만 게인은 높여서 반응성 유지)
+            max_delta = math.radians(2.5)  # SEARCHING 모드: 게인 증가 (1.9 -> 2.5도, 약 32% 증가, 더 빠른 반응)
             delta_waist_yaw = smoothed_waist_yaw - self.last_waist_command
             delta_waist_yaw = max(-max_delta, min(max_delta, delta_waist_yaw))
             new_waist_yaw = self.last_waist_command + delta_waist_yaw
@@ -452,20 +477,64 @@ class GazeControllerNode(Node):
             smoothed_waist_yaw = self.last_waist_command + alpha * (desired_total_yaw - self.last_waist_command)
             
             # Rate limit: 증분 제한
-            # 초기 5초간은 빠른 추적 (3.5도/프레임), 이후는 매우 느리게 (초당 약 2-3도, 프레임당 약 0.1도)
-            if (self.tracking_start_time is not None and 
-                current_time - self.tracking_start_time < self.initial_tracking_duration):
-                max_delta = self.initial_tracking_max_delta  # 초기 빠른 추적 (3.5도/프레임)
-            else:
-                # TRACKING 모드: 매우 느린 속도 (초당 약 2-3도, 30Hz 기준 프레임당 약 0.08도)
-                # 목이 빠르게 추종하고 허리는 천천히 따라가도록
-                max_delta = self.max_delta_waist_tracking  # 프레임당 변화량 (GUI에서 제어 가능)
+            # TRACKING 모드: 일반 추적 속도 (초당 16.5도, 30Hz 기준 0.55도/프레임, 10% 증가)
+            max_delta = self.max_delta_waist_tracking  # 프레임당 변화량 (GUI에서 제어 가능)
             
             delta_waist_yaw = smoothed_waist_yaw - self.last_waist_command
             delta_waist_yaw = max(-max_delta, min(max_delta, delta_waist_yaw))
             new_waist_yaw = self.last_waist_command + delta_waist_yaw
         
         # 각도 제한 적용
+        new_waist_yaw = max(self.waist_yaw_min, min(self.waist_yaw_max, new_waist_yaw))
+        
+        # 허리 명령 전송
+        self._send_waist_command(new_waist_yaw)
+        
+        # 상태 업데이트
+        self.last_waist_command = new_waist_yaw
+        self.last_waist_update_time = current_time
+        
+        return new_waist_yaw
+    
+    def _waist_follow_target(self, desired_waist_yaw: float, searching_mode: bool = False) -> float:
+        """허리가 절대각 목표(desired_waist_yaw)를 느리게 추종
+        
+        Args:
+            desired_waist_yaw: 목표 허리 각도 (절대각, 라디안)
+            searching_mode: True면 SEARCHING 모드 (TRACKING보다 더 느리게 움직임, tau_waist_searching 사용)
+        
+        Returns:
+            float: 실제로 전송한 허리 명령 각도 (절대각, 라디안)
+        """
+        current_time = time.monotonic()
+        dt = current_time - self.last_waist_update_time
+        dt = max(0.001, min(dt, 0.1))
+        
+        
+        # 각도 제한 적용
+        desired_waist_yaw = max(self.waist_yaw_min, min(self.waist_yaw_max, desired_waist_yaw))
+        
+        # 초기화: 첫 호출 시 last_waist_command를 현재 허리 위치로 설정
+        if self.last_waist_command is None:
+            self.last_waist_command = self.current_waist_yaw_rad
+        
+        if searching_mode:
+            # SEARCHING 모드: Exponential smoothing (느린 추종, TRACKING보다 더 느리게)
+            alpha = dt / (self.tau_waist_searching + dt)
+            smoothed_waist_yaw = self.last_waist_command + alpha * (desired_waist_yaw - self.last_waist_command)
+            max_delta = math.radians(3.5)  # SEARCHING 모드 (40% 증가: 2.5 -> 3.5도)
+        else:
+            # TRACKING 모드: Exponential smoothing (느린 추종)
+            alpha = dt / (self.tau_waist + dt)
+            smoothed_waist_yaw = self.last_waist_command + alpha * (desired_waist_yaw - self.last_waist_command)
+            # Rate limit: 일반 추적 (초당 16.5도, 10% 증가)
+            max_delta = self.max_delta_waist_tracking  # 일반: 초당 16.5도 (0.55도/프레임)
+        
+        delta_waist_yaw = smoothed_waist_yaw - self.last_waist_command
+        delta_waist_yaw = max(-max_delta, min(max_delta, delta_waist_yaw))
+        new_waist_yaw = self.last_waist_command + delta_waist_yaw
+        
+        # 각도 제한 재적용
         new_waist_yaw = max(self.waist_yaw_min, min(self.waist_yaw_max, new_waist_yaw))
         
         # 허리 명령 전송
@@ -531,38 +600,33 @@ class GazeControllerNode(Node):
             target_pitch_rad: 목표 Pitch 각도
             use_pid: PID 제어 사용 여부
             use_searching_gain: SEARCHING 게인 사용 여부
-            is_initial_tracking: 초기 TRACKING 단계 여부 (5초 이내)
+            is_initial_tracking: 초기 TRACKING 단계 여부 (1.5초 이내)
         """
         self.target_yaw_rad = target_yaw_rad
         self.target_pitch_rad = target_pitch_rad
         
+        # PID 제어 또는 직접 계산
         if use_pid:
             delta_yaw_rad, delta_pitch_rad = self._pid_control(target_yaw_rad, target_pitch_rad, use_searching_gain=use_searching_gain)
         else:
             delta_yaw_rad = target_yaw_rad - self.current_yaw_rad
             delta_pitch_rad = target_pitch_rad - self.current_pitch_rad
         
-        # TRACKING 모드에서는 목이 항상 빠르게 추종 (허리가 느리게 따라가므로)
-        # 초기 추적 단계에서는 더 빠르게 (3.5도/프레임), 일반 추적에서는 30도/프레임 유지
+        # Rate limit 적용: 초기 추적 중에는 초당 45도 (1.5도/프레임), 일반 추적에서는 81도/프레임
         if is_initial_tracking:
-            max_delta_angle = self.initial_tracking_max_delta  # 초기: 3.5도/프레임
+            max_delta_angle = self.initial_tracking_max_delta  # 초기: 초당 45도 (1.5도/프레임)
         else:
-            max_delta_angle = math.radians(30.0)  # 일반 추적: 30도/프레임 (빠른 추종)
+            max_delta_angle = math.radians(81.0)  # 일반 추적: 81도/프레임
         
         # 기본 rate limit
         delta_yaw_rad = max(-max_delta_angle, min(max_delta_angle, delta_yaw_rad))
         delta_pitch_rad = max(-max_delta_angle, min(max_delta_angle, delta_pitch_rad))
         
         # PID 제어 결과 스무딩 (더 부드러운 움직임을 위해)
-        # TRACKING 모드에서는 목이 빠르게 추종해야 하므로 스무딩을 적절히 적용
-        # (허리가 느리게 따라가므로 목이 먼저 빠르게 움직여야 하지만, 끊김 방지를 위해 스무딩 필요)
-        # 목표지점 도달까지 30% 더 빠르게: alpha를 높여서 더 빠르게 반응 (0.5 -> 0.65, 0.2 -> 0.35)
         if use_searching_gain:
-            # SEARCHING 모드: 더 부드럽지만 30% 빠르게
-            smoothing_alpha = 0.35  # SEARCHING에서는 부드럽지만 더 빠르게 (기존 0.2에서 75% 증가)
+            smoothing_alpha = 0.75  # SEARCHING에서는 5% 스무딩 추가
         else:
-            # TRACKING 모드: 빠른 반응 (30% 더 빠르게)
-            smoothing_alpha = 0.65  # TRACKING에서는 더 빠른 반응 (기존 0.5에서 30% 증가)
+            smoothing_alpha = 0.9  # TRACKING에서는 5% 스무딩 추가
         
         smoothed_delta_yaw = self.last_neck_delta_yaw + smoothing_alpha * (delta_yaw_rad - self.last_neck_delta_yaw)
         smoothed_delta_pitch = self.last_neck_delta_pitch + smoothing_alpha * (delta_pitch_rad - self.last_neck_delta_pitch)
@@ -571,12 +635,57 @@ class GazeControllerNode(Node):
         smoothed_delta_yaw = max(-max_delta_angle, min(max_delta_angle, smoothed_delta_yaw))
         smoothed_delta_pitch = max(-max_delta_angle, min(max_delta_angle, smoothed_delta_pitch))
         
-        # 마지막 증분 저장
+        # 마지막 증분 저장 (PID 출력용)
         self.last_neck_delta_yaw = smoothed_delta_yaw
         self.last_neck_delta_pitch = smoothed_delta_pitch
         
+        # 추가 스무딩: 작은 변화에 대한 부드러운 처리 (끊김 방지)
+        # 작은 변화에 대해 더 강한 스무딩 적용
+        delta_yaw_magnitude = abs(smoothed_delta_yaw - self.last_sent_neck_delta_yaw)
+        delta_pitch_magnitude = abs(smoothed_delta_pitch - self.last_sent_neck_delta_pitch)
+        
+        small_change_threshold = math.radians(0.3)  # 약 0.3도 (작은 변화)
+        
+        if delta_yaw_magnitude < small_change_threshold:
+            # 작은 변화만 약한 스무딩 (0.7 = 70% 반영)
+            final_smoothing_alpha = 0.7
+        else:
+            # 큰 변화에도 5% 스무딩 (1.0 -> 0.95)
+            final_smoothing_alpha = 0.95
+        
+        if delta_pitch_magnitude < small_change_threshold:
+            final_pitch_smoothing_alpha = 0.7
+        else:
+            # 큰 변화에도 5% 스무딩 (1.0 -> 0.95)
+            final_pitch_smoothing_alpha = 0.95
+        
+        final_delta_yaw = self.last_sent_neck_delta_yaw + final_smoothing_alpha * (smoothed_delta_yaw - self.last_sent_neck_delta_yaw)
+        final_delta_pitch = self.last_sent_neck_delta_pitch + final_pitch_smoothing_alpha * (smoothed_delta_pitch - self.last_sent_neck_delta_pitch)
+        
+        # Rate limit 재적용 (최종 값) - 초기 추적과 일반 추적 모두 적용
+        final_delta_yaw = max(-max_delta_angle, min(max_delta_angle, final_delta_yaw))
+        final_delta_pitch = max(-max_delta_angle, min(max_delta_angle, final_delta_pitch))
+        
+        # 마지막 전송 명령 업데이트
+        self.last_sent_neck_delta_yaw = final_delta_yaw
+        self.last_sent_neck_delta_pitch = final_delta_pitch
+        
+        # 초기 추적 디버깅 로그 (_send_neck_command 내부)
+        if is_initial_tracking:
+            if not hasattr(self, '_last_initial_neck_cmd_log_time') or time.monotonic() - self._last_initial_neck_cmd_log_time > 0.1:
+                self.get_logger().info(
+                    f"[초기 추적 _send_neck_command] "
+                    f"target_yaw={math.degrees(target_yaw_rad):.2f}도, "
+                    f"current_yaw={math.degrees(self.current_yaw_rad):.2f}도, "
+                    f"delta_yaw={math.degrees(delta_yaw_rad):.2f}도, "
+                    f"smoothed_delta_yaw={math.degrees(smoothed_delta_yaw):.2f}도, "
+                    f"final_delta_yaw={math.degrees(final_delta_yaw):.2f}도, "
+                    f"max_delta_angle={math.degrees(max_delta_angle):.2f}도/프레임"
+                )
+                self._last_initial_neck_cmd_log_time = time.monotonic()
+        
         msg = Float64MultiArray()
-        msg.data = [float(smoothed_delta_pitch), float(smoothed_delta_yaw)]  # [pitch, yaw] 순서, 증분 명령
+        msg.data = [float(final_delta_pitch), float(final_delta_yaw)]  # [pitch, yaw] 순서, 증분 명령
         self.neck_publisher.publish(msg)
         
         expected_yaw_rad = self.current_yaw_rad + smoothed_delta_yaw
@@ -602,12 +711,22 @@ class GazeControllerNode(Node):
                 if self.current_track_id != target_info.track_id:
                     self.current_track_id = target_info.track_id
                     self.tracking_start_time = current_time_check
+                    # 새로운 타겟 추적 시작 시 목 타겟 및 PID 상태 초기화 (초기 추적 시 빠른 반응 보장)
+                    self.last_neck_target_yaw = None
+                    self.last_neck_delta_yaw = 0.0  # PID 출력 스무딩 초기화
+                    self.last_neck_delta_pitch = 0.0
+                    self.last_sent_neck_delta_yaw = 0.0  # 최종 명령 스무딩 초기화
+                    self.last_sent_neck_delta_pitch = 0.0
+                    self.integral_yaw = 0.0  # PID 적분 초기화
+                    self.integral_pitch = 0.0
+                    self.last_error_yaw = 0.0
+                    self.last_error_pitch = 0.0
                     self.get_logger().info(
                         f"새 타겟 추적 시작: track_id={target_info.track_id}, "
                         f"초기 {self.initial_tracking_duration}초간 빠른 추적 모드"
                     )
                 
-                # 초기 추적 단계 여부 확인 (5초 이내)
+                # 초기 추적 단계 여부 확인 (1.5초 이내)
                 is_initial_tracking = (
                     self.tracking_start_time is not None and
                     current_time_check - self.tracking_start_time < self.initial_tracking_duration
@@ -617,74 +736,68 @@ class GazeControllerNode(Node):
                 target_x, target_y = target_info.point
                 relative_yaw_rad, relative_pitch_rad = self._pixel_to_angle(target_x, target_y, frame_width, frame_height)
                 
-                # 전체 시선각 계산: 현재 total gaze + 필요한 변화량
+                # 전체 시선각 계산: 현재 total gaze + 필요한 변화량 (스무딩 없이)
                 current_total_yaw = self.current_waist_yaw_rad + self.current_yaw_rad
                 raw_desired_total_yaw = current_total_yaw + relative_yaw_rad
                 
-                # 전체 시선각 스무딩 (부드러운 움직임을 위해)
-                if self.last_desired_total_yaw is not None:
-                    # Exponential smoothing: smoothed = last + alpha * (current - last)
-                    desired_total_yaw = self.last_desired_total_yaw + self.total_yaw_smoothing_alpha * (raw_desired_total_yaw - self.last_desired_total_yaw)
-                else:
-                    desired_total_yaw = raw_desired_total_yaw
-                    self.last_desired_total_yaw = desired_total_yaw
-                
-                # 허리 제어: 전체 시선각을 느리게 추종 (exponential smoothing, 반 박자 지연)
-                waist_cmd = self._waist_follow_total(desired_total_yaw, searching_mode=False)
-                
-                # 전체 시선각 업데이트
-                self.last_desired_total_yaw = desired_total_yaw
-                
-                # 목 제어: 잔여분만 담당 (전체 시선각 - 허리 각도)
-                neck_target_yaw = desired_total_yaw - waist_cmd
-                
-                # 목 각도 안전 범위 클램프 (허리가 포화되어 과도하게 커지는 경우 방지)
+                # ===== 목 중심 제어 (목이 먼저 빠르게 추종) =====
+                # 목 타겟: raw_total_target_yaw - current_waist_yaw (스무딩 없이, rate limit만)
+                neck_target_yaw = raw_desired_total_yaw - self.current_waist_yaw_rad
                 neck_target_yaw = max(self.yaw_min, min(self.yaw_max, neck_target_yaw))
                 
-                # LOST -> TRACKING 전환 시 급격한 변화 방지: 목 목표 각도 스무딩
-                # 목은 항상 빠르게 반응하도록 (허리가 느리게 따라가므로 목이 빠르게 추종해야 함)
+                # LOST -> TRACKING 전환 시 급격한 변화 방지: rate limit + 스무딩
                 if self.last_neck_target_yaw is not None:
-                    # 목은 항상 빠른 반응 (프레임당 최대 12도 변화) - 허리가 느리게 따라가므로
-                    max_neck_target_delta = math.radians(12.0)
-                    
-                    # Rate limit 적용
-                    neck_target_delta = neck_target_yaw - self.last_neck_target_yaw
-                    neck_target_delta = max(-max_neck_target_delta, min(max_neck_target_delta, neck_target_delta))
-                    
-                    # Exponential smoothing으로 더 부드럽게 (끊김 방지)
-                    # 목표 각도 변화에 대한 스무딩 (0.85 = 기본값, GUI에서 neck_target_alpha로 제어 가능)
-                    smoothing_factor = getattr(self, 'neck_target_alpha', 0.85)  # 목표 각도 변화에 대한 스무딩 (더 빠른 도달)
-                    neck_target_yaw = self.last_neck_target_yaw + smoothing_factor * neck_target_delta
+                    # 초기 추적 중에는 rate limit 적용 (초당 45도, 1.5도/프레임)
+                    if is_initial_tracking:
+                        max_neck_target_delta = self.initial_tracking_max_delta  # 초기 추적: 1.5도/프레임 (초당 45도)
+                        # 초기 추적: rate limit만 적용, 스무딩 없음
+                        neck_target_delta = neck_target_yaw - self.last_neck_target_yaw
+                        neck_target_delta = max(-max_neck_target_delta, min(max_neck_target_delta, neck_target_delta))
+                        neck_target_yaw = self.last_neck_target_yaw + neck_target_delta  # 스무딩 없음
+                    else:
+                        max_neck_target_delta = math.radians(12.0)  # 일반 추적: 12도/프레임
+                        smoothing_factor = 0.95  # 일반 추적: 5% 스무딩 적용
+                        neck_target_delta = neck_target_yaw - self.last_neck_target_yaw
+                        neck_target_delta = max(-max_neck_target_delta, min(max_neck_target_delta, neck_target_delta))
+                        neck_target_yaw = self.last_neck_target_yaw + smoothing_factor * neck_target_delta
                 else:
-                    # 초기화: 현재 목 각도로 설정
-                    self.last_neck_target_yaw = self.current_yaw_rad
+                    # 초기화: 계산된 목 타겟으로 바로 설정 (첫 프레임에서 즉시 반응)
+                    self.last_neck_target_yaw = neck_target_yaw
+                
+                # ===== 허리 제어 (목 각도를 천천히 회수) =====
+                # 허리 타겟: raw_total_target_yaw - current_neck_yaw (천천히 추종)
+                waist_target_yaw = raw_desired_total_yaw - self.current_yaw_rad
+                waist_target_yaw = max(self.waist_yaw_min, min(self.waist_yaw_max, waist_target_yaw))
+                
+                # 허리 제어: 목 각도를 천천히 회수하도록 추종
+                waist_cmd = self._waist_follow_target(waist_target_yaw, searching_mode=False)
                 
                 # Pitch는 허리가 관여하지 않으므로 기존 방식 유지
                 target_pitch_rad = self.current_pitch_rad + relative_pitch_rad
                 
-                # 목 명령 전송 (PID 제어, TRACKING에서는 항상 빠른 추종)
-                # is_initial_tracking은 False로 전달 (초기 추적 후에도 목은 빠르게 유지)
+                # 목 명령 전송 (PID 제어, 초기 추적 단계에서는 느리게)
                 yaw_rad, pitch_rad = self._send_neck_command(
                     neck_target_yaw, target_pitch_rad, 
                     use_pid=True, 
-                    is_initial_tracking=False  # 목은 항상 빠르게 추종 (허리가 느리게 따라가므로)
+                    is_initial_tracking=is_initial_tracking  # 초기 추적 단계에서는 느리게
                 )
                 
                 # 목표 각도 업데이트
                 self.last_neck_target_yaw = neck_target_yaw
                 
-                # 디버깅 로그 (1초마다 출력)
-                if not hasattr(self, '_last_tracking_log_time') or time.monotonic() - self._last_tracking_log_time > 1.0:
-                    self.get_logger().info(
-                        f"TRACKING: 전체시선각 기반 제어 | "
-                        f"relative_yaw={math.degrees(relative_yaw_rad):.2f}도, "
-                        f"current_total={math.degrees(current_total_yaw):.2f}도, "
-                        f"desired_total={math.degrees(desired_total_yaw):.2f}도, "
-                        f"waist_cmd={math.degrees(waist_cmd):.2f}도, "
-                        f"neck_target={math.degrees(neck_target_yaw):.2f}도, "
-                        f"neck_current={math.degrees(self.current_yaw_rad):.2f}도"
-                    )
-                    self._last_tracking_log_time = time.monotonic()
+                # 초기 추적 디버깅 로그 (1.5초 동안 0.1초마다 출력)
+                if is_initial_tracking:
+                    if not hasattr(self, '_last_initial_tracking_log_time') or time.monotonic() - self._last_initial_tracking_log_time > 0.1:
+                        elapsed = current_time_check - self.tracking_start_time
+                        self.get_logger().info(
+                            f"[초기 추적 {elapsed:.2f}초] "
+                            f"relative_yaw={math.degrees(relative_yaw_rad):.2f}도, "
+                            f"neck_target={math.degrees(neck_target_yaw):.2f}도, "
+                            f"neck_current={math.degrees(self.current_yaw_rad):.2f}도, "
+                            f"neck_delta={math.degrees(neck_target_yaw - self.current_yaw_rad):.2f}도, "
+                            f"waist_current={math.degrees(self.current_waist_yaw_rad):.2f}도"
+                        )
+                        self._last_initial_tracking_log_time = time.monotonic()
                 
                 return yaw_rad, pitch_rad
             
@@ -763,42 +876,31 @@ class GazeControllerNode(Node):
                 self.target_yaw_rad = self.search_target_yaw
                 self.target_pitch_rad = command_pitch_rad
                 
-                # TRACKING과 동일한 전체 시선각 기반 제어 알고리즘 적용
-                # search_target_yaw는 전체 시선각 목표로 해석
+                # search_target_yaw는 전체 시선각 목표로 해석 (스무딩 없이)
                 raw_desired_total_yaw = self.search_target_yaw
+                raw_desired_total_yaw = max(math.radians(-65.0), min(math.radians(65.0), raw_desired_total_yaw))
                 
-                # 전체 시선각 스무딩 (SEARCHING도 부드럽지만 30% 더 빠르게)
-                if self.last_desired_total_yaw is not None:
-                    # SEARCHING에서는 부드럽지만 더 빠르게 (0.3 -> 0.45: 50% 증가, 약 30% 더 빠른 도달)
-                    desired_total_yaw = self.last_desired_total_yaw + 0.45 * (raw_desired_total_yaw - self.last_desired_total_yaw)
-                else:
-                    desired_total_yaw = raw_desired_total_yaw
-                    self.last_desired_total_yaw = desired_total_yaw
-                
-                # 허리 각도 제한 (탐색 범위 제한)
-                desired_total_yaw = max(math.radians(-65.0), min(math.radians(65.0), desired_total_yaw))
-                
-                # 허리 제어: 전체 시선각을 추종 (SEARCHING 모드: 느리게)
-                waist_cmd = self._waist_follow_total(desired_total_yaw, searching_mode=True)
-                
-                # 전체 시선각 업데이트
-                self.last_desired_total_yaw = desired_total_yaw
-                
-                # 목 제어: 잔여분만 담당 (전체 시선각 - 허리 각도)
-                neck_target_yaw = desired_total_yaw - waist_cmd
-                
-                # 목 각도 안전 범위 클램프
+                # ===== 목 중심 제어 (목이 먼저 빠르게 스캔) =====
+                # 목 타겟: raw_total_target_yaw - current_waist_yaw (스무딩 없이, rate limit만)
+                neck_target_yaw = raw_desired_total_yaw - self.current_waist_yaw_rad
                 neck_target_yaw = max(self.yaw_min, min(self.yaw_max, neck_target_yaw))
                 
-                # 목 목표 각도 스무딩 (SEARCHING에서도 부드럽지만 30% 더 빠르게)
+                # Rate limit만 적용 (스무딩 제거)
                 if self.last_neck_target_yaw is not None:
+                    max_neck_delta = math.radians(12.0)
                     neck_delta = neck_target_yaw - self.last_neck_target_yaw
-                    max_neck_delta = math.radians(8.0)  # SEARCHING에서는 더 느리게
                     neck_delta = max(-max_neck_delta, min(max_neck_delta, neck_delta))
-                    # 0.5 -> 0.65: 30% 더 빠른 도달
-                    neck_target_yaw = self.last_neck_target_yaw + 0.65 * neck_delta  # 스무딩 적용
+                    neck_target_yaw = self.last_neck_target_yaw + 0.95 * neck_delta  # 5% 스무딩 적용
                 else:
                     self.last_neck_target_yaw = neck_target_yaw
+                
+                # ===== 허리 제어 (목 각도를 천천히 회수) =====
+                # 허리 타겟: raw_total_target_yaw - current_neck_yaw (천천히 추종)
+                waist_target_yaw = raw_desired_total_yaw - self.current_yaw_rad
+                waist_target_yaw = max(self.waist_yaw_min, min(self.waist_yaw_max, waist_target_yaw))
+                
+                # 허리 제어: 목 각도를 천천히 회수하도록 추종
+                waist_cmd = self._waist_follow_target(waist_target_yaw, searching_mode=True)
                 
                 # Pitch는 기존 방식 유지
                 target_pitch_rad = command_pitch_rad
@@ -817,13 +919,13 @@ class GazeControllerNode(Node):
                 # 디버깅 로그 (1초마다 출력)
                 if not hasattr(self, '_last_search_log_time') or time.monotonic() - self._last_search_log_time > 1.0:
                     self.get_logger().info(
-                        f"SEARCHING: 전체시선각 기반 제어 | "
-                        f"desired_total={math.degrees(desired_total_yaw):.2f}도, "
-                        f"waist_cmd={math.degrees(waist_cmd):.2f}도, "
-                        f"neck_target={math.degrees(neck_target_yaw):.2f}도, "
-                        f"neck_current={math.degrees(self.current_yaw_rad):.2f}도, "
+                        f"SEARCHING: 목선행/허리추종 구조 | "
+                        f"raw_total_target={math.degrees(raw_desired_total_yaw):.2f}도, "
                         f"waist_current={math.degrees(self.current_waist_yaw_rad):.2f}도, "
-                        f"current_total={math.degrees(self.current_waist_yaw_rad + self.current_yaw_rad):.2f}도, "
+                        f"waist_target={math.degrees(waist_target_yaw):.2f}도, "
+                        f"waist_cmd={math.degrees(waist_cmd):.2f}도, "
+                        f"neck_current={math.degrees(self.current_yaw_rad):.2f}도, "
+                        f"neck_target={math.degrees(neck_target_yaw):.2f}도, "
                         f"phase={self.search_phase}"
                     )
                     self._last_search_log_time = time.monotonic()
@@ -855,6 +957,7 @@ class GazeControllerNode(Node):
     def _reset_waist_pid(self):
         """허리 제어 상태 초기화"""
         self.last_waist_command = None  # None으로 설정하여 다음 호출 시 현재 위치로 자동 초기화
+        self.last_sent_waist_command = None  # 추가 스무딩용 변수도 초기화
     
     def _reset_hello_check(self):
         """HELLO 전환 체크 상태 초기화"""
@@ -898,7 +1001,7 @@ class GazeControllerNode(Node):
                     f"위치차이={position_diff_deg:.2f}도"
                 )
             
-            # 3초 유지되면 Depth 값에 따라 HELLO 또는 HANDSHAKE로 전환
+            # 1.6초 유지되면 Depth 값에 따라 HELLO 또는 HANDSHAKE로 전환
             if elapsed_time >= self.hello_stable_duration:
                 # 로그용 값 저장
                 ref_yaw_deg = math.degrees(self.hello_reference_yaw_rad)
