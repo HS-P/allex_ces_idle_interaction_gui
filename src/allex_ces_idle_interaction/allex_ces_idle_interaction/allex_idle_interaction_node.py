@@ -100,7 +100,7 @@ class RoutineController:
             self.node.get_logger().info("STATUS::RUN 명령 발행 (READY 상태 대기)")
             
             # READY 상태 확인 대기 (일정 시간 대기)
-            time.sleep(0.5)  # READY 상태로 전환될 시간 확보
+            time.sleep(0.7)  # READY 상태로 전환될 시간 확보 (RESET 완료 대기)
         
         # 4. 하트 루틴 시작
         command = f"{self.robot_name}::ROUTINE::idling_heart_rt::START"
@@ -141,7 +141,7 @@ class RoutineController:
             self.node.get_logger().info("STATUS::RUN 명령 발행 (READY 상태 대기)")
             
             # READY 상태 확인 대기 (일정 시간 대기)
-            time.sleep(0.5)  # READY 상태로 전환될 시간 확보
+            time.sleep(0.7)  # READY 상태로 전환될 시간 확보 (RESET 완료 대기)
         
         # 4. 악수 루틴 시작
         command = f"{self.robot_name}::ROUTINE::idling_handshake_rt::START"
@@ -550,13 +550,19 @@ class AllexIdleInteractionNode(Node):
                     tracker_command['target_id'] = target_id
                     self.get_logger().info(f"타겟 변경: {target_id}")
             
+            elif cmd_type == 'set_parameters':
+                # 파라미터 설정 명령은 Controller로만 전달
+                parameters = command.get('parameters', {})
+                controller_command['parameters'] = parameters
+                self.get_logger().info(f"파라미터 설정 요청: {parameters}")
+            
             # Tracker에 명령 전송
             tracker_msg = String()
             tracker_msg.data = json.dumps(tracker_command)
             self.tracker_control_publisher.publish(tracker_msg)
             
-            # Controller에 명령 전송 (필요한 경우)
-            if cmd_type in ['run', 'stop']:
+            # Controller에 명령 전송 (run, stop, set_parameters)
+            if cmd_type in ['run', 'stop', 'set_parameters']:
                 controller_msg = String()
                 controller_msg.data = json.dumps(controller_command)
                 self.controller_control_publisher.publish(controller_msg)

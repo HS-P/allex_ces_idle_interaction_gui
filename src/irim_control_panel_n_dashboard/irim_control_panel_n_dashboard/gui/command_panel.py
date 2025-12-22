@@ -41,19 +41,6 @@ def get_humanoid_control_asset_files_via_ssh(
     비밀번호 인증을 위해 sshpass 사용 (기본 password="11").
     sudo apt-get install sshpass 로 설치 필요.
     """
-    # sshpass 설치 여부 확인
-    sshpass_check = subprocess.run(
-        ["which", "sshpass"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True
-    )
-    if sshpass_check.returncode != 0:
-        raise RuntimeError(
-            "sshpass가 설치되어 있지 않습니다. "
-            "다음 명령으로 설치하세요: sudo apt-get install sshpass"
-        )
-    
     remote_dir = FILE_DIR_AT_REMOTE
     ssh_target = f"{remote_user}@{remote_host}"
 
@@ -72,14 +59,7 @@ def get_humanoid_control_asset_files_via_ssh(
         timeout=3   # [CHANGE] 1s -> 3s (불안정 완화)
     )
     if proc.returncode != 0:
-        error_msg = proc.stderr.strip()
-        if "sshpass" in error_msg or "No such file" in error_msg:
-            raise RuntimeError(
-                f"sshpass 실행 실패: {error_msg}\n"
-                "sshpass가 설치되어 있지 않습니다. "
-                "다음 명령으로 설치하세요: sudo apt-get install sshpass"
-            )
-        raise RuntimeError(f"SSH 에러 ({error_msg})")
+        raise RuntimeError(f"SSH 에러 ({proc.stderr.strip()})")
 
     files = [
         os.path.join(remote_dir, fn.strip())
@@ -101,19 +81,6 @@ def get_routine_names_via_ssh(
     SSH를 통해 remote_file(routine_names.txt)을 읽어
     줄 단위로 잘라서 루틴 이름 리스트를 반환한다.
     """
-    # sshpass 설치 여부 확인
-    sshpass_check = subprocess.run(
-        ["which", "sshpass"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True
-    )
-    if sshpass_check.returncode != 0:
-        raise RuntimeError(
-            "sshpass가 설치되어 있지 않습니다. "
-            "다음 명령으로 설치하세요: sudo apt-get install sshpass"
-        )
-    
     ssh_target = f"{remote_user}@{remote_host}"
     cmd = [
         "sshpass", "-p", password,
@@ -130,14 +97,7 @@ def get_routine_names_via_ssh(
         timeout=3,
     )
     if proc.returncode != 0:
-        error_msg = proc.stderr.strip()
-        if "sshpass" in error_msg or "No such file" in error_msg:
-            raise RuntimeError(
-                f"sshpass 실행 실패: {error_msg}\n"
-                "sshpass가 설치되어 있지 않습니다. "
-                "다음 명령으로 설치하세요: sudo apt-get install sshpass"
-            )
-        raise RuntimeError(f"SSH 에러 ({error_msg})")
+        raise RuntimeError(f"SSH 에러 ({proc.stderr.strip()})")
 
     names = [
         line.strip()

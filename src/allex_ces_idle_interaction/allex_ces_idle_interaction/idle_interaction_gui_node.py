@@ -25,7 +25,7 @@ from std_msgs.msg import String, Float64MultiArray
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QComboBox, QGroupBox, QGridLayout, QScrollArea,
-    QProgressBar
+    QProgressBar, QLineEdit, QDoubleSpinBox, QStackedWidget
 )
 from PySide6.QtCore import Qt, QTimer, Signal, QObject, QCoreApplication
 from PySide6.QtGui import QMouseEvent
@@ -428,10 +428,19 @@ class GuiNode(Node, QMainWindow):
         self.run_btn.clicked.connect(self.on_run_clicked)
         idle_control_layout.addWidget(self.run_btn)
         
+        # Parameter 버튼 추가
+        self.parameter_btn = QPushButton("Parameter")
+        self.parameter_btn.setCheckable(True)
+        self.parameter_btn.setChecked(False)
+        self.parameter_btn.setMinimumHeight(40)
+        self.parameter_btn.setStyleSheet("font-size: 12pt; font-weight: bold; background-color: #E0E0E0; color: black;")
+        self.parameter_btn.clicked.connect(self.on_parameter_clicked)
+        idle_control_layout.addWidget(self.parameter_btn)
+        
         self.idle_control_group.setLayout(idle_control_layout)
         left_layout.addWidget(self.idle_control_group)
         
-        # 상태 제어 그룹 (Manual 모드용)
+        # 상태 제어 그룹 (Manual 모드용) - 먼저 생성해야 parameter_stack에서 참조 가능
         self.state_group = QGroupBox("상태 제어 (Manual 모드)")
         state_layout = QVBoxLayout()
         
@@ -448,7 +457,133 @@ class GuiNode(Node, QMainWindow):
         state_select_layout.addWidget(self.state_combo)
         state_layout.addLayout(state_select_layout)
         self.state_group.setLayout(state_layout)
-        left_layout.addWidget(self.state_group)
+        
+        # 파라미터 제어 섹션 (스택 위젯으로 전환)
+        self.parameter_stack = QStackedWidget()
+        
+        # 기본 제어 패널 (기존 state_group)
+        default_widget = QWidget()
+        default_layout = QVBoxLayout()
+        default_layout.addWidget(self.state_group)
+        default_widget.setLayout(default_layout)
+        self.parameter_stack.addWidget(default_widget)
+        
+        # 파라미터 제어 패널
+        parameter_widget = QWidget()
+        parameter_layout = QVBoxLayout()
+        
+        # 파라미터 제어 그룹
+        param_control_group = QGroupBox("파라미터 제어")
+        param_layout = QGridLayout()
+        
+        # PID 파라미터
+        param_layout.addWidget(QLabel("PID 파라미터:"), 0, 0)
+        
+        param_layout.addWidget(QLabel("KP Yaw:"), 1, 0)
+        self.kp_yaw_spin = QDoubleSpinBox()
+        self.kp_yaw_spin.setRange(0.0, 10.0)
+        self.kp_yaw_spin.setSingleStep(0.1)
+        self.kp_yaw_spin.setValue(1.1)
+        self.kp_yaw_spin.setDecimals(2)
+        param_layout.addWidget(self.kp_yaw_spin, 1, 1)
+        
+        param_layout.addWidget(QLabel("KI Yaw:"), 1, 2)
+        self.ki_yaw_spin = QDoubleSpinBox()
+        self.ki_yaw_spin.setRange(0.0, 1.0)
+        self.ki_yaw_spin.setSingleStep(0.01)
+        self.ki_yaw_spin.setValue(0.02)
+        self.ki_yaw_spin.setDecimals(3)
+        param_layout.addWidget(self.ki_yaw_spin, 1, 3)
+        
+        param_layout.addWidget(QLabel("KP Pitch:"), 2, 0)
+        self.kp_pitch_spin = QDoubleSpinBox()
+        self.kp_pitch_spin.setRange(0.0, 10.0)
+        self.kp_pitch_spin.setSingleStep(0.1)
+        self.kp_pitch_spin.setValue(1.2)
+        self.kp_pitch_spin.setDecimals(2)
+        param_layout.addWidget(self.kp_pitch_spin, 2, 1)
+        
+        param_layout.addWidget(QLabel("KI Pitch:"), 2, 2)
+        self.ki_pitch_spin = QDoubleSpinBox()
+        self.ki_pitch_spin.setRange(0.0, 1.0)
+        self.ki_pitch_spin.setSingleStep(0.01)
+        self.ki_pitch_spin.setValue(0.12)
+        self.ki_pitch_spin.setDecimals(3)
+        param_layout.addWidget(self.ki_pitch_spin, 2, 3)
+        
+        # 스무딩 파라미터
+        param_layout.addWidget(QLabel("스무딩 파라미터:"), 3, 0)
+        
+        param_layout.addWidget(QLabel("Total Yaw Alpha:"), 4, 0)
+        self.total_yaw_alpha_spin = QDoubleSpinBox()
+        self.total_yaw_alpha_spin.setRange(0.0, 1.0)
+        self.total_yaw_alpha_spin.setSingleStep(0.05)
+        self.total_yaw_alpha_spin.setValue(0.6)
+        self.total_yaw_alpha_spin.setDecimals(2)
+        param_layout.addWidget(self.total_yaw_alpha_spin, 4, 1)
+        
+        param_layout.addWidget(QLabel("Neck Target Alpha:"), 4, 2)
+        self.neck_target_alpha_spin = QDoubleSpinBox()
+        self.neck_target_alpha_spin.setRange(0.0, 1.0)
+        self.neck_target_alpha_spin.setSingleStep(0.05)
+        self.neck_target_alpha_spin.setValue(0.85)
+        self.neck_target_alpha_spin.setDecimals(2)
+        param_layout.addWidget(self.neck_target_alpha_spin, 4, 3)
+        
+        param_layout.addWidget(QLabel("PID Smoothing Alpha:"), 5, 0)
+        self.pid_smoothing_alpha_spin = QDoubleSpinBox()
+        self.pid_smoothing_alpha_spin.setRange(0.0, 1.0)
+        self.pid_smoothing_alpha_spin.setSingleStep(0.05)
+        self.pid_smoothing_alpha_spin.setValue(0.65)
+        self.pid_smoothing_alpha_spin.setDecimals(2)
+        param_layout.addWidget(self.pid_smoothing_alpha_spin, 5, 1)
+        
+        # 허리 파라미터
+        param_layout.addWidget(QLabel("허리 파라미터:"), 6, 0)
+        
+        param_layout.addWidget(QLabel("Tau Waist:"), 7, 0)
+        self.tau_waist_spin = QDoubleSpinBox()
+        self.tau_waist_spin.setRange(0.1, 5.0)
+        self.tau_waist_spin.setSingleStep(0.1)
+        self.tau_waist_spin.setValue(1.0)
+        self.tau_waist_spin.setDecimals(2)
+        param_layout.addWidget(self.tau_waist_spin, 7, 1)
+        
+        param_layout.addWidget(QLabel("Tau Waist Searching:"), 7, 2)
+        self.tau_waist_searching_spin = QDoubleSpinBox()
+        self.tau_waist_searching_spin.setRange(0.1, 10.0)
+        self.tau_waist_searching_spin.setSingleStep(0.1)
+        self.tau_waist_searching_spin.setValue(2.5)
+        self.tau_waist_searching_spin.setDecimals(2)
+        param_layout.addWidget(self.tau_waist_searching_spin, 7, 3)
+        
+        param_layout.addWidget(QLabel("Max Delta Waist:"), 8, 0)
+        self.max_delta_waist_spin = QDoubleSpinBox()
+        self.max_delta_waist_spin.setRange(0.01, 10.0)
+        self.max_delta_waist_spin.setSingleStep(0.01)
+        self.max_delta_waist_spin.setValue(0.1)
+        self.max_delta_waist_spin.setDecimals(3)
+        param_layout.addWidget(self.max_delta_waist_spin, 8, 1)
+        
+        # 적용 버튼
+        apply_btn = QPushButton("파라미터 적용")
+        apply_btn.setMinimumHeight(40)
+        apply_btn.setStyleSheet("font-size: 12pt; font-weight: bold; background-color: #4CAF50; color: white;")
+        apply_btn.clicked.connect(self.on_parameter_apply)
+        param_layout.addWidget(apply_btn, 9, 0, 1, 4)
+        
+        param_control_group.setLayout(param_layout)
+        parameter_layout.addWidget(param_control_group)
+        
+        # 스크롤 영역 추가 (파라미터가 많을 경우)
+        scroll_area = QScrollArea()
+        scroll_area.setWidget(parameter_widget)
+        scroll_area.setWidgetResizable(True)
+        parameter_widget.setLayout(parameter_layout)
+        
+        self.parameter_stack.addWidget(scroll_area)
+        
+        left_layout.addWidget(self.parameter_stack)
         
         top_layout.addWidget(left_panel, 1)
         
@@ -709,6 +844,39 @@ class GuiNode(Node, QMainWindow):
             })
         
         self.signals.mode_changed.emit(manual)
+    
+    def on_parameter_clicked(self):
+        """Parameter 버튼 클릭 이벤트 - 파라미터 제어 패널 전환"""
+        if self.parameter_btn.isChecked():
+            # Parameter 모드: 파라미터 제어 패널 표시
+            self.parameter_stack.setCurrentIndex(1)
+            self.parameter_btn.setStyleSheet("font-size: 12pt; font-weight: bold; background-color: #90EE90; color: black;")
+            self.get_logger().info("[GUI] 파라미터 제어 모드 활성화")
+        else:
+            # 기본 모드: 상태 제어 패널 표시
+            self.parameter_stack.setCurrentIndex(0)
+            self.parameter_btn.setStyleSheet("font-size: 12pt; font-weight: bold; background-color: #E0E0E0; color: black;")
+            self.get_logger().info("[GUI] 기본 제어 모드로 복귀")
+    
+    def on_parameter_apply(self):
+        """파라미터 적용 버튼 클릭 이벤트"""
+        params = {
+            'type': 'set_parameters',
+            'parameters': {
+                'kp_yaw': self.kp_yaw_spin.value(),
+                'ki_yaw': self.ki_yaw_spin.value(),
+                'kp_pitch': self.kp_pitch_spin.value(),
+                'ki_pitch': self.ki_pitch_spin.value(),
+                'total_yaw_smoothing_alpha': self.total_yaw_alpha_spin.value(),
+                'neck_target_alpha': self.neck_target_alpha_spin.value(),
+                'pid_smoothing_alpha': self.pid_smoothing_alpha_spin.value(),
+                'tau_waist': self.tau_waist_spin.value(),
+                'tau_waist_searching': self.tau_waist_searching_spin.value(),
+                'max_delta_waist': self.max_delta_waist_spin.value()
+            }
+        }
+        self._send_manual_control(params)
+        self.get_logger().info(f"[GUI] 파라미터 적용 요청 전송: {params['parameters']}")
     
     def on_state_changed(self, state_text: str):
         """Manual 모드에서 State 변경"""
