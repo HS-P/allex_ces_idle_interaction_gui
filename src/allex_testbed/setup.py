@@ -32,7 +32,9 @@ setup(
     maintainer_email='yeah2@todo.todo',
     description='ALLEX 얼굴/허리 제어 테스트베드 - PID 튜닝 및 알고리즘 테스트',
     license='TODO: License declaration',
-    tests_require=['pytest'],
+    extras_require={
+        'test': ['pytest'],
+    },
     entry_points={
         'console_scripts': [
             'gaze_controller_testbed_node = allex_testbed.gaze_controller_testbed_node:main',

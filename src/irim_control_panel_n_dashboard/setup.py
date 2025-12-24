@@ -17,7 +17,9 @@ setup(
     maintainer_email='yeah@todo.todo',
     description='TODO: Package description',
     license='TODO: License declaration',
-    tests_require=['pytest'],
+    extras_require={
+        'test': ['pytest'],
+    },
     entry_points={
         'console_scripts': [
             'control_panel_main = irim_control_panel_n_dashboard.control_panel_main:main',

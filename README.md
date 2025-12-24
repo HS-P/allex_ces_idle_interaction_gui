@@ -24,6 +24,32 @@ colcon build --symlink-install
 source install/setup.bash
 ```
 
+### 빌드 오류 해결
+
+#### `--editable` 옵션 오류
+만약 `error: option --editable not recognized` 오류가 발생하면:
+```bash
+# setuptools 업그레이드
+pip install --upgrade setuptools
+
+# 또는 환경 변수 정리 후 재빌드
+unset AMENT_PREFIX_PATH
+unset CMAKE_PREFIX_PATH
+colcon build --symlink-install
+```
+
+#### 경로 경고 해결
+`AMENT_PREFIX_PATH` 또는 `CMAKE_PREFIX_PATH`에 존재하지 않는 경로가 포함되어 있으면:
+```bash
+# 환경 변수 확인
+echo $AMENT_PREFIX_PATH
+echo $CMAKE_PREFIX_PATH
+
+# 존재하지 않는 경로 제거 (예시)
+export AMENT_PREFIX_PATH=$(echo $AMENT_PREFIX_PATH | tr ':' '\n' | grep -v '/home/mars/allex_ces_idle_interaction' | tr '\n' ':' | sed 's/:$//')
+export CMAKE_PREFIX_PATH=$(echo $CMAKE_PREFIX_PATH | tr ':' '\n' | grep -v '/home/mars/allex_ces_idle_interaction' | tr '\n' ':' | sed 's/:$//')
+```
+
 ## 실행 방법
 
 ### 방법 1: 수동 실행
