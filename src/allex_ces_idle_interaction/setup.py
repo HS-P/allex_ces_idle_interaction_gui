@@ -44,9 +44,6 @@ setup(
     maintainer_email='yeah2@todo.todo',
     description='Person Tracking Control System',
     license='TODO: License declaration',
-    extras_require={
-        'test': ['pytest'],
-    },
     entry_points={
         'console_scripts': [
             'allex_idle_interaction_node = allex_ces_idle_interaction.allex_idle_interaction_node:main',
