@@ -33,7 +33,7 @@ TargetInfo = namedtuple('TargetInfo', [
 
 class TrackingState(Enum):
     """추적 상태"""
-    IDLE = "idle"           # 영자세로 돌아가기 (10초 동안 아무것도 안 함)
+    IDLE = "idle"           # 영자세로 돌아가기 (5초 동안 아무것도 안 함, 이후 자동으로 WAITING 전이)
     WAITING = "waiting"     # 타겟 찾기 (기존 IDLE의 타겟 찾기 로직)
     TRACKING = "tracking"   # 추적 중
     LOST = "lost"          # 추적 대상 놓침 (잠시 대기)
@@ -195,8 +195,8 @@ class TrackingFSMNode(Node):
         self.is_running = False
         
         # IDLE 상태 타이머 (영자세로 돌아가기만 하는 시간)
-        self.idle_start_time: Optional[float] = None  # IDLE 상태 진입 시간
-        self.idle_duration = 10.0  # IDLE 상태 유지 시간 (초) - 10초 동안 영자세로 돌아가기만
+        self.idle_start_time: Optional[float] = None  # IDLE 상태 진입 시간 또는 타겟 발견 시간
+        self.idle_duration = 5.0  # IDLE 상태 유지 시간 (초) - 타겟 발견 후 5초 후 WAITING 전이
         
         # 성능 모니터링
         self.frame_count = 0
@@ -355,8 +355,9 @@ class TrackingFSMNode(Node):
             )
             return [], target_info
         
-        # 타겟이 존재하면 상태 업데이트 (HELLO/HANDSHAKE 상태에서는 전환하지 않음)
-        if target_exists and self.state != TrackingState.HELLO and self.state != TrackingState.HANDSHAKE:
+        # 타겟이 존재하면 상태 업데이트 (HELLO/HANDSHAKE/IDLE 상태에서는 전환하지 않음)
+        # IDLE 상태는 시간 기반으로 자동 전이하므로 타겟 인식으로 전환하지 않음
+        if target_exists and self.state != TrackingState.HELLO and self.state != TrackingState.HANDSHAKE and self.state != TrackingState.IDLE:
             if self.state != TrackingState.TRACKING:
                 self.state = TrackingState.TRACKING
             self.lost_frames = 0
@@ -365,19 +366,41 @@ class TrackingFSMNode(Node):
         if not self.manual_mode:
             match self.state:
                 case TrackingState.IDLE:
-                    # IDLE 상태: 영자세로 돌아가기만 함 (10초 동안 아무것도 안 함)
-                    # IDLE 진입 시간 초기화 (아직 초기화되지 않았으면)
-                    if self.idle_start_time is None:
-                        self.idle_start_time = current_time
-                        self.get_logger().info(f"IDLE 상태 진입: {self.idle_duration}초 동안 영자세로 돌아가기만 수행")
-                    
-                    # 10초가 지나면 WAITING으로 전이
-                    elapsed_time = current_time - self.idle_start_time
-                    if elapsed_time >= self.idle_duration:
-                        self.state = TrackingState.WAITING
+                    # IDLE 상태: 타겟을 찾으면 그 시점부터 5초 후 WAITING으로 전이
+                    # 타겟이 발견되면 타이머 시작
+                    if detections and len(detections) > 0:
+                        # 타겟 발견 (detection이 있으면)
+                        if self.idle_start_time is None:
+                            self.idle_start_time = current_time
+                            self.get_logger().info(f"[IDLE] 타겟 발견: 시작 시간={current_time:.3f}, {self.idle_duration}초 후 WAITING으로 자동 전이 예정")
+                    elif self.idle_start_time is not None:
+                        # 타겟이 사라지면 타이머 리셋
                         self.idle_start_time = None
-                        self.get_logger().info(f"IDLE -> WAITING 전이: {self.idle_duration}초 경과")
-                    # IDLE 상태에서는 타겟 찾기 하지 않음 (영자세로 돌아가기만)
+                        self.get_logger().debug("[IDLE] 타겟 사라짐: 타이머 리셋")
+                    
+                    # 타겟 발견 후 5초가 지나면 자동으로 WAITING으로 전이
+                    if self.idle_start_time is not None:
+                        elapsed_time = current_time - self.idle_start_time
+                        
+                        # 디버깅: 1초마다 경과 시간 로그
+                        if not hasattr(self, '_last_idle_log_time') or current_time - self._last_idle_log_time >= 1.0:
+                            remaining_time = self.idle_duration - elapsed_time
+                            self.get_logger().info(
+                                f"[IDLE] 시간 체크: 경과={elapsed_time:.2f}초 / 목표={self.idle_duration}초, "
+                                f"남은 시간={remaining_time:.2f}초"
+                            )
+                            self._last_idle_log_time = current_time
+                        
+                        if elapsed_time >= self.idle_duration:
+                            self.state = TrackingState.WAITING
+                            actual_elapsed = current_time - self.idle_start_time
+                            self.idle_start_time = None
+                            if hasattr(self, '_last_idle_log_time'):
+                                delattr(self, '_last_idle_log_time')
+                            self.get_logger().info(
+                                f"[IDLE -> WAITING] 자동 전이 완료: 타겟 발견 후 {actual_elapsed:.3f}초 경과"
+                            )
+                    # IDLE 상태에서는 타겟 찾기 하지 않음 (영자세로 돌아가기만, 타겟 발견 후 시간 기반 자동 전이)
                 
                 case TrackingState.WAITING:
                     # WAITING 상태: 타겟 찾기 (기존 IDLE의 타겟 찾기 로직)
@@ -610,6 +633,7 @@ class TrackingFSMNode(Node):
                                                 f"(총 {len(self.hello_done_track_ids)}개 ID, 이제 타겟으로 선택되지 않음)"
                                             )
                                         
+                                        # 타겟이 없어도 SEARCHING으로 전환 (상대방이 사라진 경우 대응)
                                         self.state = TrackingState.SEARCHING
                                         self.target_track_id = None
                                         self.target_explicitly_set = False
@@ -704,6 +728,7 @@ class TrackingFSMNode(Node):
                                                 f"(총 {len(self.hello_done_track_ids)}개 ID, 이제 타겟으로 선택되지 않음)"
                                             )
                                         
+                                        # 타겟이 없어도 SEARCHING으로 전환 (상대방이 사라진 경우 대응)
                                         self.state = TrackingState.SEARCHING
                                         self.target_track_id = None
                                         self.target_explicitly_set = False
@@ -722,11 +747,41 @@ class TrackingFSMNode(Node):
                                             f"종료 후 {time_since_stopped:.2f}초 < {self.routine_stopped_confirmation_time}초"
                                         )
                                 else:
-                                    # 루틴 종료 시간이 아직 기록되지 않음 (최소 대기 시간은 지났지만)
-                                    self.get_logger().debug(
-                                        f"[HANDSHAKE 대기 중] 루틴 종료 시간 미기록, "
-                                        f"current_routine_running={self.current_routine_running}"
-                                    )
+                                    # 루틴 종료 시간이 아직 기록되지 않았지만, 루틴이 비어있고 충분한 시간이 지났으면 SEARCHING으로 전환
+                                    # 루틴이 비어있으면 종료된 것으로 간주하고 전환
+                                    if elapsed_time >= self.handshake_feedback_delay + self.routine_stopped_confirmation_time:
+                                        self.get_logger().info(
+                                            f"[HANDSHAKE 조건 체크] 루틴 종료 시간 미기록이지만 충분한 시간 경과: "
+                                            f"경과={elapsed_time:.2f}초 >= {self.handshake_feedback_delay + self.routine_stopped_confirmation_time}초, "
+                                            f"루틴 실행 중={self.current_routine_running}"
+                                        )
+                                        
+                                        # HANDSHAKE를 한 track_id 저장
+                                        if self.target_track_id is not None:
+                                            self.hello_done_track_ids.add(self.target_track_id)
+                                            self.get_logger().info(
+                                                f"HANDSHAKE 완료 ID 저장: track_id={self.target_track_id} "
+                                                f"(총 {len(self.hello_done_track_ids)}개 ID)"
+                                            )
+                                        
+                                        # SEARCHING으로 전환
+                                        self.state = TrackingState.SEARCHING
+                                        self.target_track_id = None
+                                        self.target_explicitly_set = False
+                                        self.handshake_routine_sent = False
+                                        self.handshake_routine_sent_time = None
+                                        self.current_routine_running = False
+                                        self.routine_stopped_time = None
+                                        self.get_logger().info(
+                                            f"HANDSHAKE 완료: 루틴 비어있음 → SEARCHING 상태로 전환 "
+                                            f"(총 경과 시간: {elapsed_time:.2f}초)"
+                                        )
+                                    else:
+                                        # 루틴 종료 시간이 아직 기록되지 않음 (최소 대기 시간은 지났지만)
+                                        self.get_logger().debug(
+                                            f"[HANDSHAKE 대기 중] 루틴 종료 시간 미기록, "
+                                            f"current_routine_running={self.current_routine_running}"
+                                        )
                             else:
                                 # 루틴이 아직 실행 중인 경우
                                 self.get_logger().info(

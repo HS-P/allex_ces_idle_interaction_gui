@@ -3,439 +3,333 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>사람 추적 시스템 플로우차트</title>
-    <script type="module">
-        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-        mermaid.initialize({ startOnLoad: true, theme: 'default' });
-    </script>
+    <title>ALLEX CES Idle Interaction - System Flowchart</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
+            margin: 20px;
             background-color: #f5f5f5;
         }
-        h1 {
-            color: #333;
-            text-align: center;
-            border-bottom: 3px solid #4CAF50;
-            padding-bottom: 10px;
-        }
-        h2 {
-            color: #555;
-            margin-top: 40px;
-            border-left: 5px solid #4CAF50;
-            padding-left: 15px;
-        }
-        .mermaid {
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
             background-color: white;
-            padding: 20px;
-            margin: 20px 0;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
         }
         .section {
-            margin-bottom: 50px;
+            margin-bottom: 40px;
+        }
+        .section-title {
+            color: #34495e;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .mermaid {
+            text-align: center;
+            background-color: #fafafa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .legend {
+            background-color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .legend h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .legend-item {
+            margin: 8px 0;
+            padding: 5px;
+        }
+        .legend-color {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            margin-right: 10px;
+            vertical-align: middle;
         }
     </style>
 </head>
 <body>
-    <h1>사람 추적 시스템 플로우차트</h1>
+    <div class="container">
+        <h1>ALLEX CES Idle Interaction System</h1>
+        <p class="subtitle">시스템 플로우차트 및 상태 전이 다이어그램</p>
 
-    <div class="section">
-        <h2>1. 전체 시스템 구조</h2>
-        <div class="mermaid">
+        <div class="section">
+            <h2 class="section-title">1. 전체 상태 머신 (FSM)</h2>
+            <div class="mermaid">
 graph TB
-    Start([시작]) --> Init[CameraPublisher 초기화]
-    Init --> Sub[이미지 토픽 구독 설정]
-    Sub --> TrackerInit[TrackerManager 초기화]
-    TrackerInit --> YOLOLoad[YOLO 모델 로드]
-    YOLOLoad --> GPUWarmup{GPU 사용 가능?}
-    GPUWarmup -->|Yes| GPUWarm[GPU 워밍업]
-    GPUWarmup -->|No| CPUReady[CPU 준비 완료]
-    GPUWarm --> Ready[시스템 준비 완료]
-    CPUReady --> Ready
-    Ready --> DisplayThread[화면 표시 스레드 시작]
-    DisplayThread --> Spin[ROS2 Spin 시작]
-    Spin --> Callback[이미지 콜백 대기]
-    Callback --> End([종료])
+    Start([시스템 시작]) --> IDLE[IDLE<br/>영자세 상태]
+    
+    IDLE -->|타겟 발견 후 5초 경과| WAITING[WAITING<br/>타겟 찾기]
+    
+    WAITING -->|타겟 선택| TRACKING[TRACKING<br/>추적 중]
+    
+    TRACKING -->|타겟 놓침| LOST[LOST<br/>타겟 놓침]
+    TRACKING -->|제스처 인식| HELLO[HELLO<br/>인사 제스처]
+    TRACKING -->|제스처 인식| HANDSHAKE[HANDSHAKE<br/>악수 제스처]
+    
+    LOST -->|타겟 재발견| TRACKING
+    LOST -->|lost_frames 초과| SEARCHING[SEARCHING<br/>주변 탐색]
+    
+    SEARCHING -->|새 타겟 선택| TRACKING
+    
+    HELLO -->|루틴 완료| SEARCHING
+    HANDSHAKE -->|루틴 완료| SEARCHING
+    
+    SEARCHING -.->|타겟 없음| SEARCHING
+    
+    style IDLE fill:#e74c3c,stroke:#c0392b,color:#fff
+    style WAITING fill:#f39c12,stroke:#e67e22,color:#fff
+    style TRACKING fill:#27ae60,stroke:#229954,color:#fff
+    style LOST fill:#e67e22,stroke:#d35400,color:#fff
+    style SEARCHING fill:#3498db,stroke:#2980b9,color:#fff
+    style HELLO fill:#9b59b6,stroke:#8e44ad,color:#fff
+    style HANDSHAKE fill:#9b59b6,stroke:#8e44ad,color:#fff
+            </div>
         </div>
-    </div>
 
-    <div class="section">
-        <h2>2. 이미지 콜백 처리 흐름</h2>
-        <div class="mermaid">
+        <div class="section">
+            <h2 class="section-title">2. TRACKING 상태 상세 플로우</h2>
+            <div class="mermaid">
 graph TB
-    Start([이미지 수신]) --> Decode[이미지 디코딩]
-    Decode --> CheckFrame{프레임 유효?}
-    CheckFrame -->|No| Return[반환]
-    CheckFrame -->|Yes| Process[TrackerManager.process 호출]
-    Process --> TrackResult[추적 결과 받기]
-    TrackResult --> LogCheck{5초 경과?}
-    LogCheck -->|Yes| Log[로그 출력]
-    LogCheck -->|No| SkipLog[로그 스킵]
-    Log --> Visualize
-    SkipLog --> Visualize[시각화 준비]
-    Visualize --> QueueCheck{큐 가득참?}
-    QueueCheck -->|Yes| SkipViz[시각화 스킵]
-    QueueCheck -->|No| Draw[프레임에 그리기]
-    Draw --> PutQueue[큐에 추가]
-    PutQueue --> End([완료])
-    SkipViz --> End
+    TRACKING_START[TRACKING 시작] --> CHECK_INITIAL{초기 추적?<br/>0.85초 이내}
+    
+    CHECK_INITIAL -->|Yes| INITIAL_TRACKING[초기 추적 모드<br/>- 목만 움직임<br/>- 허리 고정<br/>- PID 게인: 1.6<br/>- Rate Limit: 20도/프레임]
+    
+    CHECK_INITIAL -->|No| NORMAL_TRACKING[일반 추적 모드<br/>- 목 중심 제어<br/>- 허리 추종<br/>- PID 게인: 1.232<br/>- Rate Limit: 10.752도/프레임]
+    
+    INITIAL_TRACKING --> CALC_TARGET1[목표 각도 계산<br/>neck_target = current_yaw + relative_yaw]
+    NORMAL_TRACKING --> CALC_TARGET2[목표 각도 계산<br/>neck_target = total_yaw - waist_yaw]
+    
+    CALC_TARGET1 --> PID_CONTROL1[PID 제어<br/>초기 게인 적용]
+    CALC_TARGET2 --> PID_CONTROL2[PID 제어<br/>일반 게인 적용]
+    
+    PID_CONTROL1 --> RATE_LIMIT1[Rate Limit<br/>20도/프레임]
+    PID_CONTROL2 --> RATE_LIMIT2[Rate Limit<br/>10.752도/프레임]
+    
+    RATE_LIMIT1 --> SMOOTHING1[스무딩<br/>92% 반영]
+    RATE_LIMIT2 --> SMOOTHING2[스무딩<br/>95% 반영]
+    
+    SMOOTHING1 --> SEND_CMD1[명령 전송<br/>목만]
+    SMOOTHING2 --> SEND_CMD2[명령 전송<br/>목 + 허리]
+    
+    SEND_CMD1 --> CHECK_TARGET1{타겟 존재?}
+    SEND_CMD2 --> CHECK_TARGET2{타겟 존재?}
+    
+    CHECK_TARGET1 -->|Yes| TRACKING_START
+    CHECK_TARGET1 -->|No| LOST_STATE[LOST 상태]
+    CHECK_TARGET2 -->|Yes| TRACKING_START
+    CHECK_TARGET2 -->|No| LOST_STATE
+    
+    style INITIAL_TRACKING fill:#3498db,stroke:#2980b9,color:#fff
+    style NORMAL_TRACKING fill:#27ae60,stroke:#229954,color:#fff
+    style LOST_STATE fill:#e67e22,stroke:#d35400,color:#fff
+            </div>
         </div>
-    </div>
 
-    <div class="section">
-        <h2>3. TrackerManager.process 흐름 (Bot-SORT 기반)</h2>
-        <div class="mermaid">
+        <div class="section">
+            <h2 class="section-title">3. LOST 상태 감속 플로우</h2>
+            <div class="mermaid">
 graph TB
-    Start([프레임 입력]) --> YOLOTrack[YOLO + Bot-SORT track 실행<br/>persist=True로 상태 유지]
-    YOLOTrack --> Sync[GPU 동기화]
-    Sync --> CheckResults{결과 존재?}
+    LOST_ENTER[LOST 상태 진입] --> SAVE_POSITION[현재 위치 저장<br/>lost_start_yaw = current_yaw<br/>lost_start_pitch = current_pitch]
     
-    CheckResults -->|없음| NoResults[감지 없음 처리]
-    CheckResults -->|있음| CheckBoxes{박스 정보 있음?}
+    SAVE_POSITION --> START_TIMER[감속 타이머 시작<br/>lost_start_time]
     
-    CheckBoxes -->|없음| NoBoxes[박스 없음 처리]
-    CheckBoxes -->|있음| ExtractData[ID, 좌표, 신뢰도 추출]
+    START_TIMER --> CHECK_TIME{경과 시간<br/>< 1.0초?}
     
-    ExtractData --> CreateObjects[모든 추적 객체 생성]
-    CreateObjects --> StateMachine[상태 머신 처리]
+    CHECK_TIME -->|Yes| DECELERATE[선형 감속<br/>target = start_position<br/>현재 위치 유지]
     
-    NoResults --> StateUpdate1[상태 업데이트]
-    NoBoxes --> StateUpdate2[상태 업데이트]
-    StateUpdate1 --> ReturnEmpty1[빈 리스트 반환]
-    StateUpdate2 --> ReturnEmpty2[빈 리스트 반환]
+    DECELERATE --> PID_CONTROL[PID 제어<br/>일반 게인]
     
-    StateMachine --> AssignState[상태에 따라 객체 상태 할당]
-    AssignState --> CheckTarget{추적 대상?}
-    CheckTarget -->|Yes| SetTarget[state='target'<br/>붉은색 표시]
-    CheckTarget -->|No| SetSystem[state=시스템 상태]
+    PID_CONTROL --> SEND_CMD[명령 전송<br/>목 + 허리]
     
-    SetTarget --> ReturnResult[추적 결과 반환]
-    SetSystem --> ReturnResult
-    ReturnEmpty1 --> End([완료])
-    ReturnEmpty2 --> End
-    ReturnResult --> End
+    SEND_CMD --> CHECK_TIME
+    
+    CHECK_TIME -->|No| STOP[감속 완료<br/>현재 위치 유지]
+    
+    STOP --> SEARCHING_STATE[SEARCHING 상태로 전환]
+    
+    style LOST_ENTER fill:#e67e22,stroke:#d35400,color:#fff
+    style DECELERATE fill:#f39c12,stroke:#e67e22,color:#fff
+    style STOP fill:#95a5a6,stroke:#7f8c8d,color:#fff
+    style SEARCHING_STATE fill:#3498db,stroke:#2980b9,color:#fff
+            </div>
         </div>
-    </div>
 
-    <div class="section">
-        <h2>4. Bot-SORT 추적 알고리즘 (내부 처리)</h2>
-        <div class="mermaid">
+        <div class="section">
+            <h2 class="section-title">4. SEARCHING 상태 플로우</h2>
+            <div class="mermaid">
 graph TB
-    Start([YOLO 감지 결과]) --> BotSort[Bot-SORT Tracker]
+    SEARCH_START[SEARCHING 시작] --> SET_PITCH[목 Pitch 설정<br/>26도 기울임]
     
-    BotSort --> Kalman[Kalman Filter<br/>위치 및 속도 예측]
-    BotSort --> Hungarian[Hungarian Algorithm<br/>최적 매칭]
-    BotSort --> GMC[Global Motion Compensation<br/>카메라 움직임 보정]
+    SET_PITCH --> PHASE_CHECK{스캔 단계}
     
-    Kalman --> Match[감지-트랙 매칭]
-    Hungarian --> Match
-    GMC --> Match
+    PHASE_CHECK -->|Phase 0| SCAN_RIGHT[우측 스캔<br/>+40도 범위]
+    PHASE_CHECK -->|Phase 1| SCAN_LEFT[좌측 스캔<br/>-40도 범위]
     
-    Match --> UpdateTracks[트랙 업데이트]
-    Match --> CreateTracks[새 트랙 생성]
-    Match --> RemoveTracks[오래된 트랙 제거]
+    SCAN_RIGHT --> CHECK_TARGET{타겟 발견?}
+    SCAN_LEFT --> CHECK_TARGET
     
-    UpdateTracks --> AssignID[Track ID 할당]
-    CreateTracks --> AssignID
-    RemoveTracks --> AssignID
+    CHECK_TARGET -->|Yes| SELECT_TARGET[타겟 선택<br/>HELLO 완료 ID 제외]
     
-    AssignID --> Return[추적 결과 반환]
+    SELECT_TARGET --> TRACKING_STATE[TRACKING 상태로 전환]
     
-    note right of BotSort
-        Bot-SORT는 내부적으로
-        Kalman Filter와 Hungarian
-        알고리즘을 사용하여
-        프레임 간 객체 매칭 수행
-    end note
+    CHECK_TARGET -->|No| CONTINUE_SCAN[스캔 계속]
+    
+    CONTINUE_SCAN --> PHASE_CHECK
+    
+    style SEARCH_START fill:#3498db,stroke:#2980b9,color:#fff
+    style SCAN_RIGHT fill:#3498db,stroke:#2980b9,color:#fff
+    style SCAN_LEFT fill:#3498db,stroke:#2980b9,color:#fff
+    style TRACKING_STATE fill:#27ae60,stroke:#229954,color:#fff
+            </div>
         </div>
-    </div>
 
-    <div class="section">
-        <h2>5. 화면 표시 스레드 흐름</h2>
-        <div class="mermaid">
+        <div class="section">
+            <h2 class="section-title">5. HELLO/HANDSHAKE 루틴 플로우</h2>
+            <div class="mermaid">
 graph TB
-    Start([스레드 시작]) --> CreateWindow[창 생성]
-    CreateWindow --> Loop[무한 루프]
-    Loop --> CheckRunning{실행 중?}
-    CheckRunning -->|No| DestroyWindow[창 닫기]
-    CheckRunning -->|Yes| GetQueue[큐에서 프레임 가져오기]
-    GetQueue --> QueueEmpty{큐 비어있음?}
-    QueueEmpty -->|Yes| Wait[대기]
-    QueueEmpty -->|No| ShowFrame[화면에 표시]
-    Wait --> Loop
-    ShowFrame --> CheckKey[키 입력 확인]
-    CheckKey --> KeyQ{ESC 또는 'q'?}
-    KeyQ -->|Yes| StopRunning[실행 중지]
-    KeyQ -->|No| Loop
-    StopRunning --> DestroyWindow
-    DestroyWindow --> End([종료])
+    GESTURE_DETECT[제스처 인식] --> CHECK_TYPE{제스처 타입}
+    
+    CHECK_TYPE -->|인사| HELLO_STATE[HELLO 상태]
+    CHECK_TYPE -->|악수| HANDSHAKE_STATE[HANDSHAKE 상태]
+    
+    HELLO_STATE --> SEND_ROUTINE1[루틴 발행<br/>hello_routine_sent_time 기록]
+    HANDSHAKE_STATE --> SEND_ROUTINE2[루틴 발행<br/>handshake_routine_sent_time 기록]
+    
+    SEND_ROUTINE1 --> WAIT_TIME1{최소 대기 시간<br/>3.0초 경과?}
+    SEND_ROUTINE2 --> WAIT_TIME2{최소 대기 시간<br/>경과?}
+    
+    WAIT_TIME1 -->|No| WAIT_TIME1
+    WAIT_TIME2 -->|No| WAIT_TIME2
+    
+    WAIT_TIME1 -->|Yes| CHECK_ROUTINE1{루틴 종료?<br/>current_routine_running = False}
+    WAIT_TIME2 -->|Yes| CHECK_ROUTINE2{루틴 종료?<br/>current_routine_running = False}
+    
+    CHECK_ROUTINE1 -->|No| WAIT_TIME1
+    CHECK_ROUTINE2 -->|No| WAIT_TIME2
+    
+    CHECK_ROUTINE1 -->|Yes| WAIT_CONFIRM1{추가 확인 시간<br/>0.5초 경과?}
+    CHECK_ROUTINE2 -->|Yes| WAIT_CONFIRM2{추가 확인 시간<br/>0.5초 경과?}
+    
+    WAIT_CONFIRM1 -->|No| WAIT_CONFIRM1
+    WAIT_CONFIRM2 -->|No| WAIT_CONFIRM2
+    
+    WAIT_CONFIRM1 -->|Yes| SAVE_ID1[track_id 저장<br/>hello_done_track_ids]
+    WAIT_CONFIRM2 -->|Yes| SAVE_ID2[track_id 저장<br/>hello_done_track_ids]
+    
+    SAVE_ID1 --> SEARCHING_STATE[SEARCHING 상태로 전환]
+    SAVE_ID2 --> SEARCHING_STATE
+    
+    style HELLO_STATE fill:#9b59b6,stroke:#8e44ad,color:#fff
+    style HANDSHAKE_STATE fill:#9b59b6,stroke:#8e44ad,color:#fff
+    style SEARCHING_STATE fill:#3498db,stroke:#2980b9,color:#fff
+            </div>
         </div>
-    </div>
 
-    <div class="section">
-        <h2>6. 데이터 구조</h2>
-        <div class="mermaid">
-classDiagram
-    class TrackedObject {
-        +int track_id
-        +tuple bbox
-        +tuple centroid
-        +str state
-        +float confidence
-        +int age
-    }
-    
-    class TrackingState {
-        <<enumeration>>
-        IDLE
-        TRACKING
-        LOST
-        SEARCHING
-    }
-    
-    class TrackerManager {
-        -YOLO yolo_model
-        -str tracker_cfg
-        -TrackingState state
-        -int target_track_id
-        -int lost_frames
-        -int max_lost_frames
-        +process(frame) List[TrackedObject]
-        -_find_closest_person(objects, frame_shape) int
-    }
-    
-    class CameraPublisher {
-        -TrackerManager tracker_manager
-        -Queue display_queue
-        -Thread display_thread
-        -int frame_count
-        +image_callback(msg)
-        -_display_worker()
-    }
-    
-    TrackerManager --> TrackedObject : 생성
-    TrackerManager --> TrackingState : 사용
-    CameraPublisher --> TrackerManager : 사용
-        </div>
-    </div>
-
-    <div class="section">
-        <h2>7. Bot-SORT 매칭 알고리즘 (내부 처리)</h2>
-        <div class="mermaid">
-graph TB
-    A[감지 결과] --> B[Kalman Filter 예측]
-    A --> C[IOU 계산]
-    A --> D[ReID 특징 비교]
-    
-    B --> E[예측 위치와<br/>실제 위치 거리]
-    C --> F[바운딩 박스<br/>겹침 정도]
-    D --> G[외관 유사도]
-    
-    E --> H[비용 행렬 생성]
-    F --> H
-    G --> H
-    
-    H --> I[Hungarian Algorithm<br/>최적 매칭]
-    I --> J{매칭 성공?}
-    
-    J -->|Yes| K[트랙 업데이트<br/>ID 유지]
-    J -->|No| L[새 트랙 생성<br/>새 ID 할당]
-    
-    note right of H
-        Bot-SORT는 IOU, 거리,
-        ReID 특징을 종합하여
-        비용 행렬을 생성하고
-        Hungarian 알고리즘으로
-        최적 매칭 수행
-    end note
-        </div>
-    </div>
-
-    <div class="section">
-        <h2>8. 상태 머신 기반 추적 대상 관리 알고리즘</h2>
-        <div class="mermaid">
-stateDiagram-v2
-    [*] --> IDLE: 초기화
-    
-    IDLE --> TRACKING: 가장 가까운 사람 선택
-    IDLE --> IDLE: 사람 없음
-    
-    TRACKING --> LOST: 추적 대상 사라짐
-    TRACKING --> TRACKING: 추적 대상 유지
-    
-    LOST --> TRACKING: 대상 다시 발견
-    LOST --> SEARCHING: 30프레임 이상 놓침
-    
-    SEARCHING --> TRACKING: 새 대상 선택
-    SEARCHING --> SEARCHING: 사람 없음
-    
-    note right of IDLE
-        초기 상태
-        프레임 중심에 가장
-        가까운 사람 선택
-    end note
-    
-    note right of TRACKING
-        추적 중
-        대상 ID 유지
-        붉은색 표시
-    end note
-    
-    note right of LOST
-        놓침 상태
-        최대 30프레임 대기
-        대상 재발견 시도
-    end note
-    
-    note right of SEARCHING
-        탐색 상태
-        주변에서 가장
-        가까운 사람 재선택
-    end note
-        </div>
-    </div>
-
-    <div class="section">
-        <h2>9. 상태 머신 상세 처리 흐름</h2>
-        <div class="mermaid">
-graph TB
-    Start([프레임 입력]) --> YOLO[YOLO + Bot-SORT 추적]
-    YOLO --> CheckDetect{감지 결과 있음?}
-    
-    CheckDetect -->|없음| NoDetect[감지 없음 처리]
-    CheckDetect -->|있음| CreateObjects[모든 추적 객체 생성]
-    
-    NoDetect --> StateCheck1{현재 상태}
-    StateCheck1 -->|TRACKING| ToLost1[LOST 상태로 전이]
-    StateCheck1 -->|LOST| IncLost1[lost_frames 증가]
-    IncLost1 --> CheckMax1{30프레임 이상?}
-    CheckMax1 -->|Yes| ToSearch1[SEARCHING 상태로 전이]
-    CheckMax1 -->|No| KeepLost1[LOST 유지]
-    
-    CreateObjects --> StateCheck2{현재 상태}
-    
-    StateCheck2 -->|IDLE| FindClosest1[가장 가까운 사람 찾기]
-    FindClosest1 --> CheckFound1{찾음?}
-    CheckFound1 -->|Yes| SetTarget1[target_track_id 설정]
-    SetTarget1 --> ToTracking1[TRACKING 상태로 전이]
-    CheckFound1 -->|No| StayIdle[IDLE 유지]
-    
-    StateCheck2 -->|TRACKING| CheckTarget1{추적 대상 존재?}
-    CheckTarget1 -->|Yes| StayTracking[TRACKING 유지]
-    CheckTarget1 -->|No| ToLost2[LOST 상태로 전이]
-    
-    StateCheck2 -->|LOST| CheckTarget2{추적 대상 재발견?}
-    CheckTarget2 -->|Yes| ToTracking2[TRACKING 상태로 전이]
-    CheckTarget2 -->|No| IncLost2[lost_frames 증가]
-    IncLost2 --> CheckMax2{30프레임 이상?}
-    CheckMax2 -->|Yes| ToSearch2[SEARCHING 상태로 전이]
-    CheckMax2 -->|No| KeepLost2[LOST 유지]
-    
-    StateCheck2 -->|SEARCHING| FindClosest2[가장 가까운 사람 찾기]
-    FindClosest2 --> CheckFound2{찾음?}
-    CheckFound2 -->|Yes| SetTarget2[target_track_id 설정]
-    SetTarget2 --> ToTracking3[TRACKING 상태로 전이]
-    CheckFound2 -->|No| StaySearching[SEARCHING 유지]
-    
-    ToLost1 --> AssignState
-    ToSearch1 --> AssignState
-    ToTracking1 --> AssignState
-    StayIdle --> AssignState
-    StayTracking --> AssignState
-    ToLost2 --> AssignState
-    ToTracking2 --> AssignState
-    KeepLost1 --> AssignState
-    KeepLost2 --> AssignState
-    ToSearch2 --> AssignState
-    ToTracking3 --> AssignState
-    StaySearching --> AssignState
-    
-    AssignState[상태에 따라 객체 상태 할당] --> CheckTarget3{추적 대상?}
-    CheckTarget3 -->|Yes| SetTargetState[state = 'target'<br/>붉은색 표시]
-    CheckTarget3 -->|No| SetSystemState[state = 시스템 상태]
-    
-    SetTargetState --> Return[결과 반환]
-    SetSystemState --> Return
-    Return --> End([완료])
-        </div>
-    </div>
-
-    <div class="section">
-        <h2>10. 가장 가까운 사람 선택 알고리즘</h2>
-        <div class="mermaid">
-graph TB
-    Start([추적 객체 리스트 입력]) --> CheckEmpty{리스트 비어있음?}
-    CheckEmpty -->|Yes| ReturnNone[None 반환]
-    CheckEmpty -->|No| CalcCenter[프레임 중심점 계산<br/>center_x = width/2<br/>center_y = height/2]
-    
-    CalcCenter --> InitMin[최소 거리 = 무한대]
-    InitMin --> LoopStart[각 객체 순회]
-    
-    LoopStart --> GetCentroid[객체 중심점 가져오기<br/>cx, cy]
-    GetCentroid --> CalcDist[유클리드 거리 계산<br/>√(cx-center_x)² + (cy-center_y)²]
-    
-    CalcDist --> CompareDist{거리 < 최소 거리?}
-    CompareDist -->|Yes| UpdateMin[최소 거리 업데이트<br/>가장 가까운 ID 저장]
-    CompareDist -->|No| NextObj[다음 객체]
-    
-    UpdateMin --> NextObj
-    NextObj --> MoreObj{더 많은 객체?}
-    MoreObj -->|Yes| LoopStart
-    MoreObj -->|No| ReturnClosest[가장 가까운 ID 반환]
-    
-    ReturnNone --> End([완료])
-    ReturnClosest --> End
-    
-    style CalcCenter fill:#e1f5ff
-    style CalcDist fill:#fff4e1
-    style ReturnClosest fill:#e8f5e9
-        </div>
-    </div>
-
-    <div class="section">
-        <h2>11. 상태별 시각화 색상</h2>
-        <div class="mermaid">
+        <div class="section">
+            <h2 class="section-title">6. 시스템 아키텍처</h2>
+            <div class="mermaid">
 graph LR
-    A[상태] --> B[target<br/>붉은색<br/>0,0,255]
-    A --> C[tracking<br/>초록색<br/>0,255,0]
-    A --> D[idle<br/>회색<br/>128,128,128]
-    A --> E[lost<br/>주황색<br/>0,165,255]
-    A --> F[searching<br/>노란색<br/>255,255,0]
+    subgraph "DGX Thor"
+        CAMERA[Orbbec Femto Bolt<br/>카메라]
+        CAMERA -->|/camera/color/image_raw/compressed| ROS2_NETWORK[ROS 2 네트워크]
+    end
     
-    style B fill:#ff0000,color:#fff
-    style C fill:#00ff00
-    style D fill:#808080,color:#fff
-    style E fill:#ffa500
-    style F fill:#ffff00
+    subgraph "DGX SPARK"
+        ROS2_NETWORK -->|이미지 수신| YOLO[YOLO Detection Node<br/>사람 감지]
+        
+        YOLO -->|/allex_camera/detections| FSM[Tracking FSM Node<br/>상태 머신 관리]
+        
+        FSM -->|/allex_camera/tracking_result| GAZE[Gaze Controller Node<br/>목/허리 제어]
+        
+        FSM -->|/allex_camera/tracking_result| INTERACTION[Idle Interaction Node<br/>루틴 제어]
+        
+        GAZE -->|/robot_inbound/theOne_neck/joint_command| ROBOT_NECK[로봇 목 관절]
+        GAZE -->|/robot_inbound/theOne_waist/joint_command| ROBOT_WAIST[로봇 허리 관절]
+        
+        INTERACTION -->|루틴 명령| ROBOT_ROUTINE[로봇 루틴 실행]
+    end
+    
+    style CAMERA fill:#3498db,stroke:#2980b9,color:#fff
+    style YOLO fill:#27ae60,stroke:#229954,color:#fff
+    style FSM fill:#f39c12,stroke:#e67e22,color:#fff
+    style GAZE fill:#9b59b6,stroke:#8e44ad,color:#fff
+    style INTERACTION fill:#e74c3c,stroke:#c0392b,color:#fff
+            </div>
+        </div>
+
+        <div class="legend">
+            <h3>범례</h3>
+            <div class="legend-item">
+                <span class="legend-color" style="background-color: #e74c3c;"></span>
+                <strong>IDLE:</strong> 영자세 상태, 타겟 발견 후 5초 대기
+            </div>
+            <div class="legend-item">
+                <span class="legend-color" style="background-color: #f39c12;"></span>
+                <strong>WAITING:</strong> 타겟 찾기 모드
+            </div>
+            <div class="legend-item">
+                <span class="legend-color" style="background-color: #27ae60;"></span>
+                <strong>TRACKING:</strong> 추적 중 (초기 0.85초 / 일반 추적)
+            </div>
+            <div class="legend-item">
+                <span class="legend-color" style="background-color: #e67e22;"></span>
+                <strong>LOST:</strong> 타겟 놓침, 현재 위치에서 감속
+            </div>
+            <div class="legend-item">
+                <span class="legend-color" style="background-color: #3498db;"></span>
+                <strong>SEARCHING:</strong> 주변 탐색 (목 pitch 26도)
+            </div>
+            <div class="legend-item">
+                <span class="legend-color" style="background-color: #9b59b6;"></span>
+                <strong>HELLO/HANDSHAKE:</strong> 제스처 루틴 실행
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">주요 특징</h2>
+            <ul>
+                <li><strong>초기 추적 (0.85초):</strong> 목만 움직이며 타겟 추적, 허리는 고정</li>
+                <li><strong>일반 추적:</strong> 목 중심 제어 + 허리 추종, 속도 12% 증가</li>
+                <li><strong>LOST 감속:</strong> 현재 위치에서 부드럽게 멈춤 (1초 감속)</li>
+                <li><strong>SEARCHING:</strong> 목 pitch 26도로 주변 탐색</li>
+                <li><strong>HELLO/HANDSHAKE:</strong> 루틴 완료 후 자동으로 SEARCHING 전환</li>
+            </ul>
         </div>
     </div>
 
-    <div class="section">
-        <h2>12. 성능 최적화 포인트</h2>
-        <div class="mermaid">
-graph TB
-    A[최적화 전략] --> B[GPU 사용]
-    A --> C[프레임 리사이즈]
-    A --> D[비동기 처리]
-    A --> E[큐 관리]
-    
-    B --> B1[FP16 반정밀도]
-    B --> B2[CUDA 동기화]
-    
-    C --> C1[1920x1080 제한]
-    
-    D --> D1[별도 스레드 시각화]
-    D --> D2[논블로킹 큐]
-    
-    E --> E1[최대 2개 프레임만 유지]
-    E --> E2[가득 차면 스킵]
-        </div>
-    </div>
-
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
 </body>
 </html>
 
