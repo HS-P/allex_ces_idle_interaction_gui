@@ -18,24 +18,103 @@ ALLEX 로봇의 Idle Interaction 시스템입니다. 사람 추적, 시선 제�
 
 ## 빌드 및 설치
 
+### 사전 준비
+
+**⚠️ 중요: ROS 2 Humble 환경이 올바르게 설정되어 있어야 합니다!**
+
+```bash
+# ROS 2 Humble 환경 설정 (Thor에서 실행)
+source /opt/ros/humble/setup.bash
+
+# 현재 ROS 2 버전 확인
+echo $ROS_DISTRO  # "humble"이 출력되어야 함
+```
+
+### 빌드
+
 ```bash
 cd ~/allex_ces_idle_interaction_gui
+
+# ROS 2 Humble 환경 확인 (반드시 실행!)
+source /opt/ros/humble/setup.bash
+
+# 빌드 실행
 colcon build --symlink-install
+
+# 설치 후 환경 설정
 source install/setup.bash
 ```
 
 ### 빌드 오류 해결
 
+**⚠️ 중요: 모든 빌드 명령은 DGX Thor에서 실행해야 합니다!**
+
+#### `pkgutil.ImpImporter` 오류 (Python 3.12 환경)
+만약 `AttributeError: module 'pkgutil' has no attribute 'ImpImporter'` 오류가 발생하면:
+
+**해결 방법 1: setuptools 업그레이드 (Python 3.12 권장)**
+```bash
+# Thor에서 실행
+pip install --upgrade setuptools
+colcon build --symlink-install
+```
+
+**해결 방법 2: setuptools 특정 버전 설치 (Python 3.10 이하 환경)**
+```bash
+# Thor에서 실행 (Python 3.10 이하인 경우에만)
+pip install setuptools==58.1.0
+colcon build --symlink-install
+```
+
 #### `--editable` 옵션 오류
 만약 `error: option --editable not recognized` 오류가 발생하면:
-```bash
-# setuptools 업그레이드
-pip install --upgrade setuptools
 
-# 또는 환경 변수 정리 후 재빌드
+**해결 방법: 환경 변수 정리 후 재빌드**
+```bash
+# Thor에서 실행
+# 환경 변수 정리
 unset AMENT_PREFIX_PATH
 unset CMAKE_PREFIX_PATH
+
+# 빌드 캐시 정리
+rm -rf build/ install/ log/
+
+# 재빌드
 colcon build --symlink-install
+```
+
+#### `rosidl_typesupport_c` 찾을 수 없음 오류
+만약 `No 'rosidl_typesupport_c' found` 오류가 발생하면:
+
+**원인: 잘못된 ROS 2 버전이 소스되어 있거나 ROS 2가 제대로 설치되지 않음**
+
+**해결 방법:**
+```bash
+# Thor에서 실행
+
+# 1. ROS 2 Humble 환경을 명시적으로 소스
+source /opt/ros/humble/setup.bash
+
+# 2. ROS_DISTRO 환경 변수 확인
+echo $ROS_DISTRO  # "humble"이어야 함
+
+# 3. 만약 "jazzy" 또는 다른 값이면, .bashrc 또는 .bash_profile 확인
+# 잘못된 ROS 2 소스 명령이 있는지 확인하고 제거
+
+# 4. rosidl 관련 패키지 설치 확인 (필요시)
+sudo apt update
+sudo apt install ros-humble-rosidl-typesupport-c
+
+# 5. 재빌드
+cd ~/allex_ces_idle_interaction_gui
+colcon build --symlink-install
+```
+
+#### 병렬 작업자 수 제한
+메모리 부족 등의 문제가 발생하면:
+```bash
+# Thor에서 실행
+colcon build --symlink-install --parallel-workers 2
 ```
 
 #### 경로 경고 해결
@@ -49,6 +128,8 @@ echo $CMAKE_PREFIX_PATH
 export AMENT_PREFIX_PATH=$(echo $AMENT_PREFIX_PATH | tr ':' '\n' | grep -v '/home/mars/allex_ces_idle_interaction' | tr '\n' ':' | sed 's/:$//')
 export CMAKE_PREFIX_PATH=$(echo $CMAKE_PREFIX_PATH | tr ':' '\n' | grep -v '/home/mars/allex_ces_idle_interaction' | tr '\n' ':' | sed 's/:$//')
 ```
+
+**참고:** 경로 경고는 빌드를 막지 않지만, 정리하면 더 깔끔한 빌드가 가능합니다.
 
 ## 실행 방법
 

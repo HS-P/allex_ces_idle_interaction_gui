@@ -151,7 +151,7 @@ class TrackingFSMNode(Node):
         self.state = TrackingState.IDLE
         self.target_track_id: Optional[int] = None  # 추적 대상 ID
         self.lost_frames = 0  # 놓친 프레임 수
-        self.max_lost_frames = 45  # 최대 놓친 프레임 수 (약 1.5초, 30FPS 기준)
+        self.max_lost_frames = 120  # 최대 놓친 프레임 수 (약 4초, 30FPS 기준) - 1.5초에서 4초로 증가
         
         # Manual 모드 지원
         self.manual_mode = False  # True면 상태 자동 전이 비활성화
