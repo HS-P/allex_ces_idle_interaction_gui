@@ -1,0 +1,1098 @@
+{
+  "version": 1,
+  "config_name": "default_kb16_mapping",
+  "device": {
+    "grab": true,
+    "reconnect_period_ms": 500,
+    "paths": [],
+    "match": {
+      "name": "DOIO_KB16B",
+      "vendor": "0x1915",
+      "product": "0xEEEE",
+      "uniq": "cc:56:4f:a3:81:30"
+    }
+  },
+  "ros": {
+    "topic": "/hmi/robot_command",
+    "qos_depth": 10
+  },
+  "robot_discovery": {
+    "enabled": true,
+    "method": "ros2_topic_list_subprocess",
+    "topic_regex": "^/robot_outbound_data/([^/]+)/",
+    "refresh_period_sec": 10.0
+  },
+  "ui": {
+    "window_title": "DOIO Macro → ROS2 Topic Publisher",
+    "auto_save_debounce_ms": 250,
+    "debug_log_keys": false
+  },
+  "behavior": {
+    "publish_key": "KEY_P",
+    "clear_pending_key": "KEY_MUTE",
+    "pending_prefix": "",
+    "message_format": "{robots}::{suffix}",
+    "suppress_base_action_on_chord": true
+  },
+  "layer": {
+    "initial": 0,
+    "suppress_base_action_on_indicator": true,
+    "indicator_keys": {
+      "KEY_F1": 0,
+      "KEY_F2": 1,
+      "KEY_F3": 2,
+      "KEY_F4": 3,
+      "KEY_F5": 4,
+      "KEY_F6": 5,
+      "KEY_F7": 6,
+      "KEY_F8": 7,
+      "KEY_F9": 8
+    }
+  },
+  "chords": [
+    {
+      "when_held": [
+        "KEY_L"
+      ],
+      "then_press": "KEY_F",
+      "action": {
+        "kind": "robot_select_cmd",
+        "cmd": "Arm_L_theOne"
+      },
+      "description": "Arm_L_theOne"
+    },
+    {
+      "when_held": [
+        "KEY_L"
+      ],
+      "then_press": "KEY_G",
+      "action": {
+        "kind": "robot_select_cmd",
+        "cmd": "Arm_R_theOne"
+      },
+      "description": "Arm_R_theOne"
+    },
+    {
+      "when_held": [
+        "KEY_L"
+      ],
+      "then_press": "KEY_E",
+      "action": {
+        "kind": "robot_select_cmd",
+        "cmd": "Hand_L"
+      },
+      "description": "Hand_L"
+    },
+    {
+      "when_held": [
+        "KEY_L"
+      ],
+      "then_press": "KEY_H",
+      "action": {
+        "kind": "robot_select_cmd",
+        "cmd": "Hand_R"
+      },
+      "description": "Hand_R"
+    },
+    {
+      "when_held": [
+        "KEY_L"
+      ],
+      "then_press": "KEY_C",
+      "action": {
+        "kind": "robot_select_cmd",
+        "cmd": "theOne_neck"
+      },
+      "description": "Neck"
+    },
+    {
+      "when_held": [
+        "KEY_L"
+      ],
+      "then_press": "KEY_D",
+      "action": {
+        "kind": "robot_select_cmd",
+        "cmd": "theOne_waist"
+      },
+      "description": "Waist"
+    },
+    {
+      "when_held": [
+        "KEY_L"
+      ],
+      "then_press": "KEY_A",
+      "action": {
+        "kind": "robot_select_cmd",
+        "cmd": "+all"
+      },
+      "description": "+ALL"
+    },
+    {
+      "when_held": [
+        "KEY_L"
+      ],
+      "then_press": "KEY_B",
+      "action": {
+        "kind": "robot_select_cmd",
+        "cmd": "-all"
+      },
+      "description": "-all"
+    }
+  ],
+  "layers": [
+    {
+      "name": "L0",
+      "bindings": {
+        "KEY_F1": {
+          "kind": "set_layer",
+          "layer": 0
+        },
+        "KEY_A": {
+          "kind": "set_pending",
+          "suffix": "STATUS::SERVO_ON",
+          "description": "SERVO_ON"
+        },
+        "KEY_B": {
+          "kind": "set_pending",
+          "suffix": "STATUS::SERVO_OFF",
+          "description": "SERVO_OFF"
+        },
+        "KEY_C": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_D": {
+          "kind": "set_pending",
+          "suffix": "STATUS::HOMING",
+          "description": "HOMING"
+        },
+        "KEY_E": {
+          "kind": "set_pending",
+          "suffix": "STATUS::RUN",
+          "description": "RUN"
+        },
+        "KEY_F": {
+          "kind": "set_pending",
+          "suffix": "STATUS::STOP",
+          "description": "STOP"
+        },
+        "KEY_G": {
+          "kind": "set_pending",
+          "suffix": "STATUS::READY",
+          "description": "READY"
+        },
+        "KEY_H": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_I": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_J": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_K": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_L": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_M": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_P": {
+          "kind": "publish_pending"
+        },
+        "KEY_1": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_2": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_3": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_4": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_5": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_6": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_7": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_8": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_9": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_MUTE": {
+          "kind": "set_pending",
+          "suffix": "",
+          "description": ""
+        }
+      }
+    },
+    {
+      "name": "L1",
+      "bindings": {
+        "KEY_F2": {
+          "kind": "set_layer",
+          "layer": 1
+        },
+        "KEY_A": {
+          "kind": "robot_select_cmd",
+          "description": "+ALL",
+          "cmd": "+all"
+        },
+        "KEY_B": {
+          "kind": "robot_select_cmd",
+          "description": "-all",
+          "cmd": "-all"
+        },
+        "KEY_C": {
+          "kind": "robot_select_cmd",
+          "description": "Neck",
+          "cmd": "theOne_neck"
+        },
+        "KEY_D": {
+          "kind": "robot_select_cmd",
+          "description": "Waist",
+          "cmd": "theOne_waist"
+        },
+        "KEY_E": {
+          "kind": "robot_select_cmd",
+          "description": "Hand_L",
+          "cmd": "Hand_L"
+        },
+        "KEY_F": {
+          "kind": "robot_select_cmd",
+          "description": "Arm_L",
+          "cmd": "Arm_L_theOne"
+        },
+        "KEY_G": {
+          "kind": "robot_select_cmd",
+          "description": "Arm_R",
+          "cmd": "Arm_R_theOne"
+        },
+        "KEY_H": {
+          "kind": "robot_select_cmd",
+          "description": "Hand_R",
+          "cmd": "Hand_R"
+        },
+        "KEY_I": {
+          "kind": "set_pending",
+          "suffix": "SPECIFIC::ControlMode::Position",
+          "description": "Position"
+        },
+        "KEY_J": {
+          "kind": "set_pending",
+          "description": "Torque",
+          "suffix": "SPECIFIC::ControlMode::Torque"
+        },
+        "KEY_K": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_L": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_P": {
+          "kind": "publish_pending"
+        },
+        "KEY_1": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_2": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_3": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_4": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_5": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_6": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_7": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_8": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_9": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_MUTE": {
+          "kind": "set_pending",
+          "suffix": "",
+          "description": ""
+        }
+      }
+    },
+    {
+      "name": "L2",
+      "bindings": {
+        "KEY_F3": {
+          "kind": "set_layer",
+          "layer": 2
+        },
+        "KEY_A": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_B": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_C": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_D": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_E": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_G": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_H": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_I": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_J": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_K": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_L": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_P": {
+          "kind": "publish_pending"
+        },
+        "KEY_1": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_2": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_3": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_4": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_5": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_6": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_7": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_8": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_9": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_MUTE": {
+          "kind": "set_pending",
+          "suffix": "",
+          "description": ""
+        }
+      }
+    },
+    {
+      "name": "L3",
+      "bindings": {
+        "KEY_F4": {
+          "kind": "set_layer",
+          "layer": 3
+        },
+        "KEY_A": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_B": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_C": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_D": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_E": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_G": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_H": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_I": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_J": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_K": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_L": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_P": {
+          "kind": "publish_pending"
+        },
+        "KEY_1": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_2": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_3": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_4": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_5": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_6": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_7": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_8": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_9": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_MUTE": {
+          "kind": "set_pending",
+          "suffix": "",
+          "description": ""
+        }
+      }
+    },
+    {
+      "name": "L4",
+      "bindings": {
+        "KEY_F5": {
+          "kind": "set_layer",
+          "layer": 4
+        },
+        "KEY_A": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_B": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_C": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_D": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_E": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_G": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_H": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_I": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_J": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_K": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_L": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_P": {
+          "kind": "publish_pending"
+        },
+        "KEY_1": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_2": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_3": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_4": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_5": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_6": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_7": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_8": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_9": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_MUTE": {
+          "kind": "set_pending",
+          "suffix": "",
+          "description": ""
+        }
+      }
+    },
+    {
+      "name": "L5",
+      "bindings": {
+        "KEY_F4": {
+          "kind": "set_layer",
+          "layer": 5
+        },
+        "KEY_A": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_B": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_C": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_D": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_E": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_G": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_H": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_I": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_J": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_K": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_L": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_P": {
+          "kind": "publish_pending"
+        },
+        "KEY_1": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_2": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_3": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_4": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_5": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_6": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_7": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_8": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_9": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_MUTE": {
+          "kind": "set_pending",
+          "suffix": "",
+          "description": ""
+        }
+      }
+    },
+    {
+      "name": "L6",
+      "bindings": {
+        "KEY_F7": {
+          "kind": "set_layer",
+          "layer": 6
+        },
+        "KEY_A": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_B": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_C": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_D": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_E": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_G": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_H": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_I": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_J": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_K": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_L": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_P": {
+          "kind": "publish_pending"
+        },
+        "KEY_1": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_2": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_3": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_4": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_5": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_6": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_7": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_8": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_9": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_MUTE": {
+          "kind": "set_pending",
+          "suffix": "",
+          "description": ""
+        }
+      }
+    },
+    {
+      "name": "L7",
+      "bindings": {
+        "KEY_F8": {
+          "kind": "set_layer",
+          "layer": 7
+        },
+        "KEY_A": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_B": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_C": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_D": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_E": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_G": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_H": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_I": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_J": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_K": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_L": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_P": {
+          "kind": "publish_pending"
+        },
+        "KEY_1": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_2": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_3": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_4": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_5": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_6": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_7": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_8": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_9": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_MUTE": {
+          "kind": "set_pending",
+          "suffix": "",
+          "description": ""
+        }
+      }
+    },
+    {
+      "name": "L8",
+      "bindings": {
+        "KEY_F9": {
+          "kind": "set_layer",
+          "layer": 8
+        },
+        "KEY_A": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_B": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_C": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_D": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_E": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_G": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_H": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_I": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_J": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_K": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_L": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_P": {
+          "kind": "publish_pending"
+        },
+        "KEY_1": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_2": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_3": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_4": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_5": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_6": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_7": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_8": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_9": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_MUTE": {
+          "kind": "set_pending",
+          "suffix": "",
+          "description": ""
+        }
+      }
+    }
+  ],
+  "robot_selection": {
+    "enabled": true,
+    "suppress_base_action": true,
+    "keys": {
+      "KEY_D": {
+        "mode": "all"
+      },
+      "KEY_E": {
+        "mode": "group",
+        "group": "Arm_L"
+      },
+      "KEY_F": {
+        "mode": "group",
+        "group": "Arm_R"
+      },
+      "KEY_G": {
+        "mode": "group",
+        "group": "Hand_L"
+      },
+      "KEY_H": {
+        "mode": "group",
+        "group": "Hand_R"
+      }
+    }
+  }
+}

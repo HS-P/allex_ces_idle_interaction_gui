@@ -172,11 +172,11 @@ class GazeControllerNode(Node):
         self.kd_yaw = 0.0   # D 게인 (Yaw) - 낮춰서 움직임 억제 감소
         self.kd_pitch = 0.01 # D 게인 (Pitch)
         
-        # 초기 추적용 게인 (속도 조금 감소)
-        self.kp_yaw_initial = 1.6   # P 게인 (Yaw) - 초기 추적 시 (2.0 -> 1.6으로 감소)
-        self.kp_pitch_initial = 1.6 # P 게인 (Pitch) - 초기 추적 시 (2.0 -> 1.6으로 감소)
-        self.ki_yaw_initial = 0.04  # I 게인 (Yaw) - 초기 추적 시 (0.05 -> 0.04로 감소)
-        self.ki_pitch_initial = 0.15 # I 게인 (Pitch) - 초기 추적 시 (0.2 -> 0.15로 감소)
+        # 초기 추적용 게인 (속도 50% 감소)
+        self.kp_yaw_initial = 0.8   # P 게인 (Yaw) - 초기 추적 시 (1.6 -> 0.8으로 50% 감소)
+        self.kp_pitch_initial = 0.8 # P 게인 (Pitch) - 초기 추적 시 (1.6 -> 0.8으로 50% 감소)
+        self.ki_yaw_initial = 0.02  # I 게인 (Yaw) - 초기 추적 시 (0.04 -> 0.02로 50% 감소)
+        self.ki_pitch_initial = 0.075 # I 게인 (Pitch) - 초기 추적 시 (0.15 -> 0.075로 50% 감소)
         self.kd_yaw_initial = 0.0   # D 게인 (Yaw) - 초기 추적 시
         self.kd_pitch_initial = 0.02 # D 게인 (Pitch) - 초기 추적 시
         
@@ -816,8 +816,8 @@ class GazeControllerNode(Node):
         
         # Rate limit 적용: 초기 추적 중에는 더 큰 값 사용하여 움직임 보장
         if is_initial_tracking:
-            # 초기 추적 시: rate limit을 조금 줄여서 속도 감소
-            max_delta_angle = math.radians(20.0)  # 초기: 20.0도/프레임 (25도에서 감소)
+            # 초기 추적 시: rate limit을 50%로 줄여서 속도 감소
+            max_delta_angle = math.radians(10.0)  # 초기: 10.0도/프레임 (20도에서 50% 감소)
         else:
             max_delta_angle = math.radians(66.0)  # 일반 추적: 72.9도/프레임 (81도의 90%, 10% 하향)
         
@@ -839,8 +839,8 @@ class GazeControllerNode(Node):
         
         # PID 제어 결과 스무딩 (초기 추적 시 스무딩 최소화)
         if is_initial_tracking:
-            # 초기 추적 시: 스무딩 최소화하여 즉각 반응
-            smoothing_alpha = 0.92  # 초기 추적: 최소 스무딩 (8%)
+            # 초기 추적 시: 스무딩을 더 강하게 하여 속도 감소 (50% 속도)
+            smoothing_alpha = 0.85  # 초기 추적: 더 강한 스무딩 (15%)
         elif use_searching_gain:
             smoothing_alpha = 0.75  # SEARCHING에서는 5% 스무딩 추가
         else:
@@ -865,9 +865,9 @@ class GazeControllerNode(Node):
         small_change_threshold = math.radians(0.3)  # 약 0.3도 (작은 변화)
         
         if is_initial_tracking:
-            # 초기 추적 시: 스무딩 최소화하여 즉각 반응
-            final_smoothing_alpha = 0.67  # 8% 스무딩 (즉각 반응)
-            final_pitch_smoothing_alpha = 0.67
+            # 초기 추적 시: 스무딩을 더 강하게 하여 속도 감소 (50% 속도)
+            final_smoothing_alpha = 0.5  # 50% 스무딩 (속도 감소)
+            final_pitch_smoothing_alpha = 0.5
         else:
             if delta_yaw_magnitude < small_change_threshold:
                 # 작은 변화만 약한 스무딩 (0.7 = 70% 반영)

@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>irim_doio_macro_panel</name>
+  <version>0.1.0</version>
+  <description>DOIO macro keyboard -> ROS2 topic publisher with editable JSON mappings and GUI.</description>
+  <maintainer email="user@example.com">user</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+
+  <!-- System Python deps (install via apt or pip) -->
+  <exec_depend>python3-pyqt5</exec_depend>
+  <exec_depend>python3-evdev</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

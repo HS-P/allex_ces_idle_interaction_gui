@@ -45,6 +45,37 @@ class RoutineController:
         self.command_pub.publish(msg)
         self.node.get_logger().info(f"Routine 명령 발행: {command}")
     
+    def is_routine_idle(self) -> bool:
+        """루틴이 Idle 상태인지 확인 (nodes.length == 0)"""
+        return self.node.routine_nodes_count == 0
+    
+    def wait_for_idle(self, timeout=3.0, check_interval=0.1) -> bool:
+        """
+        Idle 상태가 될 때까지 대기 (블로킹)
+        다른 콜백을 처리하면서 대기하기 위해 rclpy.spin_once() 사용
+        
+        Args:
+            timeout: 최대 대기 시간 (초)
+            check_interval: 확인 간격 (초)
+        
+        Returns:
+            True: Idle 상태 도달 성공
+            False: 타임아웃
+        """
+
+        start_time = time.monotonic()
+        while (time.monotonic() - start_time) < timeout:
+            # 다른 콜백(/debug/routine 등)이 실행될 수 있도록 spin_once 호출
+            rclpy.spin_once(self.node, timeout_sec=check_interval)
+            
+            if self.is_routine_idle():
+                elapsed = time.monotonic() - start_time
+                self.node.get_logger().info(f"Idle 상태 확인 완료 (대기 시간: {elapsed:.2f}초)")
+                return True
+        
+        self.node.get_logger().warn(f"Idle 상태 확인 타임아웃 ({timeout}초, 현재 nodes={self.node.routine_nodes_count})")
+        return False
+    
     def start_breathing(self):
         """숨쉬기 루틴 시작 (무한 반복) - 기존 루틴이 없을 경우 바로 실행"""
         # 이미 실행 중이면 중복 시작 방지
@@ -68,82 +99,98 @@ class RoutineController:
         self.publish_command(command)
     
     def pause_reset_and_start_heart(self):
-        """HELLO 전환 전: 현재 루틴 PAUSE → RESET → READY 확인 → 하트 루틴 시작"""
+        """HELLO 전환 전: 현재 루틴 PAUSE → RESET → Idle 확인 → 하트 루틴 시작"""
         # 현재 루틴이 실행 중인 경우
         if self.current_routine and self.breathing_routine_running:
-            # 1. PAUSE 먼저
-            pause_command = f"{self.robot_name}::ROUTINE::{self.current_routine}::PAUSE"
-            self.publish_command(pause_command)
-            self.node.get_logger().info(f"루틴 PAUSE: {self.current_routine}")
+            retry_count = 0
             
-            # PAUSE와 RESET 사이에 0.1초 지연
-            time.sleep(0.2)
+            while True:  # Idle 확인 성공할 때까지 무한 반복
+                retry_count += 1
+                if retry_count > 1:
+                    self.node.get_logger().warn(f"RESET 재시도 {retry_count - 1}")
+                
+                # 1. PAUSE 명령 전송
+                pause_command = f"{self.robot_name}::ROUTINE::{self.current_routine}::PAUSE"
+                self.publish_command(pause_command)
+                self.node.get_logger().info(f"루틴 PAUSE: {self.current_routine} (시도 {retry_count})")
+                
+                # 2. PAUSE 처리 시간 대기 (0.1초)
+                time.sleep(0.1)
+                
+                # 3. RESET 명령 전송
+                reset_command = f"{self.robot_name}::ROUTINE::{self.current_routine}::RESET"
+                self.publish_command(reset_command)
+                self.node.get_logger().info(f"루틴 RESET: {self.current_routine} (시도 {retry_count})")
+                self.breathing_routine_running = False
+                
+                # 4. Idle 상태 확인 (0.1초마다 확인, 타임아웃 3.0초)
+                if self.wait_for_idle(timeout=3.0, check_interval=0.1):
+                    # Idle 확인 성공
+                    self.node.get_logger().info("RESET 완료 확인: Idle 상태 도달")
+                    break  # 성공 시에만 루프 탈출
+                else:
+                    # Idle 확인 실패 - 계속 재시도
+                    self.node.get_logger().warn(
+                        f"RESET 확인 실패 (nodes={self.node.routine_nodes_count}), "
+                        f"재시도 예정 (시도 {retry_count})"
+                    )
             
-            # 2. RESET
-            reset_command = f"{self.robot_name}::ROUTINE::{self.current_routine}::RESET"
-            self.publish_command(reset_command)
-            self.node.get_logger().info(f"루틴 RESET: {self.current_routine}")
-            self.breathing_routine_running = False
-            
-            # RESET 완료 대기 (로봇 시스템이 RESET을 처리할 시간 확보)
-            time.sleep(0.3)
-            
-            # 3. READY 상태 확인 및 대기
-            self.node.get_logger().info("READY 상태 확인 중...")
-            max_wait_time = 2.0  # 최대 2초 대기
-            check_interval = 0.1  # 0.1초마다 확인
-            elapsed_time = 0.0
-            
-            # READY 상태 확인을 위해 STATUS::RUN 명령 발행 후 대기
+            # STATUS::RUN 명령 발행 (READY 상태로 전환)
             status_run_command = "theOne_neck,theOne_waist::STATUS::RUN"
             self.publish_command(status_run_command)
-            self.node.get_logger().info("STATUS::RUN 명령 발행 (READY 상태 대기)")
-            
-            # READY 상태 확인 대기 (일정 시간 대기)
-            time.sleep(0.7)  # READY 상태로 전환될 시간 확보 (RESET 완료 대기)
+            self.node.get_logger().info("STATUS::RUN 명령 발행")
+            time.sleep(0.1)  # 명령 처리 시간 대기
         
-        # 4. 하트 루틴 시작
+        # 5. 하트 루틴 시작 (Idle 확인 성공 후에만 실행)
         command = f"{self.robot_name}::ROUTINE::idling_heart_rt::START"
         self.current_routine = "idling_heart_rt"
         self.publish_command(command)
         self.node.get_logger().info(f"하트 루틴 시작: idling_heart_rt")
     
     def pause_reset_and_start_handshake(self):
-        """HANDSHAKE 전환 전: 현재 루틴 PAUSE → RESET → READY 확인 → 악수 루틴 시작"""
+        """HANDSHAKE 전환 전: 현재 루틴 PAUSE → RESET → Idle 확인 → 악수 루틴 시작"""
         # 현재 루틴이 실행 중인 경우
         if self.current_routine and self.breathing_routine_running:
-            # 1. PAUSE 먼저
-            pause_command = f"{self.robot_name}::ROUTINE::{self.current_routine}::PAUSE"
-            self.publish_command(pause_command)
-            self.node.get_logger().info(f"루틴 PAUSE: {self.current_routine}")
+            retry_count = 0
             
-            # PAUSE와 RESET 사이에 0.1초 지연
-            time.sleep(0.2)
+            while True:  # Idle 확인 성공할 때까지 무한 반복
+                retry_count += 1
+                if retry_count > 1:
+                    self.node.get_logger().warn(f"RESET 재시도 {retry_count - 1}")
+                
+                # 1. PAUSE 명령 전송
+                pause_command = f"{self.robot_name}::ROUTINE::{self.current_routine}::PAUSE"
+                self.publish_command(pause_command)
+                self.node.get_logger().info(f"루틴 PAUSE: {self.current_routine} (시도 {retry_count})")
+                
+                # 2. PAUSE 처리 시간 대기 (0.1초)
+                time.sleep(0.1)
+                
+                # 3. RESET 명령 전송
+                reset_command = f"{self.robot_name}::ROUTINE::{self.current_routine}::RESET"
+                self.publish_command(reset_command)
+                self.node.get_logger().info(f"루틴 RESET: {self.current_routine} (시도 {retry_count})")
+                self.breathing_routine_running = False
+                
+                # 4. Idle 상태 확인 (0.1초마다 확인, 타임아웃 3.0초)
+                if self.wait_for_idle(timeout=3.0, check_interval=0.1):
+                    # Idle 확인 성공
+                    self.node.get_logger().info("RESET 완료 확인: Idle 상태 도달")
+                    break  # 성공 시에만 루프 탈출
+                else:
+                    # Idle 확인 실패 - 계속 재시도
+                    self.node.get_logger().warn(
+                        f"RESET 확인 실패 (nodes={self.node.routine_nodes_count}), "
+                        f"재시도 예정 (시도 {retry_count})"
+                    )
             
-            # 2. RESET
-            reset_command = f"{self.robot_name}::ROUTINE::{self.current_routine}::RESET"
-            self.publish_command(reset_command)
-            self.node.get_logger().info(f"루틴 RESET: {self.current_routine}")
-            self.breathing_routine_running = False
-            
-            # RESET 완료 대기 (로봇 시스템이 RESET을 처리할 시간 확보)
-            time.sleep(0.3)
-            
-            # 3. READY 상태 확인 및 대기
-            self.node.get_logger().info("READY 상태 확인 중...")
-            max_wait_time = 2.0  # 최대 2초 대기
-            check_interval = 0.1  # 0.1초마다 확인
-            elapsed_time = 0.0
-            
-            # READY 상태 확인을 위해 STATUS::RUN 명령 발행 후 대기
+            # STATUS::RUN 명령 발행 (READY 상태로 전환)
             status_run_command = "theOne_neck,theOne_waist::STATUS::RUN"
             self.publish_command(status_run_command)
-            self.node.get_logger().info("STATUS::RUN 명령 발행 (READY 상태 대기)")
-            
-            # READY 상태 확인 대기 (일정 시간 대기)
-            time.sleep(0.7)  # READY 상태로 전환될 시간 확보 (RESET 완료 대기)
+            self.node.get_logger().info("STATUS::RUN 명령 발행")
+            time.sleep(0.1)  # 명령 처리 시간 대기
         
-        # 4. 악수 루틴 시작
+        # 5. 악수 루틴 시작 (Idle 확인 성공 후에만 실행)
         command = f"{self.robot_name}::ROUTINE::idling_handshake_rt::START"
         self.current_routine = "idling_handshake_rt"
         # breathing_routine_running은 idle_breathing_rt 전용이므로 여기서는 설정하지 않음
@@ -160,23 +207,39 @@ class RoutineController:
         if routine_to_stop:
             self.node.get_logger().info(f"[STOP] 루틴 중단 시작: {routine_to_stop} (추적 중: {self.current_routine}, 실제 실행 중: {self.node.actual_running_routine})")
             
-            # 1. PAUSE 먼저
-            pause_command = f"{self.robot_name}::ROUTINE::{routine_to_stop}::PAUSE"
-            self.publish_command(pause_command)
-            self.node.get_logger().info(f"[STOP] 루틴 PAUSE: {routine_to_stop}")
+            retry_count = 0
             
-            # PAUSE와 RESET 사이에 0.2초 지연 (안정성 확보)
-            time.sleep(0.2)
+            while True:  # Idle 확인 성공할 때까지 무한 반복
+                retry_count += 1
+                if retry_count > 1:
+                    self.node.get_logger().warn(f"[STOP] RESET 재시도 {retry_count - 1}")
+                
+                # 1. PAUSE 명령 전송
+                pause_command = f"{self.robot_name}::ROUTINE::{routine_to_stop}::PAUSE"
+                self.publish_command(pause_command)
+                self.node.get_logger().info(f"[STOP] 루틴 PAUSE: {routine_to_stop} (시도 {retry_count})")
+                
+                # 2. PAUSE 처리 시간 대기 (0.1초)
+                time.sleep(0.1)
+                
+                # 3. RESET 명령 전송
+                reset_command = f"{self.robot_name}::ROUTINE::{routine_to_stop}::RESET"
+                self.publish_command(reset_command)
+                self.node.get_logger().info(f"[STOP] 루틴 RESET: {routine_to_stop} (시도 {retry_count})")
+                
+                # 4. Idle 상태 확인 (0.1초마다 확인, 타임아웃 3.0초)
+                if self.wait_for_idle(timeout=3.0, check_interval=0.1):
+                    # Idle 확인 성공
+                    self.node.get_logger().info("[STOP] RESET 완료 확인: Idle 상태 도달")
+                    break  # 성공 시에만 루프 탈출
+                else:
+                    # Idle 확인 실패 - 계속 재시도
+                    self.node.get_logger().warn(
+                        f"[STOP] RESET 확인 실패 (nodes={self.node.routine_nodes_count}), "
+                        f"재시도 예정 (시도 {retry_count})"
+                    )
             
-            # 2. RESET
-            reset_command = f"{self.robot_name}::ROUTINE::{routine_to_stop}::RESET"
-            self.publish_command(reset_command)
-            self.node.get_logger().info(f"[STOP] 루틴 RESET: {routine_to_stop}")
-            
-            # RESET 완료 대기 (로봇 시스템이 RESET을 처리할 시간 확보)
-            time.sleep(0.3)
-            
-            # 3. STOP 명령 (루틴 완전 중단)
+            # 5. STOP 명령 (루틴 완전 중단) - Idle 확인 성공 후에만 실행
             stop_command = f"{self.robot_name}::ROUTINE::{routine_to_stop}::STOP"
             self.publish_command(stop_command)
             self.node.get_logger().info(f"[STOP] 루틴 STOP: {routine_to_stop}")
@@ -277,6 +340,7 @@ class AllexIdleInteractionNode(Node):
         
         # 현재 실행 중인 루틴 이름 추적 (실제 실행 중인 루틴)
         self.actual_running_routine = None  # 실제 실행 중인 루틴 이름
+        self.routine_nodes_count = 0  # 최신 nodes 개수 저장 (피드백 기반 제어용)
         
         # RoutineController 초기화
         self.routine_controller = RoutineController(self, robot_name="X")
@@ -306,6 +370,10 @@ class AllexIdleInteractionNode(Node):
             
             # 루틴이 비어있는지 확인 (루틴 종료 상태)
             nodes = data.get("nodes", [])
+            
+            # nodes 개수 저장 (피드백 기반 제어용)
+            self.routine_nodes_count = len(nodes) if nodes else 0
+            
             if not nodes or len(nodes) == 0:
                 self.actual_running_routine = None
                 return

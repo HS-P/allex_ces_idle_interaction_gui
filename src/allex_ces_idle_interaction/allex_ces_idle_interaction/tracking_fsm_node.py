@@ -334,19 +334,21 @@ class TrackingFSMNode(Node):
         # 상태 머신 처리
         if not detections:
             # 감지된 객체가 없으면 상태 업데이트
-            if not self.manual_mode:
-                match self.state:
-                    case TrackingState.TRACKING:
-                        self.state = TrackingState.LOST
-                        self.lost_frames = 0
-                    case TrackingState.LOST:
-                        self.lost_frames += 1
-                        if self.lost_frames >= self.max_lost_frames:
-                            self.state = TrackingState.SEARCHING
-                            if not self.target_explicitly_set:
-                                self.target_track_id = None
-                    case _:
-                        pass
+            # Manual Mode에서도 안전을 위해 TRACKING -> LOST 전환은 허용
+            match self.state:
+                case TrackingState.TRACKING:
+                    self.state = TrackingState.LOST
+                    self.lost_frames = 0
+                case TrackingState.LOST:
+                    self.lost_frames += 1
+                    # LOST -> SEARCHING 자동 전이는 Manual Mode에서 비활성화
+                    if self.lost_frames >= self.max_lost_frames and not self.manual_mode:
+                        self.state = TrackingState.SEARCHING
+                        if not self.target_explicitly_set:
+                            self.target_track_id = None
+                    # Manual Mode에서는 LOST 상태 유지 (lost_frames만 증가)
+                case _:
+                    pass
             
             target_info = TargetInfo(
                 point=None,
@@ -361,6 +363,79 @@ class TrackingFSMNode(Node):
             if self.state != TrackingState.TRACKING:
                 self.state = TrackingState.TRACKING
             self.lost_frames = 0
+        
+        # TRACKING 상태: 타겟 손실 감지 (Manual Mode에서도 안전을 위해 허용)
+        if self.state == TrackingState.TRACKING:
+            # 현재 타겟이 HELLO 완료 ID이면 LOST로 전환
+            if self.target_track_id is not None and self.target_track_id in self.hello_done_track_ids:
+                self.get_logger().info(
+                    f"TRACKING: 타겟 ID={self.target_track_id}는 HELLO 완료 ID이므로 LOST로 전환"
+                )
+                self.target_track_id = None
+                self.target_explicitly_set = False
+                self.state = TrackingState.LOST
+                self.lost_frames = 0
+                # target_exists는 이미 False가 되므로 target_info 반환
+                target_info = TargetInfo(
+                    point=None,
+                    state=self.state,
+                    track_id=self.target_track_id
+                )
+                return [], target_info
+            
+            # 타겟이 존재하면 타겟 선택 시간 업데이트 (타겟 유지 중)
+            if target_exists and self.target_track_id is not None:
+                if self.target_selected_time is None:
+                    self.target_selected_time = current_time
+            
+            # Manual Mode에서도 타겟 손실 시 LOST로 전환 (안전을 위해)
+            if not target_exists and self.target_track_id is not None:
+                # 타겟 lock 시간이 지나지 않았으면 타겟 유지 (ID 스위치 방지)
+                should_keep_target = False
+                if self.target_selected_time is not None:
+                    elapsed_since_selection = current_time - self.target_selected_time
+                    if elapsed_since_selection < self.target_lock_duration:
+                        # 타겟 lock 기간 중이면 LOST로 전환하지 않음 (타겟 유지)
+                        should_keep_target = True
+                        self.get_logger().debug(
+                            f"타겟 lock 중: ID={self.target_track_id}, "
+                            f"경과={elapsed_since_selection:.1f}초/{self.target_lock_duration}초"
+                        )
+                
+                if not should_keep_target:
+                    self.state = TrackingState.LOST
+                    self.lost_frames = 0
+        
+        # LOST 상태: 동일 타겟 복귀 감지 (Manual Mode에서도 허용)
+        if self.state == TrackingState.LOST:
+            # target_exists는 이미 hello_done_track_ids를 체크하므로,
+            # HELLO 완료 ID는 자동으로 제외됨
+            if target_exists:
+                # 동일 타겟이 다시 나타남 -> TRACKING으로 복귀
+                self.state = TrackingState.TRACKING
+                self.lost_frames = 0
+                # Auto Mode에서는 target_explicitly_set을 False로 유지
+                # Manual Mode에서는 target_explicitly_set을 True로 유지
+                if not self.manual_mode and self.target_explicitly_set:
+                    self.target_explicitly_set = False
+            elif self.target_track_id is not None and self.target_track_id in self.hello_done_track_ids:
+                # 현재 타겟이 HELLO 완료 ID이면 타겟을 None으로 설정하고 LOST 상태 유지
+                self.get_logger().info(
+                    f"LOST: 타겟 ID={self.target_track_id}는 HELLO 완료 ID이므로 타겟 해제"
+                )
+                self.target_track_id = None
+                self.target_explicitly_set = False
+            else:
+                self.lost_frames += 1
+                # LOST -> SEARCHING 자동 전이는 Manual Mode에서 비활성화
+                if self.lost_frames >= self.max_lost_frames and not self.manual_mode:
+                    # Auto Mode에서는 항상 SEARCHING으로 전환 (새 타겟 자동 선택)
+                    if self.target_track_id is not None:
+                        # SEARCHING 전환 시 마지막 위치는 유지 (같은 사람을 찾기 위해)
+                        # target_track_id만 None으로 설정
+                        self.target_track_id = None
+                        self.target_explicitly_set = False
+                    self.state = TrackingState.SEARCHING
         
         # 상태 머신 처리 (Manual 모드가 아닐 때만 자동 전이)
         if not self.manual_mode:
@@ -431,71 +506,9 @@ class TrackingFSMNode(Node):
                             if self.target_selected_time is None:
                                 self.target_selected_time = current_time
                 
-                case TrackingState.TRACKING:
-                    # 현재 타겟이 HELLO 완료 ID이면 LOST로 전환
-                    if self.target_track_id is not None and self.target_track_id in self.hello_done_track_ids:
-                        self.get_logger().info(
-                            f"TRACKING: 타겟 ID={self.target_track_id}는 HELLO 완료 ID이므로 LOST로 전환"
-                        )
-                        self.target_track_id = None
-                        self.target_explicitly_set = False
-                        self.state = TrackingState.LOST
-                        self.lost_frames = 0
-                        # target_exists는 이미 False가 되므로 아래 조건은 실행되지 않음
-                        return [], target_info
-                    
-                    # 타겟이 존재하면 타겟 선택 시간 업데이트 (타겟 유지 중)
-                    if target_exists and self.target_track_id is not None:
-                        if self.target_selected_time is None:
-                            self.target_selected_time = current_time
-                    
-                    # HELLO 상태 전환은 gaze_controller_neck_waist_node에서 처리
-                    if not target_exists and self.target_track_id is not None and not self.target_explicitly_set:
-                        # 타겟 lock 시간이 지나지 않았으면 타겟 유지 (ID 스위치 방지)
-                        should_keep_target = False
-                        if self.target_selected_time is not None:
-                            elapsed_since_selection = current_time - self.target_selected_time
-                            if elapsed_since_selection < self.target_lock_duration:
-                                # 타겟 lock 기간 중이면 LOST로 전환하지 않음 (타겟 유지)
-                                should_keep_target = True
-                                self.get_logger().debug(
-                                    f"타겟 lock 중: ID={self.target_track_id}, "
-                                    f"경과={elapsed_since_selection:.1f}초/{self.target_lock_duration}초"
-                                )
-                        
-                        if not should_keep_target:
-                            self.state = TrackingState.LOST
-                            self.lost_frames = 0
-                
-                case TrackingState.LOST:
-                    # target_exists는 이미 hello_done_track_ids를 체크하므로,
-                    # HELLO 완료 ID는 자동으로 제외됨
-                    if target_exists:
-                        self.state = TrackingState.TRACKING
-                        self.lost_frames = 0
-                        # Auto Mode에서는 target_explicitly_set을 False로 유지
-                        if not self.manual_mode and self.target_explicitly_set:
-                            self.target_explicitly_set = False
-                    elif self.target_track_id is not None and self.target_track_id in self.hello_done_track_ids:
-                        # 현재 타겟이 HELLO 완료 ID이면 타겟을 None으로 설정하고 LOST 상태 유지
-                        # (다음 SEARCHING에서 다른 타겟 선택)
-                        self.get_logger().info(
-                            f"LOST: 타겟 ID={self.target_track_id}는 HELLO 완료 ID이므로 타겟 해제"
-                        )
-                        self.target_track_id = None
-                        self.target_explicitly_set = False
-                    else:
-                        self.lost_frames += 1
-                        if self.lost_frames >= self.max_lost_frames:
-                            # Auto Mode에서는 항상 SEARCHING으로 전환 (새 타겟 자동 선택)
-                            # Manual Mode에서는 target_explicitly_set이 False일 때만 SEARCHING으로 전환
-                            if self.target_track_id is None or not self.target_explicitly_set or not self.manual_mode:
-                                if self.target_track_id is not None:
-                                    # SEARCHING 전환 시 마지막 위치는 유지 (같은 사람을 찾기 위해)
-                                    # target_track_id만 None으로 설정
-                                    self.target_track_id = None
-                                    self.target_explicitly_set = False
-                                self.state = TrackingState.SEARCHING
+                # TRACKING과 LOST 케이스는 블록 밖에서 처리 (Manual Mode에서도 안전 관련 전환 허용)
+                # case TrackingState.TRACKING: (제거됨 - 블록 밖에서 처리)
+                # case TrackingState.LOST: (제거됨 - 블록 밖에서 처리)
                 
                 case TrackingState.SEARCHING:
                     if detections:

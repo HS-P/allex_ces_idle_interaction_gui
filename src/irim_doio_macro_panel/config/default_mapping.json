@@ -1,0 +1,1347 @@
+{
+  "version": 1,
+  "config_name": "default_kb16_mapping",
+  "device": {
+    "grab": true,
+    "reconnect_period_ms": 500,
+    "paths": [],
+    "match": {
+      "name": "DOIO_KB16B",
+      "vendor": "0x1915",
+      "product": "0xEEEE",
+      "uniq": "cc:56:4f:a3:81:30"
+    }
+  },
+  "ros": {
+    "topic": "/hmi/robot_command_wontae",
+    "qos_depth": 10
+  },
+  "robot_discovery": {
+    "enabled": true,
+    "method": "ros2_topic_list_subprocess",
+    "topic_regex": "^/robot_outbound_data/([^/]+)/",
+    "refresh_period_sec": 2.0
+  },
+  "ui": {
+    "window_title": "DOIO Macro → ROS2 Topic Publisher",
+    "auto_save_debounce_ms": 250,
+    "debug_log_keys": true
+  },
+  "behavior": {
+    "publish_key": "KEY_P",
+    "clear_pending_key": "KEY_MUTE",
+    "pending_prefix": "",
+    "message_format": "{robots}::{suffix}",
+    "suppress_base_action_on_chord": true
+  },
+  "layer": {
+    "initial": 0,
+    "suppress_base_action_on_indicator": true,
+    "indicator_keys": {
+      "KEY_F1": 0,
+      "KEY_F2": 1,
+      "KEY_F3": 2,
+      "KEY_F4": 3,
+      "KEY_F5": 4,
+      "KEY_F6": 5,
+      "KEY_F7": 6,
+      "KEY_F8": 7,
+      "KEY_F9": 8
+    }
+  },
+  "robot_selection": {
+    "enabled": false,
+    "suppress_base_action": false,
+    "keys": {
+      "KEY_D": {
+        "kind": "select_all"
+      },
+      "KEY_E": {
+        "kind": "select_group",
+        "group": "Arm_L"
+      },
+      "KEY_F": {
+        "kind": "select_group",
+        "group": "Arm_R"
+      },
+      "KEY_G": {
+        "kind": "select_group",
+        "group": "Hand_L"
+      },
+      "KEY_H": {
+        "kind": "select_group",
+        "group": "Hand_R"
+      }
+    }
+  },
+  "chords": [
+    {
+      "when_held": [
+        "KEY_B"
+      ],
+      "then_press": "KEY_A",
+      "action": {
+        "kind": "publish_suffix",
+        "suffix": "STATUS::ESTOP"
+      },
+      "description": "Hold B + press A → publish ESTOP"
+    }
+  ],
+  "layers": [
+    {
+      "name": "L0",
+      "bindings": {
+        "KEY_5": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_A": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_B": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_C": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_D": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_E": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F1": {
+          "kind": "set_layer",
+          "layer": 0
+        },
+        "KEY_F13": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F14": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F15": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F16": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F17": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F18": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F19": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F2": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F20": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F21": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F3": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F4": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F5": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F6": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F7": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F8": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F9": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_G": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_H": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_I": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_J": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_K": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_L": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_M": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_MUTE": {
+          "kind": "clear_pending"
+        },
+        "KEY_P": {
+          "kind": "publish_pending"
+        }
+      }
+    },
+    {
+      "name": "L1",
+      "bindings": {
+        "KEY_5": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_A": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_B": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_C": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_D": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_E": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F1": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F13": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F14": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F15": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F16": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F17": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F18": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F19": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F2": {
+          "kind": "set_layer",
+          "layer": 1
+        },
+        "KEY_F20": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F21": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F3": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F4": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F5": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F6": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F7": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F8": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F9": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_G": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_H": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_I": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_J": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_K": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_L": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_M": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_MUTE": {
+          "kind": "clear_pending"
+        },
+        "KEY_P": {
+          "kind": "publish_pending"
+        }
+      }
+    },
+    {
+      "name": "L2",
+      "bindings": {
+        "KEY_5": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_A": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_B": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_C": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_D": {
+          "kind": "select_all",
+          "description": "SEL ALL"
+        },
+        "KEY_E": {
+          "kind": "select_group",
+          "group": "Arm_L",
+          "description": "Arm L"
+        },
+        "KEY_F": {
+          "kind": "select_group",
+          "group": "Arm_R",
+          "description": "Arm R"
+        },
+        "KEY_F1": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F13": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F14": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F15": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F16": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F17": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F18": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F19": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F2": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F20": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F21": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F3": {
+          "kind": "set_layer",
+          "layer": 2
+        },
+        "KEY_F4": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F5": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F6": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F7": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F8": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F9": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_G": {
+          "kind": "select_group",
+          "group": "Hand_L",
+          "description": "Hand L"
+        },
+        "KEY_H": {
+          "kind": "select_group",
+          "group": "Hand_R",
+          "description": "Hand R"
+        },
+        "KEY_I": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_J": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_K": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_L": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_M": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_MUTE": {
+          "kind": "clear_pending"
+        },
+        "KEY_P": {
+          "kind": "publish_pending"
+        }
+      }
+    },
+    {
+      "name": "L3",
+      "bindings": {
+        "KEY_5": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_A": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_B": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_C": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_D": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_E": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F1": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F13": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F14": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F15": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F16": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F17": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F18": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F19": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F2": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F20": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F21": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F3": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F4": {
+          "kind": "set_layer",
+          "layer": 3
+        },
+        "KEY_F5": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F6": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F7": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F8": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F9": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_G": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_H": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_I": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_J": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_K": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_L": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_M": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_MUTE": {
+          "kind": "clear_pending"
+        },
+        "KEY_P": {
+          "kind": "publish_pending"
+        }
+      }
+    },
+    {
+      "name": "L4",
+      "bindings": {
+        "KEY_5": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_A": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_B": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_C": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_D": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_E": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F1": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F13": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F14": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F15": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F16": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F17": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F18": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F19": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F2": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F20": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F21": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F3": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F4": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F5": {
+          "kind": "set_layer",
+          "layer": 4
+        },
+        "KEY_F6": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F7": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F8": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F9": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_G": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_H": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_I": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_J": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_K": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_L": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_M": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_MUTE": {
+          "kind": "clear_pending"
+        },
+        "KEY_P": {
+          "kind": "publish_pending"
+        }
+      }
+    },
+    {
+      "name": "L5",
+      "bindings": {
+        "KEY_5": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_A": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_B": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_C": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_D": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_E": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F1": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F13": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F14": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F15": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F16": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F17": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F18": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F19": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F2": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F20": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F21": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F3": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F4": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F5": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F6": {
+          "kind": "set_layer",
+          "layer": 5
+        },
+        "KEY_F7": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F8": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F9": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_G": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_H": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_I": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_J": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_K": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_L": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_M": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_MUTE": {
+          "kind": "clear_pending"
+        },
+        "KEY_P": {
+          "kind": "publish_pending"
+        }
+      }
+    },
+    {
+      "name": "L6",
+      "bindings": {
+        "KEY_5": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_A": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_B": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_C": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_D": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_E": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F1": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F13": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F14": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F15": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F16": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F17": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F18": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F19": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F2": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F20": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F21": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F3": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F4": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F5": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F6": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F7": {
+          "kind": "set_layer",
+          "layer": 6
+        },
+        "KEY_F8": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F9": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_G": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_H": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_I": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_J": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_K": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_L": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_M": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_MUTE": {
+          "kind": "clear_pending"
+        },
+        "KEY_P": {
+          "kind": "publish_pending"
+        }
+      }
+    },
+    {
+      "name": "L7",
+      "bindings": {
+        "KEY_5": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_A": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_B": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_C": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_D": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_E": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F1": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F13": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F14": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F15": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F16": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F17": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F18": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F19": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F2": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F20": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F21": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F3": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F4": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F5": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F6": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F7": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F8": {
+          "kind": "set_layer",
+          "layer": 7
+        },
+        "KEY_F9": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_G": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_H": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_I": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_J": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_K": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_L": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_M": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_MUTE": {
+          "kind": "clear_pending"
+        },
+        "KEY_P": {
+          "kind": "publish_pending"
+        }
+      }
+    },
+    {
+      "name": "L8",
+      "bindings": {
+        "KEY_5": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_A": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_B": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_C": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_D": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_E": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F1": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F13": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F14": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F15": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F16": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F17": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F18": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F19": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F2": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F20": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F21": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F3": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F4": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F5": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F6": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F7": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F8": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_F9": {
+          "kind": "set_layer",
+          "layer": 8
+        },
+        "KEY_G": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_H": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_I": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_J": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_K": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_L": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_M": {
+          "kind": "set_pending",
+          "suffix": ""
+        },
+        "KEY_MUTE": {
+          "kind": "clear_pending"
+        },
+        "KEY_P": {
+          "kind": "publish_pending"
+        }
+      }
+    }
+  ]
+}
