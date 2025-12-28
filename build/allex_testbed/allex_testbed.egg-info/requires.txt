@@ -1,8 +1,8 @@
-PyQt5
-huggingface-hub
-numpy
-opencv-python
-pyyaml
 setuptools
+pyyaml
+numpy
+PyQt5
+opencv-python
 torch
 ultralytics
+huggingface-hub

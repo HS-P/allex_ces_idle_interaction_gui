@@ -1,0 +1,9 @@
+source;share/irim_doio_macro_panel/hook/pythonpath.ps1
+source;share/irim_doio_macro_panel/hook/pythonpath.dsv
+source;share/irim_doio_macro_panel/hook/pythonpath.sh
+source;share/irim_doio_macro_panel/hook/ament_prefix_path.ps1
+source;share/irim_doio_macro_panel/hook/ament_prefix_path.dsv
+source;share/irim_doio_macro_panel/hook/ament_prefix_path.sh
+source;../../build/irim_doio_macro_panel/share/irim_doio_macro_panel/hook/pythonpath_develop.ps1
+source;../../build/irim_doio_macro_panel/share/irim_doio_macro_panel/hook/pythonpath_develop.dsv
+source;../../build/irim_doio_macro_panel/share/irim_doio_macro_panel/hook/pythonpath_develop.sh

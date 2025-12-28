@@ -1,0 +1,7 @@
+[0.723s] Invoking command in '/home/dgx_allex_one/allex_ces_idle_interaction_gui/build/irim_doio_macro_panel': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/dgx_allex_one/allex_ces_idle_interaction_gui/build/irim_doio_macro_panel/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/dgx_allex_one/allex_ces_idle_interaction_gui/install/irim_doio_macro_panel/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/dgx_allex_one/allex_ces_idle_interaction_gui/build/irim_doio_macro_panel/build --no-deps symlink_data
+[0.829s] usage: setup.py [global_opts] cmd1 [cmd1_opts] [cmd2 [cmd2_opts] ...]
+[0.829s]    or: setup.py --help [cmd1 cmd2 ...]
+[0.829s]    or: setup.py --help-commands
+[0.829s]    or: setup.py cmd --help
+[0.829s] 
+[0.829s] error: option --editable not recognized

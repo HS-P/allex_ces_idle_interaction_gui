@@ -1,0 +1,2 @@
+[console_scripts]
+doio_macro_panel = irim_doio_macro_panel.main:main

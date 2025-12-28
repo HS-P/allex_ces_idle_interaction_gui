@@ -1347,6 +1347,15 @@ class GazeControllerNode(Node):
             
                 case TrackingState.SEARCHING:
                     # SEARCHING 동작: 목과 허리 독립 제어
+                    # HELLO -> SEARCHING 전환 시 부드러운 전환 보장
+                    if prev_lost_state == TrackingState.HELLO or prev_lost_state == TrackingState.HANDSHAKE:
+                        # HELLO/HANDSHAKE에서 SEARCHING으로 전환될 때 현재 위치에서 시작
+                        self.last_neck_target_yaw = self.current_yaw_rad
+                        self.get_logger().info(
+                            f"[HELLO/HANDSHAKE -> SEARCHING 전환] 부드러운 전환을 위해 last_neck_target_yaw를 현재 위치로 초기화: "
+                            f"{math.degrees(self.current_yaw_rad):.2f}도"
+                        )
+                    
                     command_yaw_rad, command_pitch_rad = self._searching_behavior()
                     
                     # _searching_behavior()에서 계산된 exponential smoothing 명령 사용

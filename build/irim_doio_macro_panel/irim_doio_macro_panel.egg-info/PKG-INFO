@@ -1,0 +1,7 @@
+Metadata-Version: 2.1
+Name: irim-doio-macro-panel
+Version: 0.1.0
+Summary: DOIO macro keyboard -> ROS2 topic publisher (GUI + JSON mapping).
+Maintainer: user
+Maintainer-email: user@example.com
+License: MIT
