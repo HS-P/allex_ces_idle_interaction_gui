@@ -250,8 +250,8 @@ class GuiNode(Node, QMainWindow):
             except (KeyError, AttributeError):
                 self.current_state = TrackingState.IDLE
             
-            # Manual 모드에서 상태 변경 시 콤보박스 업데이트
-            if self.manual_btn.isChecked() and self.current_state != prev_state:
+            # 상태 변경 시 콤보박스 업데이트 (RUN 중일 때만, Manual 모드가 아니어도 업데이트)
+            if self.current_state != prev_state:
                 state_display_str = self.current_state.value.upper()
                 current_combo_text = self.state_combo.currentText()
                 if current_combo_text != state_display_str:
@@ -265,9 +265,39 @@ class GuiNode(Node, QMainWindow):
             if manual_mode is not None:
                 current_manual_state = self.manual_btn.isChecked()
                 if manual_mode != current_manual_state:
-                    # tracking_data에서 받은 모드 정보로 UI 업데이트
-                    self.set_mode(manual_mode)
+                    # tracking_data에서 받은 모드 정보로 UI 업데이트 (시그널 없이 직접 업데이트하여 무한 루프 방지)
+                    self.manual_btn.blockSignals(True)
+                    self.auto_btn.blockSignals(True)
+                    if manual_mode:
+                        self.manual_btn.setChecked(True)
+                        self.auto_btn.setChecked(False)
+                        self.manual_btn.setStyleSheet("font-size: 12pt; font-weight: bold; background-color: #90EE90; color: black;")
+                        self.auto_btn.setStyleSheet("font-size: 12pt; font-weight: bold; background-color: #E0E0E0; color: black;")
+                    else:
+                        self.manual_btn.setChecked(False)
+                        self.auto_btn.setChecked(True)
+                        self.manual_btn.setStyleSheet("font-size: 12pt; font-weight: bold; background-color: #E0E0E0; color: black;")
+                        self.auto_btn.setStyleSheet("font-size: 12pt; font-weight: bold; background-color: #90EE90; color: black;")
+                    self.manual_btn.blockSignals(False)
+                    self.auto_btn.blockSignals(False)
                     self.get_logger().info(f"[GUI] tracking_data에서 모드 변경 감지: {'MANUAL' if manual_mode else 'AUTO'}")
+            
+            # RUN/STOP 상태 정보도 업데이트 (tracking_data에 포함되어 있다면)
+            is_running = data.get('is_running', None)
+            if is_running is not None:
+                if is_running != self.is_running:
+                    self.is_running = is_running
+                    self.run_btn.blockSignals(True)
+                    if is_running:
+                        self.run_btn.setChecked(True)
+                        self.run_btn.setText("STOP")
+                        self.run_btn.setStyleSheet("font-size: 16pt; font-weight: bold; background-color: #90EE90; color: black;")
+                    else:
+                        self.run_btn.setChecked(False)
+                        self.run_btn.setText("RUN")
+                        self.run_btn.setStyleSheet("font-size: 16pt; font-weight: bold; background-color: #E0E0E0; color: black;")
+                    self.run_btn.blockSignals(False)
+                    self.get_logger().info(f"[GUI] tracking_data에서 RUN 상태 변경 감지: {'RUN' if is_running else 'STOP'}")
             
             target_info_data = data.get('target_info', {})
             if target_info_data:
@@ -945,6 +975,12 @@ class GuiNode(Node, QMainWindow):
                 manual_mode = command.get('manual', False)
                 self.get_logger().info(f"[GUI] 외부 명령 수신: 모드 변경 → {'MANUAL' if manual_mode else 'AUTO'}")
                 self.signals.update_mode_ui.emit(manual_mode)  # True = Manual, False = Auto
+            
+            elif cmd_type == 'set_state':
+                # 상태 변경 명령 수신 시 UI 업데이트는 tracking_data 콜백에서 처리
+                # (tracking_result가 발행되면 자동으로 상태가 업데이트됨)
+                state_str = command.get('state', 'idle')
+                self.get_logger().info(f"[GUI] 외부 명령 수신: 상태 변경 → {state_str.upper()}")
                         
         except json.JSONDecodeError as e:
             self.get_logger().error(f"Manual 제어 명령 파싱 실패: {e}")
@@ -1058,14 +1094,13 @@ class GuiNode(Node, QMainWindow):
         color = state_colors.get(state_str, 'black')
         self.state_label.setStyleSheet(f"font-weight: bold; font-size: 14pt; color: {color};")
         
-        # ComboBox 동기화 (Manual 모드에서만)
-        if self.manual_btn.isChecked():
-            current_combo_text = self.state_combo.currentText()
-            if current_combo_text != state_str:
-                self.state_combo.blockSignals(True)
-                self.state_combo.setCurrentText(state_str)
-                self.state_combo.blockSignals(False)
-                self.get_logger().debug(f"[GUI] update_info: 콤보박스 업데이트 {current_combo_text} → {state_str}")
+        # ComboBox 동기화 (항상 업데이트 - 상태 변경 시 자동 반영)
+        current_combo_text = self.state_combo.currentText()
+        if current_combo_text != state_str:
+            self.state_combo.blockSignals(True)
+            self.state_combo.setCurrentText(state_str)
+            self.state_combo.blockSignals(False)
+            self.get_logger().debug(f"[GUI] update_info: 콤보박스 업데이트 {current_combo_text} → {state_str}")
         
         # FPS 및 처리 시간 표시
         self.fps_label.setText(f"{self.fps:.1f}" if self.fps > 0 else "--")

@@ -16,6 +16,7 @@ import cv2
 import numpy as np
 
 from .tracking_fsm_node import TrackingState
+from typing import Optional
 
 cv2.setNumThreads(0)  # OpenCV의 멀티스레딩 비활성화
 
@@ -28,6 +29,14 @@ class RoutineController:
         self.robot_name = robot_name
         self.current_routine = None
         self.breathing_routine_running = False  # idle_breathing_rt 실행 상태 추적
+        
+        # RESET 대기 상태 추적
+        self.waiting_for_reset = False  # RESET 대기 중인지
+        self.resetting_routine_name = None  # 현재 RESET 중인 루틴 이름 (단일 루틴 RESET 시 사용)
+        
+        # START 명령 확인용 (플래그 기반)
+        self.expected_routine_name = None  # START 명령 발행 시 예상하는 루틴 이름
+        self.expected_routine_start_time = None  # START 명령 발행 시각
         
         # HMI 명령 Publisher
         self.command_pub = node.create_publisher(
@@ -62,7 +71,7 @@ class RoutineController:
             True: Idle 상태 도달 성공
             False: 타임아웃
         """
-
+        import rclpy
         start_time = time.monotonic()
         while (time.monotonic() - start_time) < timeout:
             # 다른 콜백(/debug/routine 등)이 실행될 수 있도록 spin_once 호출
@@ -75,6 +84,137 @@ class RoutineController:
         
         self.node.get_logger().warn(f"Idle 상태 확인 타임아웃 ({timeout}초, 현재 nodes={self.node.routine_nodes_count})")
         return False
+    
+    def start_pause_reset_all_routines(self):
+        """
+        모든 루틴에 대해 PAUSE -> RESET 명령 발행 (STOP 명령 시에만 사용)
+        (RESET 완료될 때까지 계속 호출됨)
+        """
+        # 모든 루틴 이름 목록 (현재 사용 중인 루틴들)
+        all_routine_names = [
+            "idle_breathing_rt",
+            "idling_heart_rt",
+            "idling_handshake_rt"
+        ]
+        
+        # RESET 완료 플래그 초기화
+        self.node.routine_reset_complete_flag = False
+        # START 확인 플래그 초기화 (PAUSE/RESET 시작 시)
+        self.expected_routine_name = None
+        self.expected_routine_start_time = None
+        
+        # 모든 루틴에 대해 PAUSE 명령 발행 (0.05초 간격)
+        for routine_name in all_routine_names:
+            pause_command = f"{self.robot_name}::ROUTINE::{routine_name}::PAUSE"
+            self.publish_command(pause_command)
+            time.sleep(0.05)
+        
+        # 모든 루틴에 대해 RESET 명령 발행 (0.05초 간격)
+        for routine_name in all_routine_names:
+            reset_command = f"{self.robot_name}::ROUTINE::{routine_name}::RESET"
+            self.publish_command(reset_command)
+            time.sleep(0.05)
+        
+        self.node.get_logger().info(f"[PAUSE/RESET ALL] PAUSE/RESET 명령 발행 (현재 nodes={self.node.routine_nodes_count})")
+    
+    def start_pause_reset_single_routine(self, routine_name: str):
+        """
+        특정 루틴에 대해 PAUSE -> RESET 명령 발행 (0.05초 간격)
+        """
+        # RESET 완료 플래그 초기화
+        self.node.routine_reset_complete_flag = False
+        # START 확인 플래그 초기화 (PAUSE/RESET 시작 시)
+        self.expected_routine_name = None
+        self.expected_routine_start_time = None
+        # RESET 중인 루틴 이름 저장
+        self.resetting_routine_name = routine_name
+        
+        # 특정 루틴에 대해 PAUSE 명령 발행
+        pause_command = f"{self.robot_name}::ROUTINE::{routine_name}::PAUSE"
+        self.publish_command(pause_command)
+        time.sleep(0.05)
+        
+        # 특정 루틴에 대해 RESET 명령 발행
+        reset_command = f"{self.robot_name}::ROUTINE::{routine_name}::RESET"
+        self.publish_command(reset_command)
+        time.sleep(0.05)
+        
+        self.node.get_logger().info(f"[PAUSE/RESET] {routine_name} PAUSE/RESET 명령 발행 (현재 nodes={self.node.routine_nodes_count})")
+    
+    def is_reset_complete(self) -> bool:
+        """
+        RESET 완료 여부 확인 (콜백에서 설정된 플래그 확인)
+        
+        Returns:
+            True: RESET 완료 (플래그가 True)
+            False: RESET 미완료 (플래그가 False)
+        """
+        return self.node.routine_reset_complete_flag
+    
+    def transition_to_routine(self, from_routine: Optional[str], to_routine: str, old_state: TrackingState, new_state: TrackingState):
+        """
+        루틴 전환: 현재 루틴 PAUSE/RESET (0.05초 간격) → 피드백 확인 → 목표 루틴 START
+        
+        Args:
+            from_routine: 현재 실행 중인 루틴 이름 (None이면 실행 중이 아님)
+            to_routine: 목표 루틴 이름
+            old_state: 이전 상태
+            new_state: 새로운 상태
+        """
+        # RESET 완료 확인
+        if self.is_reset_complete():
+            # RESET 완료: 목표 루틴 START
+            self.waiting_for_reset = False
+            self.resetting_routine_name = None
+            
+            # RESET 후 시스템 안정화 대기 (1초)
+            time.sleep(1.0)
+            
+            # 목표 루틴 START
+            command = f"{self.robot_name}::ROUTINE::{to_routine}::START"
+            self.current_routine = to_routine
+            
+            # breathing 루틴인지 확인
+            if to_routine == "idle_breathing_rt":
+                self.breathing_routine_running = True
+            else:
+                self.breathing_routine_running = False
+            
+            self.publish_command(command)
+            
+            # START 명령 확인용 플래그 설정
+            self.expected_routine_name = to_routine
+            self.expected_routine_start_time = time.monotonic()
+            
+            self.node.get_logger().info(
+                f"{old_state.value} → {new_state.value}: {from_routine or 'None'} PAUSE → RESET → {to_routine} 시작"
+            )
+        else:
+            # RESET 미완료: 현재 루틴 PAUSE/RESET 계속 발행 (0.05초 간격)
+            self.waiting_for_reset = True
+            if from_routine:
+                self.start_pause_reset_single_routine(from_routine)
+            else:
+                # 현재 루틴이 없으면 바로 목표 루틴 START
+                self.waiting_for_reset = False
+                self.resetting_routine_name = None
+                
+                command = f"{self.robot_name}::ROUTINE::{to_routine}::START"
+                self.current_routine = to_routine
+                
+                if to_routine == "idle_breathing_rt":
+                    self.breathing_routine_running = True
+                else:
+                    self.breathing_routine_running = False
+                
+                self.publish_command(command)
+                
+                self.expected_routine_name = to_routine
+                self.expected_routine_start_time = time.monotonic()
+                
+                self.node.get_logger().info(
+                    f"{old_state.value} → {new_state.value}: 현재 루틴 없음, {to_routine} 시작"
+                )
     
     def start_breathing(self):
         """숨쉬기 루틴 시작 (무한 반복) - 기존 루틴이 없을 경우 바로 실행"""
@@ -93,168 +233,74 @@ class RoutineController:
         time.sleep(0.07)
         
         # 루틴 시작
-        command = f"{self.robot_name}::ROUTINE::idle_breathing_rt::START"
-        self.current_routine = "idle_breathing_rt"
+        routine_name = "idle_breathing_rt"
+        command = f"{self.robot_name}::ROUTINE::{routine_name}::START"
+        self.current_routine = routine_name
         self.breathing_routine_running = True
         self.publish_command(command)
-    
-    def pause_reset_and_start_heart(self):
-        """HELLO 전환 전: 현재 루틴 PAUSE → RESET → Idle 확인 → 하트 루틴 시작"""
-        # 현재 루틴이 실행 중인 경우
-        if self.current_routine and self.breathing_routine_running:
-            retry_count = 0
-            
-            while True:  # Idle 확인 성공할 때까지 무한 반복
-                retry_count += 1
-                if retry_count > 1:
-                    self.node.get_logger().warn(f"RESET 재시도 {retry_count - 1}")
-                
-                # 1. PAUSE 명령 전송
-                pause_command = f"{self.robot_name}::ROUTINE::{self.current_routine}::PAUSE"
-                self.publish_command(pause_command)
-                self.node.get_logger().info(f"루틴 PAUSE: {self.current_routine} (시도 {retry_count})")
-                
-                # 2. PAUSE 처리 시간 대기 (0.1초)
-                time.sleep(0.1)
-                
-                # 3. RESET 명령 전송
-                reset_command = f"{self.robot_name}::ROUTINE::{self.current_routine}::RESET"
-                self.publish_command(reset_command)
-                self.node.get_logger().info(f"루틴 RESET: {self.current_routine} (시도 {retry_count})")
-                self.breathing_routine_running = False
-                
-                # 4. Idle 상태 확인 (0.1초마다 확인, 타임아웃 3.0초)
-                if self.wait_for_idle(timeout=3.0, check_interval=0.1):
-                    # Idle 확인 성공
-                    self.node.get_logger().info("RESET 완료 확인: Idle 상태 도달")
-                    break  # 성공 시에만 루프 탈출
-                else:
-                    # Idle 확인 실패 - 계속 재시도
-                    self.node.get_logger().warn(
-                        f"RESET 확인 실패 (nodes={self.node.routine_nodes_count}), "
-                        f"재시도 예정 (시도 {retry_count})"
-                    )
-            
-            # STATUS::RUN 명령 발행 (READY 상태로 전환)
-            status_run_command = "theOne_neck,theOne_waist::STATUS::RUN"
-            self.publish_command(status_run_command)
-            self.node.get_logger().info("STATUS::RUN 명령 발행")
-            time.sleep(0.1)  # 명령 처리 시간 대기
         
-        # 5. 하트 루틴 시작 (Idle 확인 성공 후에만 실행)
-        command = f"{self.robot_name}::ROUTINE::idling_heart_rt::START"
-        self.current_routine = "idling_heart_rt"
-        self.publish_command(command)
-        self.node.get_logger().info(f"하트 루틴 시작: idling_heart_rt")
-    
-    def pause_reset_and_start_handshake(self):
-        """HANDSHAKE 전환 전: 현재 루틴 PAUSE → RESET → Idle 확인 → 악수 루틴 시작"""
-        # 현재 루틴이 실행 중인 경우
-        if self.current_routine and self.breathing_routine_running:
-            retry_count = 0
-            
-            while True:  # Idle 확인 성공할 때까지 무한 반복
-                retry_count += 1
-                if retry_count > 1:
-                    self.node.get_logger().warn(f"RESET 재시도 {retry_count - 1}")
-                
-                # 1. PAUSE 명령 전송
-                pause_command = f"{self.robot_name}::ROUTINE::{self.current_routine}::PAUSE"
-                self.publish_command(pause_command)
-                self.node.get_logger().info(f"루틴 PAUSE: {self.current_routine} (시도 {retry_count})")
-                
-                # 2. PAUSE 처리 시간 대기 (0.1초)
-                time.sleep(0.1)
-                
-                # 3. RESET 명령 전송
-                reset_command = f"{self.robot_name}::ROUTINE::{self.current_routine}::RESET"
-                self.publish_command(reset_command)
-                self.node.get_logger().info(f"루틴 RESET: {self.current_routine} (시도 {retry_count})")
-                self.breathing_routine_running = False
-                
-                # 4. Idle 상태 확인 (0.1초마다 확인, 타임아웃 3.0초)
-                if self.wait_for_idle(timeout=3.0, check_interval=0.1):
-                    # Idle 확인 성공
-                    self.node.get_logger().info("RESET 완료 확인: Idle 상태 도달")
-                    break  # 성공 시에만 루프 탈출
-                else:
-                    # Idle 확인 실패 - 계속 재시도
-                    self.node.get_logger().warn(
-                        f"RESET 확인 실패 (nodes={self.node.routine_nodes_count}), "
-                        f"재시도 예정 (시도 {retry_count})"
-                    )
-            
-            # STATUS::RUN 명령 발행 (READY 상태로 전환)
-            status_run_command = "theOne_neck,theOne_waist::STATUS::RUN"
-            self.publish_command(status_run_command)
-            self.node.get_logger().info("STATUS::RUN 명령 발행")
-            time.sleep(0.1)  # 명령 처리 시간 대기
+        # START 명령 확인용 플래그 설정
+        self.expected_routine_name = routine_name
+        self.expected_routine_start_time = time.monotonic()
         
-        # 5. 악수 루틴 시작 (Idle 확인 성공 후에만 실행)
-        command = f"{self.robot_name}::ROUTINE::idling_handshake_rt::START"
-        self.current_routine = "idling_handshake_rt"
-        # breathing_routine_running은 idle_breathing_rt 전용이므로 여기서는 설정하지 않음
-        self.publish_command(command)
-        self.node.get_logger().info(f"악수 루틴 시작: idling_handshake_rt (명령 발행 완료)")
+        self.node.get_logger().info(f"idle_breathing_rt 시작: {routine_name} (명령 발행 완료, 시작 확인 대기 중)")
     
     def stop_current_routine(self):
-        """현재 실행 중인 루틴 중단: PAUSE → RESET → STOP (GUI STOP 명령 시 호출)
-        추적 중인 루틴(current_routine)을 우선 사용 (idle_breathing_rt 등), 없으면 actual_running_routine 사용"""
-        # 추적 중인 루틴 우선 사용 (idle_breathing_rt 등 사용자가 관리하는 루틴)
-        # 없으면 실제 실행 중인 루틴 사용
-        routine_to_stop = self.current_routine if self.current_routine else self.node.actual_running_routine
+        """
+        모든 루틴 중단: 모든 루틴 PAUSE → RESET → STOP (GUI STOP 명령 시 호출)
+        (블로킹 없이, 콜백에서 플래그 확인하여 처리)
+        """
+        # 처음 호출: PAUSE/RESET 명령 발행 및 STOP 대기 플래그 설정
+        self.node.get_logger().info(f"[STOP] 모든 루틴 중단 시작")
+        self.node.waiting_for_stop = True
+        # START 확인 플래그 초기화
+        self.expected_routine_name = None
+        self.expected_routine_start_time = None
+        self.start_pause_reset_all_routines()
+    
+    def _complete_stop(self):
+        """
+        STOP 완료 처리 (콜백에서 호출)
+        RESET 완료 후 모든 루틴 STOP 및 트래커/컨트롤러 STOP 명령 전송
+        """
+        if not self.node.waiting_for_stop:
+            return
         
-        if routine_to_stop:
-            self.node.get_logger().info(f"[STOP] 루틴 중단 시작: {routine_to_stop} (추적 중: {self.current_routine}, 실제 실행 중: {self.node.actual_running_routine})")
-            
-            retry_count = 0
-            
-            while True:  # Idle 확인 성공할 때까지 무한 반복
-                retry_count += 1
-                if retry_count > 1:
-                    self.node.get_logger().warn(f"[STOP] RESET 재시도 {retry_count - 1}")
-                
-                # 1. PAUSE 명령 전송
-                pause_command = f"{self.robot_name}::ROUTINE::{routine_to_stop}::PAUSE"
-                self.publish_command(pause_command)
-                self.node.get_logger().info(f"[STOP] 루틴 PAUSE: {routine_to_stop} (시도 {retry_count})")
-                
-                # 2. PAUSE 처리 시간 대기 (0.1초)
-                time.sleep(0.1)
-                
-                # 3. RESET 명령 전송
-                reset_command = f"{self.robot_name}::ROUTINE::{routine_to_stop}::RESET"
-                self.publish_command(reset_command)
-                self.node.get_logger().info(f"[STOP] 루틴 RESET: {routine_to_stop} (시도 {retry_count})")
-                
-                # 4. Idle 상태 확인 (0.1초마다 확인, 타임아웃 3.0초)
-                if self.wait_for_idle(timeout=3.0, check_interval=0.1):
-                    # Idle 확인 성공
-                    self.node.get_logger().info("[STOP] RESET 완료 확인: Idle 상태 도달")
-                    break  # 성공 시에만 루프 탈출
-                else:
-                    # Idle 확인 실패 - 계속 재시도
-                    self.node.get_logger().warn(
-                        f"[STOP] RESET 확인 실패 (nodes={self.node.routine_nodes_count}), "
-                        f"재시도 예정 (시도 {retry_count})"
-                    )
-            
-            # 5. STOP 명령 (루틴 완전 중단) - Idle 확인 성공 후에만 실행
-            stop_command = f"{self.robot_name}::ROUTINE::{routine_to_stop}::STOP"
+        self.node.get_logger().info("[STOP] 모든 루틴 RESET 완료 확인: Idle 상태 도달")
+        self.node.waiting_for_stop = False
+        self.waiting_for_reset = False
+        
+        # 모든 루틴에 대해 STOP 명령
+        all_routine_names = [
+            "idle_breathing_rt",
+            "idling_heart_rt",
+            "idling_handshake_rt"
+        ]
+        for routine_name in all_routine_names:
+            stop_command = f"{self.robot_name}::ROUTINE::{routine_name}::STOP"
             self.publish_command(stop_command)
-            self.node.get_logger().info(f"[STOP] 루틴 STOP: {routine_to_stop}")
-            
-            # STOP 명령 처리 대기
-            time.sleep(0.1)
-            
-            # 상태 초기화
-            routine_name = routine_to_stop
-            self.current_routine = None
-            self.breathing_routine_running = False
-            self.node.actual_running_routine = None
-            self.node.get_logger().info(f"[STOP] 루틴 완전 중단 완료: {routine_name}")
-        else:
-            self.node.get_logger().warn(f"[STOP] 중단할 루틴이 없음 (추적 중: {self.current_routine}, 실제 실행 중: {self.node.actual_running_routine})")
+            self.node.get_logger().info(f"[STOP] 루틴 STOP: {routine_name}")
+        
+        # 트래커와 컨트롤러에 STOP 명령 전송
+        tracker_command = {'type': 'stop'}
+        controller_command = {'type': 'stop'}
+        
+        from std_msgs.msg import String
+        tracker_msg = String()
+        tracker_msg.data = json.dumps(tracker_command)
+        self.node.tracker_control_publisher.publish(tracker_msg)
+        
+        controller_msg = String()
+        controller_msg.data = json.dumps(controller_command)
+        self.node.controller_control_publisher.publish(controller_msg)
+        
+        self.node.get_logger().info("[STOP] 트래커/컨트롤러 STOP 명령 전송 완료")
+        
+        # 상태 초기화
+        self.current_routine = None
+        self.breathing_routine_running = False
+        self.node.actual_running_routine = None
+        self.node.get_logger().info(f"[STOP] 모든 루틴 완전 중단 완료")
 
 
 class AllexIdleInteractionNode(Node):
@@ -341,6 +387,8 @@ class AllexIdleInteractionNode(Node):
         # 현재 실행 중인 루틴 이름 추적 (실제 실행 중인 루틴)
         self.actual_running_routine = None  # 실제 실행 중인 루틴 이름
         self.routine_nodes_count = 0  # 최신 nodes 개수 저장 (피드백 기반 제어용)
+        self.routine_reset_complete_flag = False  # RESET 완료 플래그 (콜백에서 설정)
+        self.waiting_for_stop = False  # STOP 대기 중인지
         
         # RoutineController 초기화
         self.routine_controller = RoutineController(self, robot_name="X")
@@ -372,10 +420,45 @@ class AllexIdleInteractionNode(Node):
             nodes = data.get("nodes", [])
             
             # nodes 개수 저장 (피드백 기반 제어용)
-            self.routine_nodes_count = len(nodes) if nodes else 0
+            # nodes가 리스트인지 확인하고, 빈 리스트도 처리
+            if isinstance(nodes, list):
+                old_nodes_count = self.routine_nodes_count
+                self.routine_nodes_count = len(nodes)
+                # nodes가 비어있으면 RESET 완료 플래그 설정
+                if len(nodes) == 0:
+                    # RESET 완료 플래그가 False에서 True로 변경되는 경우에만 로그 출력
+                    if not self.routine_reset_complete_flag:
+                        self.get_logger().info(f"[ROUTINE STATUS] RESET 완료 확인: nodes={old_nodes_count} -> 0 (플래그=True로 설정)")
+                    self.routine_reset_complete_flag = True
+                    # STOP 대기 중이면 STOP 완료 처리
+                    if self.waiting_for_stop:
+                        self.routine_controller._complete_stop()
+                else:
+                    self.routine_reset_complete_flag = False
+            else:
+                old_nodes_count = self.routine_nodes_count
+                self.routine_nodes_count = 0
+                if not self.routine_reset_complete_flag:
+                    self.get_logger().info(f"[ROUTINE STATUS] RESET 완료 확인: nodes={old_nodes_count} -> 0 (플래그=True로 설정)")
+                self.routine_reset_complete_flag = True
+                # STOP 대기 중이면 STOP 완료 처리
+                if self.waiting_for_stop:
+                    self.routine_controller._complete_stop()
             
             if not nodes or len(nodes) == 0:
                 self.actual_running_routine = None
+                # START 명령 확인: nodes가 비어있어도 타임아웃 체크는 계속 수행
+                # (START 명령 후 루틴이 시작되지 않은 경우 감지)
+                if self.routine_controller.expected_routine_name and self.routine_controller.expected_routine_start_time:
+                    elapsed = time.monotonic() - self.routine_controller.expected_routine_start_time
+                    if elapsed > 0.5:  # 0.5초 후에도 시작되지 않으면 경고
+                        self.get_logger().warn(
+                            f"[ROUTINE START 경고] {self.routine_controller.expected_routine_name} 루틴이 "
+                            f"START 명령 후 {elapsed:.3f}초 동안 시작되지 않음. (nodes가 비어있음)"
+                        )
+                        # 플래그 초기화 (경고 후에도 계속 확인하지 않음)
+                        self.routine_controller.expected_routine_name = None
+                        self.routine_controller.expected_routine_start_time = None
                 return
             
             # 루트 노드 찾기 (parent == -1)
@@ -385,21 +468,97 @@ class AllexIdleInteractionNode(Node):
                     root_node = node
                     break
             
+            # 실제 루틴 이름 찾기: nodes 배열에서 루틴 이름 패턴 찾기
+            actual_routine_name = None
+            for node in nodes:
+                node_name = node.get("name", "")
+                # 루틴 이름 패턴 확인 (idling_heart_rt, idling_handshake_rt, idle_breathing_rt)
+                if node_name and ("_rt" in node_name or "idling" in node_name or "breathing" in node_name):
+                    actual_routine_name = node_name
+                    break
+            
+            # 단일 루틴 RESET 완료 확인: RESET 중인 루틴이 실행 중이 아니면 RESET 완료
+            if self.routine_controller.waiting_for_reset and self.routine_controller.resetting_routine_name:
+                # 단일 루틴 RESET의 경우: 해당 루틴이 실행 중이 아니면 RESET 완료
+                resetting_routine = self.routine_controller.resetting_routine_name
+                is_resetting_routine_running = False
+                for node in nodes:
+                    node_name = node.get("name", "")
+                    if resetting_routine in node_name:
+                        is_resetting_routine_running = True
+                        break
+                
+                if not is_resetting_routine_running and not self.routine_reset_complete_flag:
+                    self.get_logger().info(f"[ROUTINE STATUS] 단일 루틴 RESET 완료 확인: {resetting_routine} 루틴이 실행 중이 아님 (플래그=True로 설정)")
+                    self.routine_reset_complete_flag = True
+                    self.routine_controller.resetting_routine_name = None
+            
             if root_node:
                 status = root_node.get("status")
-                routine_name = root_node.get("name", "")
+                root_name = root_node.get("name", "")
                 
                 # status: 0=IDLE, 1=RUNNING, 2=SUCCESS, 3=FAILURE
                 if status == 1:  # RUNNING인 경우만 실행 중으로 판단
-                    # 루틴 이름에서 실제 루틴 이름 추출 (예: "idling_handshake_rt", "idling_heart_rt", "idle_breathing_rt")
+                    # 실제 루틴 이름이 있으면 사용, 없으면 루트 노드 이름 사용
+                    routine_name = actual_routine_name if actual_routine_name else root_name
                     if routine_name:
                         self.actual_running_routine = routine_name
+                        
+                        # START 명령 확인: 예상한 루틴이 시작되었는지 확인
+                        if self.routine_controller.expected_routine_name and self.routine_controller.expected_routine_start_time:
+                            expected_routine = self.routine_controller.expected_routine_name
+                            elapsed = time.monotonic() - self.routine_controller.expected_routine_start_time
+                            
+                            # breathing 루틴인 경우: LoopWhile 노드 확인
+                            if expected_routine == "idle_breathing_rt":
+                                if root_name == "LoopWhile" or actual_routine_name == expected_routine:
+                                    self.get_logger().info(
+                                        f"[ROUTINE START 확인] {expected_routine} 루틴 시작 확인됨 "
+                                        f"(루트 노드: {root_name}, 실제 루틴: {actual_routine_name}, 경과 시간: {elapsed:.3f}초)"
+                                    )
+                                    # 플래그 초기화
+                                    self.routine_controller.expected_routine_name = None
+                                    self.routine_controller.expected_routine_start_time = None
+                            # handshake/hello 루틴인 경우: Sequence 노드 확인 또는 실제 루틴 이름 확인
+                            elif expected_routine in ("idling_heart_rt", "idling_handshake_rt"):
+                                # Sequence 노드이거나 실제 루틴 이름이 일치하면 성공
+                                if root_name == "Sequence" or actual_routine_name == expected_routine:
+                                    self.get_logger().info(
+                                        f"[ROUTINE START 확인] {expected_routine} 루틴 시작 확인됨 "
+                                        f"(루트 노드: {root_name}, 실제 루틴: {actual_routine_name}, 경과 시간: {elapsed:.3f}초)"
+                                    )
+                                    # 플래그 초기화
+                                    self.routine_controller.expected_routine_name = None
+                                    self.routine_controller.expected_routine_start_time = None
+                                elif elapsed > 0.5:
+                                    # 0.5초 후에도 Sequence가 아니면 재시도
+                                    self.get_logger().warn(
+                                        f"[ROUTINE START 재시도] {expected_routine} 루틴이 Sequence로 시작되지 않음 "
+                                        f"(루트 노드: {root_name}, 실제 루틴: {actual_routine_name}), 재시도 중..."
+                                    )
+                                    # 재시도: START 명령 다시 발행
+                                    command = f"{self.routine_controller.robot_name}::ROUTINE::{expected_routine}::START"
+                                    self.routine_controller.publish_command(command)
+                                    self.routine_controller.expected_routine_start_time = time.monotonic()
                 else:
                     # RUNNING이 아니면 실행 중이 아님
                     self.actual_running_routine = None
             else:
                 # 루트 노드를 찾을 수 없으면 루틴이 없는 것으로 간주
                 self.actual_running_routine = None
+            
+            # START 명령 확인: 일정 시간(0.5초) 후에도 루틴이 시작되지 않으면 경고
+            if self.routine_controller.expected_routine_name and self.routine_controller.expected_routine_start_time:
+                elapsed = time.monotonic() - self.routine_controller.expected_routine_start_time
+                if elapsed > 0.5:  # 0.5초 후에도 시작되지 않으면 경고
+                    self.get_logger().warn(
+                        f"[ROUTINE START 경고] {self.routine_controller.expected_routine_name} 루틴이 "
+                        f"START 명령 후 {elapsed:.3f}초 동안 시작되지 않음. "
+                        f"현재 실행 중인 루틴: {self.actual_running_routine}"
+                    )
+                    # 플래그 초기화 (경고 후에도 계속 확인하지 않음)
+                    self.routine_controller.expected_routine_name = None
+                    self.routine_controller.expected_routine_start_time = None
                 
         except json.JSONDecodeError as e:
             self.get_logger().warn(f"루틴 상태 피드백 JSON 파싱 실패: {e}")
@@ -435,6 +594,19 @@ class AllexIdleInteractionNode(Node):
                 if current_state != self.previous_state:
                     self._handle_state_change(self.previous_state, current_state)
                     self.previous_state = current_state
+                else:
+                    # 상태가 변경되지 않았어도 RESET 대기 중이면 계속 확인
+                    if self.routine_controller.waiting_for_reset:
+                        # 목표 루틴 결정
+                        target_routine = self._get_target_routine_for_state(current_state)
+                        if target_routine:
+                            # transition_to_routine 호출 (이전 상태는 알 수 없으므로 None 전달)
+                            self.routine_controller.transition_to_routine(
+                                self.routine_controller.current_routine,
+                                target_routine,
+                                current_state,  # old_state 대신 current_state 사용
+                                current_state   # new_state도 current_state 사용
+                            )
             else:
                 # RUN 중이 아니면 상태만 업데이트 (루틴 전환은 하지 않음)
                 state_str = data.get('state', 'idle')
@@ -506,7 +678,10 @@ class AllexIdleInteractionNode(Node):
                     'elapsed_time': None,
                     'duration': 5.0
                 },
-                'timestamp': time.monotonic()
+                'timestamp': time.monotonic(),
+                # GUI 업데이트를 위한 추가 정보
+                'manual_mode': tracking_result_data.get('manual_mode', False),  # tracking_result에서 manual_mode 가져오기
+                'is_running': self.is_running  # 현재 RUN/STOP 상태
             }
             
             json_str = json.dumps(data, ensure_ascii=False)
@@ -586,59 +761,60 @@ class AllexIdleInteractionNode(Node):
         except Exception as e:
             self.get_logger().error(f"타겟 Crop 이미지 발행 실패: {e}")
     
+    def _get_target_routine_for_state(self, state: TrackingState) -> str:
+        """
+        상태에 해당하는 목표 루틴 이름 반환
+        
+        Returns:
+            루틴 이름 (idle_breathing_rt, idling_heart_rt, idling_handshake_rt) 또는 None
+        """
+        if state in (TrackingState.IDLE, TrackingState.WAITING, TrackingState.TRACKING, 
+                     TrackingState.LOST, TrackingState.SEARCHING):
+            return "idle_breathing_rt"
+        elif state == TrackingState.HELLO:
+            return "idling_heart_rt"
+        elif state == TrackingState.HANDSHAKE:
+            return "idling_handshake_rt"
+        return None
+    
     def _handle_state_change(self, old_state: TrackingState, new_state: TrackingState):
-        """상태 변경 시 루틴 전환 처리 (Idling 범주만 처리)"""
+        """
+        상태 변경 시 루틴 전환 처리
         
-        # IDLE 상태 진입 시: idle_breathing_rt 시작 (한 번만, 무한 루프로 계속 돌아감)
-        if new_state == TrackingState.IDLE:
-            if not self.routine_controller.breathing_routine_running:
-                self.routine_controller.start_breathing()
-                self.get_logger().info("IDLE 상태: idle_breathing_rt 시작 (무한 루프)")
-            # 이미 실행 중이면 아무것도 하지 않음
+        로직:
+        1. 상태에 따라 목표 루틴 결정
+        2. 현재 실행 중인 루틴과 목표 루틴 비교
+        3. 같으면 아무것도 하지 않음 (breathing -> breathing 등)
+        4. 다르면 현재 루틴 PAUSE/RESET → 피드백 확인 → 목표 루틴 START
+        """
+        # 제외 케이스: TRACKING -> LOST, IDLE -> WAITING -> TRACKING
+        if old_state == TrackingState.TRACKING and new_state == TrackingState.LOST:
+            return  # 제외
+        if old_state == TrackingState.IDLE and new_state == TrackingState.WAITING:
+            return  # 제외
+        if old_state == TrackingState.WAITING and new_state == TrackingState.TRACKING:
+            return  # 제외
+        
+        # 목표 루틴 결정
+        target_routine = self._get_target_routine_for_state(new_state)
+        if target_routine is None:
+            self.get_logger().warn(f"알 수 없는 상태에 대한 루틴: {new_state}")
             return
         
-        # TRACKING 상태 진입 시: 기존 루틴이 없으면 idle_breathing_rt 시작
-        if new_state == TrackingState.TRACKING:
-            if not self.routine_controller.current_routine:
-                # 기존에 어떠한 루틴도 돌고 있지 않을 경우 그냥 Routine 실행
-                self.routine_controller.start_breathing()
-                self.get_logger().info("TRACKING 상태: 기존 루틴 없음, idle_breathing_rt 시작")
-            # 이미 실행 중이면 아무것도 하지 않음 (idle_breathing_rt 계속 돌아감)
+        # 현재 실행 중인 루틴 확인
+        current_routine = self.routine_controller.current_routine
+        
+        # 같은 루틴이면 아무것도 하지 않음 (breathing -> breathing 등)
+        if current_routine == target_routine:
+            self.get_logger().debug(f"{old_state.value} → {new_state.value}: 동일 루틴 ({target_routine}) 유지")
             return
         
-        # HELLO 상태로 전환 시: PAUSE → RESET → heart_rt 시작
-        if new_state == TrackingState.HELLO:
-            self.routine_controller.pause_reset_and_start_heart()
-            self.get_logger().info("HELLO 상태: idle_breathing_rt PAUSE → RESET → idling_heart_rt 시작")
-            # tracking_fsm_node에서 hello_routine_sent_time을 설정하므로 여기서는 루틴만 시작
-            return
+        # STOP 플래그 초기화 (interaction 상태 전환 시)
+        if new_state in (TrackingState.HELLO, TrackingState.HANDSHAKE):
+            self.waiting_for_stop = False
         
-        # HANDSHAKE 상태로 전환 시: PAUSE → RESET → handshake_rt 시작
-        if new_state == TrackingState.HANDSHAKE:
-            self.routine_controller.pause_reset_and_start_handshake()
-            self.get_logger().info("HANDSHAKE 상태: idle_breathing_rt PAUSE → RESET → idling_handshake_rt 시작")
-            # tracking_fsm_node에서 handshake_routine_sent_time을 설정하므로 여기서는 루틴만 시작
-            return
-        
-        # HELLO/HANDSHAKE에서 SEARCHING으로 전환 시: idle_breathing_rt 재시작
-        if (old_state == TrackingState.HELLO or old_state == TrackingState.HANDSHAKE) and new_state == TrackingState.SEARCHING:
-            # 이미 실행 중이 아닐 때만 시작 (중복 시작 방지)
-            if not self.routine_controller.breathing_routine_running:
-                self.routine_controller.start_breathing()
-                self.get_logger().info("HELLO → SEARCHING: idle_breathing_rt 재시작")
-            else:
-                self.get_logger().info("HELLO → SEARCHING: idle_breathing_rt가 이미 실행 중입니다.")
-            return
-        
-        # LOST, SEARCHING 상태들 간 전환 시
-        # idle_breathing_rt는 계속 돌아가도록 유지 (아무것도 하지 않음)
-        if new_state in (TrackingState.LOST, TrackingState.SEARCHING):
-            # idle_breathing_rt가 꺼져있으면만 시작 (혹시 모를 상황 대비)
-            if not self.routine_controller.breathing_routine_running:
-                self.routine_controller.start_breathing()
-                self.get_logger().info(f"{new_state.value} 상태: idle_breathing_rt 시작 (상태 복구)")
-            # 이미 실행 중이면 아무것도 하지 않음
-            return
+        # 루틴 전환 필요: 현재 루틴 PAUSE/RESET → 목표 루틴 START
+        self.routine_controller.transition_to_routine(current_routine, target_routine, old_state, new_state)
     
     def _manual_control_callback(self, msg: String):
         """Manual 제어 콜백 - GUI에서 오는 명령 처리"""
@@ -651,6 +827,12 @@ class AllexIdleInteractionNode(Node):
             controller_command = command.copy()
             
             if cmd_type == 'run' or cmd_type == 'start':
+                # RESET 대기 중이면 플래그 리셋 (RUN 시작 시 초기화)
+                if self.routine_controller.waiting_for_reset:
+                    self.get_logger().warn("RUN 시작: 이전 RESET 대기 상태 리셋")
+                    self.routine_controller.waiting_for_reset = False
+                    self.routine_reset_complete_flag = False
+                
                 self.is_running = True
                 manual_mode = command.get('manual', False)
                 tracker_command['manual'] = manual_mode
@@ -662,11 +844,11 @@ class AllexIdleInteractionNode(Node):
             
             elif cmd_type == 'stop':
                 self.is_running = False
-                tracker_command['type'] = 'stop'
-                controller_command['type'] = 'stop'
-                self.routine_controller.stop_current_routine()
+                # STOP 처리: 루틴 PAUSE/RESET부터 시작 (RESET 완료 후 트래커/컨트롤러 STOP은 _complete_stop에서 처리)
+                if not self.routine_controller.waiting_for_reset:
+                    self.routine_controller.stop_current_routine()
                 self.previous_state = TrackingState.IDLE
-                self.get_logger().info("RUN 중지")
+                self.get_logger().info("RUN 중지: 루틴 RESET 대기 중...")
             
             elif cmd_type == 'set_mode':
                 if self.is_running:
@@ -680,6 +862,23 @@ class AllexIdleInteractionNode(Node):
                 tracker_command['state'] = state_str
                 tracker_command['target_id'] = target_id
                 self.get_logger().info(f"상태 설정: {state_str}, 타겟 ID: {target_id}")
+                
+                # 상태 변경 시 루틴 전환 처리 (RUN 중일 때만)
+                if self.is_running:
+                    try:
+                        new_state = TrackingState[state_str.upper()]
+                        old_state = self.previous_state
+                        
+                        # 상태가 실제로 변경되는 경우에만 루틴 전환 처리
+                        if new_state != old_state:
+                            self.get_logger().info(f"[MANUAL STATE CHANGE] {old_state.value} -> {new_state.value}")
+                            # 상태 변경 처리 (루틴 전환 포함)
+                            self._handle_state_change(old_state, new_state)
+                            # previous_state 업데이트 (tracking_result_callback에서도 업데이트되지만, 
+                            # 명시적으로 여기서도 업데이트하여 중복 처리 방지)
+                            self.previous_state = new_state
+                    except (KeyError, AttributeError) as e:
+                        self.get_logger().warn(f"알 수 없는 상태: {state_str}, 오류: {e}")
             
             elif cmd_type == 'set_target':
                 target_id = command.get('target_id')
@@ -693,16 +892,18 @@ class AllexIdleInteractionNode(Node):
                 controller_command['parameters'] = parameters
                 self.get_logger().info(f"파라미터 설정 요청: {parameters}")
             
-            # Tracker에 명령 전송
-            tracker_msg = String()
-            tracker_msg.data = json.dumps(tracker_command)
-            self.tracker_control_publisher.publish(tracker_msg)
+            # Tracker에 명령 전송 (STOP은 RESET 완료 후 _complete_stop에서 전송)
+            if cmd_type != 'stop':
+                tracker_msg = String()
+                tracker_msg.data = json.dumps(tracker_command)
+                self.tracker_control_publisher.publish(tracker_msg)
             
-            # Controller에 명령 전송 (run, stop, set_parameters)
+            # Controller에 명령 전송 (run, stop, set_parameters) (STOP은 RESET 완료 후 _complete_stop에서 전송)
             if cmd_type in ['run', 'stop', 'set_parameters']:
-                controller_msg = String()
-                controller_msg.data = json.dumps(controller_command)
-                self.controller_control_publisher.publish(controller_msg)
+                if cmd_type != 'stop':
+                    controller_msg = String()
+                    controller_msg.data = json.dumps(controller_command)
+                    self.controller_control_publisher.publish(controller_msg)
                 
         except json.JSONDecodeError as e:
             self.get_logger().error(f"Manual 제어 명령 파싱 실패: {e}")

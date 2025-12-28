@@ -994,7 +994,8 @@ class TrackingFSMNode(Node):
                 'performance': {
                     'process_time_ms': float(process_time_ms) if process_time_ms else 0.0
                 },
-                'timestamp': time.monotonic()
+                'timestamp': time.monotonic(),
+                'manual_mode': self.manual_mode  # GUI 업데이트를 위한 manual_mode 정보 추가
             }
             
             # JSON 문자열로 변환하여 발행
