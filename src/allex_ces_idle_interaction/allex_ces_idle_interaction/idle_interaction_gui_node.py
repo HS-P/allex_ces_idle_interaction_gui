@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 GUI Node - GUI를 관리하고 여러 Topic을 동적으로 구독하는 통합 Node
-v1.9.2 - PySide6 사용
+v1.10.2 - PySide6 사용
 
 시스템 구조:
 - SPARK 1 PC: Camera Publisher (카메라 + YOLO 추적)
@@ -200,7 +200,7 @@ class GuiNode(Node, QMainWindow):
         self.update_timer.start(50)  # 20Hz 업데이트
         
         self.get_logger().info("=" * 60)
-        self.get_logger().info("GUI Node v1.9.2 초기화 완료!")
+        self.get_logger().info("GUI Node v1.10.2 초기화 완료!")
         self.get_logger().info(f"토픽 설정 파일: {self.topic_config_path}")
         self.get_logger().info("=" * 60)
     
@@ -375,7 +375,7 @@ class GuiNode(Node, QMainWindow):
     
     def init_ui(self):
         """UI 초기화"""
-        self.setWindowTitle("Person Tracking Control Panel v1.9.2")
+        self.setWindowTitle("Person Tracking Control Panel v1.10.2")
         screen = QApplication.primaryScreen().geometry()
         self.setGeometry(0, 0, screen.width(), screen.height())
         
@@ -1004,7 +1004,9 @@ class GuiNode(Node, QMainWindow):
         if not self.target_buttons:
             return
         
-        tracked_ids = sorted([obj.track_id for obj in self.tracked_objects])[:10]
+        # 가로축 기준 좌측부터 정렬 (centroid의 x 좌표 기준)
+        sorted_objects = sorted(self.tracked_objects, key=lambda obj: obj.centroid[0])
+        tracked_ids = [obj.track_id for obj in sorted_objects][:10]
         current_target_id = self.current_target_info.track_id if self.current_target_info else None
         
         for btn in self.target_buttons:

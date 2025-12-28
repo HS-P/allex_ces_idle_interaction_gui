@@ -196,7 +196,11 @@ class TrackingFSMNode(Node):
         
         # IDLE 상태 타이머 (영자세로 돌아가기만 하는 시간)
         self.idle_start_time: Optional[float] = None  # IDLE 상태 진입 시간 또는 타겟 발견 시간
-        self.idle_duration = 5.0  # IDLE 상태 유지 시간 (초) - 타겟 발견 후 5초 후 WAITING 전이
+        self.idle_duration = 7.5  # IDLE 상태 유지 시간 (초) - 타겟 발견 후 5초 후 WAITING 전이
+        
+        # SEARCHING 상태 진입 시간 (최초 진입 후 5초 동안은 사람 탐색 안 함)
+        self.searching_start_time: Optional[float] = None  # SEARCHING 상태 최초 진입 시간
+        self.searching_cooldown_duration = 5.0  # SEARCHING 최초 진입 후 대기 시간 (초)
         
         # 성능 모니터링
         self.frame_count = 0
@@ -346,6 +350,10 @@ class TrackingFSMNode(Node):
                         self.state = TrackingState.SEARCHING
                         if not self.target_explicitly_set:
                             self.target_track_id = None
+                        # SEARCHING 진입 시간 기록 (최초 진입 시에만)
+                        if self.searching_start_time is None:
+                            self.searching_start_time = current_time
+                            self.get_logger().info(f"SEARCHING 상태 최초 진입: {self.searching_cooldown_duration}초 동안 사람 탐색 안 함")
                     # Manual Mode에서는 LOST 상태 유지 (lost_frames만 증가)
                 case _:
                     pass
@@ -511,7 +519,24 @@ class TrackingFSMNode(Node):
                 # case TrackingState.LOST: (제거됨 - 블록 밖에서 처리)
                 
                 case TrackingState.SEARCHING:
-                    if detections:
+                    # SEARCHING 진입 시간 기록 (최초 진입 시에만)
+                    if self.searching_start_time is None:
+                        self.searching_start_time = current_time
+                        self.get_logger().info(f"SEARCHING 상태 최초 진입: {self.searching_cooldown_duration}초 동안 사람 탐색 안 함")
+                    
+                    # 최초 진입 후 5초 동안은 사람 탐색 안 함
+                    can_search = True
+                    if self.searching_start_time is not None:
+                        elapsed_since_searching = current_time - self.searching_start_time
+                        if elapsed_since_searching < self.searching_cooldown_duration:
+                            # 5초가 지나지 않았으면 타겟 선택하지 않음
+                            can_search = False
+                            self.get_logger().debug(
+                                f"SEARCHING: 쿨다운 중 ({elapsed_since_searching:.2f}초/{self.searching_cooldown_duration}초), "
+                                f"사람 탐색 건너뜀"
+                            )
+                    
+                    if detections and can_search:
                         # 타겟 lock 시간이 지나지 않았으면 기존 타겟 유지 시도
                         target_found = False
                         if (self.target_track_id is not None and 
@@ -528,6 +553,8 @@ class TrackingFSMNode(Node):
                                         self.state = TrackingState.TRACKING
                                         self.lost_frames = 0
                                         target_found = True
+                                        # SEARCHING에서 벗어나므로 초기화
+                                        self.searching_start_time = None
                                         self.get_logger().info(
                                             f"타겟 lock 중 기존 타겟 재발견: ID={self.target_track_id}"
                                         )
@@ -591,6 +618,8 @@ class TrackingFSMNode(Node):
                                 self.lost_frames = 0
                                 self.target_explicitly_set = False
                                 self.target_selected_time = current_time  # 새 타겟 선택 시간 기록
+                                # SEARCHING에서 벗어나므로 초기화
+                                self.searching_start_time = None
                 
                 case TrackingState.HELLO:
                     # HELLO 상태: 루틴 발행 후 루틴 종료 모니터링
@@ -654,6 +683,10 @@ class TrackingFSMNode(Node):
                                         self.hello_routine_sent_time = None
                                         self.current_routine_running = False
                                         self.routine_stopped_time = None
+                                        # SEARCHING 진입 시간 기록 (최초 진입 시에만)
+                                        if self.searching_start_time is None:
+                                            self.searching_start_time = current_time_check
+                                            self.get_logger().info(f"SEARCHING 상태 최초 진입: {self.searching_cooldown_duration}초 동안 사람 탐색 안 함")
                                         self.get_logger().info(
                                             f"HELLO 완료: 루틴 종료 → SEARCHING 상태로 전환 "
                                             f"(총 경과 시간: {elapsed_time:.2f}초, 종료 확인 후: {time_since_stopped:.2f}초)"
@@ -749,6 +782,10 @@ class TrackingFSMNode(Node):
                                         self.handshake_routine_sent_time = None
                                         self.current_routine_running = False
                                         self.routine_stopped_time = None
+                                        # SEARCHING 진입 시간 기록 (최초 진입 시에만)
+                                        if self.searching_start_time is None:
+                                            self.searching_start_time = current_time_check
+                                            self.get_logger().info(f"SEARCHING 상태 최초 진입: {self.searching_cooldown_duration}초 동안 사람 탐색 안 함")
                                         self.get_logger().info(
                                             f"HANDSHAKE 완료: 루틴 종료 → SEARCHING 상태로 전환 "
                                             f"(총 경과 시간: {elapsed_time:.2f}초, 종료 확인 후: {time_since_stopped:.2f}초)"
@@ -785,6 +822,10 @@ class TrackingFSMNode(Node):
                                         self.handshake_routine_sent_time = None
                                         self.current_routine_running = False
                                         self.routine_stopped_time = None
+                                        # SEARCHING 진입 시간 기록 (최초 진입 시에만)
+                                        if self.searching_start_time is None:
+                                            self.searching_start_time = current_time_check
+                                            self.get_logger().info(f"SEARCHING 상태 최초 진입: {self.searching_cooldown_duration}초 동안 사람 탐색 안 함")
                                         self.get_logger().info(
                                             f"HANDSHAKE 완료: 루틴 비어있음 → SEARCHING 상태로 전환 "
                                             f"(총 경과 시간: {elapsed_time:.2f}초)"
