@@ -6,15 +6,23 @@ THOR 노드 Launch 파일
 - GUI 노드
 """
 from launch import LaunchDescription
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
+import os
+from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
     """Launch 파일 생성"""
     
-    # 1. 카메라 Launch (IncludeLaunchDescription 사용하지 않고 직접 노드 실행)
-    # 주의: orbbec_camera 패키지의 femto_bolt.launch.py를 직접 실행하는 것이 아니라
-    # 여기서는 조이스틱과 GUI만 포함하고, 카메라는 별도 스크립트에서 실행
+    # 1. 카메라 Launch (orbbec_camera 패키지의 femto_bolt.launch.py 포함)
+    orbbec_camera_package = get_package_share_directory('orbbec_camera')
+    femto_launch_file = os.path.join(orbbec_camera_package, 'launch', 'femto_bolt.launch.py')
+    
+    orbbec_camera_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(femto_launch_file),
+    )
     
     # 2. 조이스틱 제어 노드
     joystick_control_node = Node(
@@ -33,6 +41,7 @@ def generate_launch_description():
     )
     
     return LaunchDescription([
+        orbbec_camera_launch,
         joystick_control_node,
         gui_node,
     ])

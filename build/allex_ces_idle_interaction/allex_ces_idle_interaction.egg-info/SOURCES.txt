@@ -20,4 +20,5 @@ allex_ces_idle_interaction.egg-info/zip-safe
 config/botsort.yaml
 config/topics.json
 launch/allex_idle_interaction.launch.py
+launch/thor_nodes.launch.py
 resource/allex_ces_idle_interaction
