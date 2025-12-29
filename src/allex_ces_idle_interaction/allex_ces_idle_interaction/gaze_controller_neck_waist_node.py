@@ -172,9 +172,9 @@ class GazeControllerNode(Node):
         self.search_phase_timeout = 15.0  # Phase 타임아웃 (초) - 이 시간이 지나면 강제로 Phase 변경
         
         # PID 제어 파라미터 (일반 추적용, 12% 속도 증가)
-        self.kp_yaw = 1.232   # P 게인 (Yaw) - 1.1 * 1.12 = 1.232 (12% 증가)
-        self.kp_pitch = 1.344 # P 게인 (Pitch) - 1.2 * 1.12 = 1.344 (12% 증가)
-        self.ki_yaw = 0.0224    # I 게인 (Yaw) - 0.02 * 1.12 = 0.0224 (12% 증가)
+        self.kp_yaw = 0.95  # P 게인 (Yaw) - 1.1 * 1.12 = 1.232 (12% 증가)
+        self.kp_pitch = 1.15 # P 게인 (Pitch) - 1.2 * 1.12 = 1.344 (12% 증가)
+        self.ki_yaw = 0.01    # I 게인 (Yaw) - 0.02 * 1.12 = 0.0224 (12% 증가)
         self.ki_pitch = 0.1344  # I 게인 (Pitch) - 0.12 * 1.12 = 0.1344 (12% 증가)
         self.kd_yaw = 0.0   # D 게인 (Yaw) - 낮춰서 움직임 억제 감소
         self.kd_pitch = 0.01 # D 게인 (Pitch)
@@ -270,6 +270,11 @@ class GazeControllerNode(Node):
         self.lost_v0_neck_yaw: float = 0.0
         self.lost_v0_neck_pitch: float = 0.0
         self.lost_v0_waist_yaw: float = 0.0
+        
+        # LOST 감속을 위한 마지막 타겟 위치 (TRACKING 상태에서 저장)
+        self.lost_last_target_yaw: Optional[float] = None
+        self.lost_last_target_pitch: Optional[float] = None
+        self.lost_last_waist_target_yaw: Optional[float] = None
         
         # LOST 지수 감쇠 파라미터 (목표 위치 기반 exponential smoothing)
         # 얼굴이 목표 위치로 초당 3~5도씩 이동하도록 설정
@@ -1090,7 +1095,7 @@ class GazeControllerNode(Node):
                     return yaw_rad, pitch_rad
             
                 case TrackingState.LOST:
-                    # LOST 상태: 목표 위치(영자세 0도) 기반 exponential smoothing (허리와 동일한 방식)
+                    # LOST 상태: 마지막 타겟 위치 방향으로 exponential smoothing 감속
                     current_time_lost = time.monotonic()
                 
                     # LOST 상태 진입 감지 (이전 상태가 LOST가 아니었을 때)
@@ -1115,31 +1120,48 @@ class GazeControllerNode(Node):
                         
                         # 진입 로그 (상세)
                         sensor_cmd_diff = abs(self.current_yaw_rad - self.last_cmd_neck_yaw) if self.last_cmd_neck_yaw is not None else 0.0
+                        lost_target_yaw_str = f"{math.degrees(self.lost_last_target_yaw):.2f}도" if self.lost_last_target_yaw is not None else "None (영자세 0도로 복귀)"
+                        lost_target_pitch_str = f"{math.degrees(self.lost_last_target_pitch):.2f}도" if self.lost_last_target_pitch is not None else "None (현재 각도 유지)"
+                        lost_target_waist_str = f"{math.degrees(self.lost_last_waist_target_yaw):.2f}도" if self.lost_last_waist_target_yaw is not None else "None (영자세 0도로 복귀)"
                         self.get_logger().info(
-                            f"LOST 상태 진입: 목표 위치 기반 exponential smoothing 시작 | "
+                            f"LOST 상태 진입: 마지막 타겟 위치로 exponential smoothing 감속 시작 | "
                             f"prev_lost_state={prev_lost_state}, "
                             f"센서위치(current_yaw)={math.degrees(self.current_yaw_rad):.2f}도, "
                             f"명령위치(last_cmd_yaw)={math.degrees(self.last_cmd_neck_yaw):.2f}도, "
-                            f"센서-명령차이={math.degrees(sensor_cmd_diff):.2f}도, "
-                            f"current_waist_yaw={math.degrees(self.current_waist_yaw_rad):.2f}도, "
-                            f"tau_neck_lost={self.tau_neck_lost:.2f}초 (극단적으로 느림), tau_waist_lost={self.tau_waist_lost:.2f}초"
+                            f"마지막 타겟 위치: neck_yaw={lost_target_yaw_str}, neck_pitch={lost_target_pitch_str}, waist_yaw={lost_target_waist_str}, "
+                            f"tau_neck_lost={self.tau_neck_lost:.2f}초, tau_waist_lost={self.tau_waist_lost:.2f}초"
                         )
                 
                     # dt 계산
                     dt = current_time_lost - self.lost_last_time if self.lost_last_time is not None else (1.0 / 30.0)
                     dt = max(0.001, min(dt, 0.1))
                 
-                    # 목표 위치: 영자세 (0도)로 복귀
-                    target_neck_yaw = 0.0
-                    target_waist_yaw = 0.0
+                    # 목표 위치: 마지막 타겟 위치 (없으면 영자세 0도로 복귀)
+                    if self.lost_last_target_yaw is not None:
+                        target_neck_yaw = self.lost_last_target_yaw
+                    else:
+                        target_neck_yaw = 0.0
+                    
+                    if self.lost_last_target_pitch is not None:
+                        target_neck_pitch = self.lost_last_target_pitch
+                    else:
+                        target_neck_pitch = self.current_pitch_rad  # Pitch는 현재 각도 유지
+                    
+                    if self.lost_last_waist_target_yaw is not None:
+                        target_waist_yaw = self.lost_last_waist_target_yaw
+                    else:
+                        target_waist_yaw = 0.0
                 
-                    # 얼굴: Exponential smoothing으로 목표 위치(영자세 0도)로 천천히 이동
-                    # Yaw만 영자세(0도)로 복귀, Pitch는 현재 각도 유지 (smoothing 없음)
+                    # 얼굴: Exponential smoothing으로 목표 위치(마지막 타겟)로 천천히 이동
+                    # Yaw: 마지막 타겟 위치로 감속, Pitch: 마지막 타겟 위치로 감속
                     alpha_neck = dt / (self.tau_neck_lost + dt)
                     new_neck_yaw = self.last_cmd_neck_yaw + alpha_neck * (target_neck_yaw - self.last_cmd_neck_yaw)
                     
-                    # Pitch는 현재 각도 그대로 유지 (smoothing, rate limit 없음)
-                    new_neck_pitch = self.current_pitch_rad
+                    # Pitch: 마지막 타겟 위치로 감속 (없으면 현재 각도 유지)
+                    if self.lost_last_target_pitch is not None:
+                        new_neck_pitch = self.last_cmd_neck_pitch + alpha_neck * (target_neck_pitch - self.last_cmd_neck_pitch)
+                    else:
+                        new_neck_pitch = self.current_pitch_rad
                     
                     # 하드 리밋 적용
                     new_neck_yaw = max(self.yaw_min, min(self.yaw_max, new_neck_yaw))
@@ -1154,7 +1176,9 @@ class GazeControllerNode(Node):
                         return last + d
                     
                     new_neck_yaw = rate_limit(new_neck_yaw, self.last_cmd_neck_yaw, self.max_delta_neck_lost)
-                    # Pitch는 rate limit 적용 안 함 (현재 각도 유지)
+                    # Pitch도 rate limit 적용 (마지막 타겟 위치로 감속)
+                    if self.lost_last_target_pitch is not None:
+                        new_neck_pitch = rate_limit(new_neck_pitch, self.last_cmd_neck_pitch, self.max_delta_pitch_lost)
                     
                     # 목 명령 전송 (절대각도 방식 - 하드웨어가 절대각도로 해석함)
                     # 목 명령 전송 (PID 비활성화, 직접 절대각도 전송)
@@ -1165,11 +1189,12 @@ class GazeControllerNode(Node):
                     # 상세 로그: exponential smoothing 확인용 (매 프레임, 디버깅용)
                     if not hasattr(self, '_last_lost_cmd_log_time') or current_time_lost - self._last_lost_cmd_log_time > 0.1:
                         delta_yaw_for_log = new_neck_yaw - self.last_cmd_neck_yaw if self.last_cmd_neck_yaw is not None else 0.0
+                        target_yaw_str = f"{math.degrees(target_neck_yaw):.3f}도 (마지막 타겟)" if self.lost_last_target_yaw is not None else "0.000도 (영자세)"
                         self.get_logger().info(
                             f"[LOST 명령 상세] "
                             f"last_cmd_yaw={math.degrees(self.last_cmd_neck_yaw):.3f}도, "
                             f"new_yaw={math.degrees(new_neck_yaw):.3f}도, "
-                            f"target_yaw={math.degrees(target_neck_yaw):.3f}도, "
+                            f"target_yaw={target_yaw_str}, "
                             f"alpha={alpha_neck:.4f}, "
                             f"delta_yaw(변화량)={math.degrees(delta_yaw_for_log):.3f}도, "
                             f"발행값(msg.data[1])={new_neck_yaw:.6f}rad ({math.degrees(new_neck_yaw):.3f}도) [절대각도]"
@@ -1181,7 +1206,7 @@ class GazeControllerNode(Node):
                     self.prev_cmd_neck_pitch = self.last_cmd_neck_pitch
                     self.prev_cmd_time_neck = self.last_cmd_time_neck
                     self.last_cmd_neck_yaw = new_neck_yaw
-                    # Pitch는 현재 센서 각도로 업데이트 (smoothing 없이 유지)
+                    # Pitch 업데이트 (마지막 타겟 위치로 감속)
                     self.last_cmd_neck_pitch = new_neck_pitch
                     self.last_cmd_time_neck = current_time_lost
                     
