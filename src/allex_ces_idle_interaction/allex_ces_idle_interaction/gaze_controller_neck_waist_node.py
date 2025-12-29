@@ -225,6 +225,12 @@ class GazeControllerNode(Node):
         # ROI 영역: [left_margin * width, (1 - right_margin) * width]
         # 예: 1280x720 화면에서 [192, 1088] 픽셀 영역만 사용
         
+        # 현재 추적 중인 track_id (Track ID 변경 감지용)
+        self.current_track_id = None
+        
+        # Manual 모드 추적 (tracking_result에서 받아옴)
+        self.manual_mode = False
+        
         # 실행 상태 플래그
         self.is_running = False
         
@@ -1013,7 +1019,8 @@ class GazeControllerNode(Node):
                     current_time_check = time.monotonic()
                     if self.current_track_id != target_info.track_id:
                         self.current_track_id = target_info.track_id
-                        self.get_logger().info(f"새 타겟 추적 시작: track_id={target_info.track_id}")
+                        if target_info.track_id is not None:
+                            self.get_logger().info(f"새 타겟 추적 시작: track_id={target_info.track_id}")
                 
                     # 픽셀 좌표를 ROI 영역으로 제한
                     target_x, target_y = target_info.point
@@ -1490,21 +1497,37 @@ class GazeControllerNode(Node):
         self.hello_stable_start_time = None
         self.hello_reference_yaw_rad = None
     
-    def _check_hello_transition(self, target_track_id, current_state):
-        """HELLO 상태 전환 조건 체크 (현재 위치에서 ±1도 이내로 3초 유지)"""
+    def _check_hello_transition(self, target_track_id, current_state, target_selected_time):
+        """HELLO 상태 전환 조건 체크 (타겟 선택 후 정지 상태에서 ±2도 이내로 1.45초 유지)
+        
+        Args:
+            target_track_id: 현재 타겟 track_id
+            current_state: 현재 상태
+            target_selected_time: 타겟 선택 시간 (None이면 아직 선택되지 않음)
+        """
         # 이미 HELLO를 한 track_id면 전환하지 않음
         if target_track_id is not None and target_track_id in self.hello_done_track_ids:
             return
         
         current_time = time.monotonic()
         
-        # TRACKING 상태로 전환되었을 때만 타이머 시작 (이전 상태가 TRACKING이 아니었을 때)
-        if self.prev_state_for_hello != TrackingState.TRACKING:
-            # TRACKING 상태로 새로 진입했으므로 타이머 시작
-            self.hello_stable_start_time = current_time
+        # 타겟이 선택되지 않았으면 타이머를 시작하지 않음
+        if target_selected_time is None:
+            # 타이머가 시작되었으면 리셋
+            if self.hello_stable_start_time is not None:
+                self._reset_hello_check()
+            self.prev_state_for_hello = current_state
+            return
+        
+        # 타겟이 선택된 후에만 타이머 시작 (타겟 선택 시간이 설정된 후)
+        # 이전에 타이머가 시작되지 않았거나, 타겟이 새로 선택되었을 때만 타이머 시작
+        if self.hello_stable_start_time is None:
+            # 타겟 선택 시간 이후에만 타이머 시작 (사람을 인식하고 난 후)
+            self.hello_stable_start_time = target_selected_time
             self.hello_reference_yaw_rad = self.current_yaw_rad
             self.get_logger().debug(
-                f"HELLO 체크 시작: TRACKING 상태 진입, 기준 위치={math.degrees(self.hello_reference_yaw_rad):.1f}도"
+                f"HELLO 체크 시작: 타겟 선택 후 정지 상태, 기준 위치={math.degrees(self.hello_reference_yaw_rad):.1f}도, "
+                f"타겟 선택 시간={target_selected_time:.2f}"
             )
         
         # 타이머가 시작되지 않았으면 체크하지 않음 (안전장치)
@@ -1554,9 +1577,14 @@ class GazeControllerNode(Node):
                 )
                 self._reset_hello_check()
         else:
-            # 기준 위치에서 ±5도 벗어나면 타이머 리셋 및 새 기준 위치 설정
-            self.hello_stable_start_time = current_time
-            self.hello_reference_yaw_rad = self.current_yaw_rad
+            # 기준 위치에서 ±2도 벗어나면 타이머 리셋 및 새 기준 위치 설정 (타겟 선택 시간 기반)
+            if target_selected_time is not None:
+                self.hello_stable_start_time = target_selected_time
+                self.hello_reference_yaw_rad = self.current_yaw_rad
+            else:
+                # target_selected_time이 없으면 현재 시간으로 리셋
+                self.hello_stable_start_time = current_time
+                self.hello_reference_yaw_rad = self.current_yaw_rad
         
         # 이전 상태 업데이트 (HELLO 체크용)
         self.prev_state_for_hello = current_state
@@ -1583,6 +1611,9 @@ class GazeControllerNode(Node):
         try:
             data = json.loads(msg.data)
             
+            # Manual 모드 정보 업데이트
+            self.manual_mode = data.get('manual_mode', False)
+            
             target_info_data = data.get('target_info', {})
             state_str = data.get('state', 'idle')
             
@@ -1600,9 +1631,11 @@ class GazeControllerNode(Node):
             frame_width = 1280.0
             frame_height = 720.0
             
-            # TRACKING 상태에서 HELLO 전환 조건 체크
-            if state == TrackingState.TRACKING:
-                self._check_hello_transition(target_info.track_id, state)
+            # TRACKING 상태에서 HELLO 전환 조건 체크 (Manual 모드가 아닐 때만)
+            if state == TrackingState.TRACKING and not self.manual_mode:
+                # target_selected_time을 tracking_result에서 받아옴
+                target_selected_time = data.get('target_selected_time')
+                self._check_hello_transition(target_info.track_id, state, target_selected_time)
             else:
                 # TRACKING 상태가 아니면 타이머 리셋 및 이전 상태 업데이트 (HELLO 체크용)
                 if self.prev_state_for_hello == TrackingState.TRACKING:

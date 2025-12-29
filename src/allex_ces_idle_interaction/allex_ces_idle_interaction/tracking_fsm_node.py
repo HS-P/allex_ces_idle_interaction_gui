@@ -165,6 +165,10 @@ class TrackingFSMNode(Node):
         # 각 track_id의 첫 등장 시간 추적
         self.track_id_first_seen: Dict[int, float] = {}
         
+        # TRACKING ROI 영역 변수 (좌우 끝 영역 제한) - gaze_controller와 동일한 값 사용
+        self.tracking_roi_left_margin = 0.12  # 좌측 마진 (화면 너비의 12%)
+        self.tracking_roi_right_margin = 0.12  # 우측 마진 (화면 너비의 12%)
+        
         # 타겟 유지 시간: 타겟이 한 번 선택되면 이 시간 동안은 타겟 변경 방지 (초)
         self.target_lock_duration = 3.0  # 3초 동안 타겟 고정
         self.target_selected_time: Optional[float] = None  # 타겟이 선택된 시간
@@ -200,7 +204,7 @@ class TrackingFSMNode(Node):
         
         # SEARCHING 상태 진입 시간 (최초 진입 후 5초 동안은 사람 탐색 안 함)
         self.searching_start_time: Optional[float] = None  # SEARCHING 상태 최초 진입 시간
-        self.searching_cooldown_duration = 5.0  # SEARCHING 최초 진입 후 대기 시간 (초)
+        self.searching_cooldown_duration = 8.0  # SEARCHING 최초 진입 후 대기 시간 (초)
         
         # 성능 모니터링
         self.frame_count = 0
@@ -222,12 +226,19 @@ class TrackingFSMNode(Node):
             return None
         
         # 현재 타겟이 존재하는 경우, 그 타겟을 우선적으로 반환 (타겟 안정성 유지)
-        # 단, HELLO 완료 ID는 제외
+        # 단, HELLO 완료 ID는 제외, ROI 영역 내에 있어야 함
+        frame_height, frame_width = frame_shape
+        roi_left = frame_width * self.tracking_roi_left_margin
+        roi_right = frame_width * (1.0 - self.tracking_roi_right_margin)
+        
         if current_target_id is not None and current_target_id not in self.hello_done_track_ids:
             for det in detections:
                 if det['track_id'] == current_target_id:
-                    # 현재 타겟이 존재하면 그대로 반환 (타겟 변경 방지)
-                    return current_target_id
+                    # ROI 영역 체크: centroid의 x 좌표가 ROI 영역 내에 있는지 확인
+                    cx, cy = det['centroid']
+                    if roi_left <= cx <= roi_right:
+                        # 현재 타겟이 ROI 영역 내에 존재하면 그대로 반환 (타겟 변경 방지)
+                        return current_target_id
         
         # 현재 프레임에 나타난 track_id 업데이트
         current_frame_ids = set()
@@ -246,11 +257,24 @@ class TrackingFSMNode(Node):
         
         # 최소 지속 시간 이상이고 HELLO 완료 ID가 아닌 객체만 필터링
         valid_detections = []
+        frame_height, frame_width = frame_shape
+        
+        # ROI 영역 계산
+        roi_left = frame_width * self.tracking_roi_left_margin
+        roi_right = frame_width * (1.0 - self.tracking_roi_right_margin)
+        
         for det in detections:
             track_id = det['track_id']
             # HELLO 완료 ID는 제외
             if track_id in self.hello_done_track_ids:
                 continue
+            
+            # ROI 영역 체크: centroid의 x 좌표가 ROI 영역 내에 있는지 확인
+            cx, cy = det['centroid']
+            if cx < roi_left or cx > roi_right:
+                # ROI 영역 외의 사람은 제외
+                continue
+            
             if track_id in self.track_id_first_seen:
                 duration = current_time - self.track_id_first_seen[track_id]
                 if duration >= self.min_target_duration:
@@ -259,7 +283,7 @@ class TrackingFSMNode(Node):
         if not valid_detections:
             return None
         
-        # 유효한 객체 중에서 가장 가까운 사람 찾기
+        # 유효한 객체 중에서 가장 가까운 사람 찾기 (ROI 영역 내의 사람만 대상)
         frame_center_y, frame_center_x = frame_shape[0] / 2, frame_shape[1] / 2
         
         min_distance = float('inf')
@@ -329,11 +353,20 @@ class TrackingFSMNode(Node):
         
         # 타겟이 설정되어 있으면 현재 프레임에 존재하는지 확인
         # 단, HELLO를 한 번 완료한 타겟은 존재하지 않는 것으로 처리 (더 이상 추적하지 않음)
-        target_exists = (
-            self.target_track_id is not None and
-            self.target_track_id not in self.hello_done_track_ids and
-            any(det['track_id'] == self.target_track_id for det in detections)
-        )
+        # 또한 ROI 영역 내에 있는지 확인
+        frame_height, frame_width = frame_shape
+        roi_left = frame_width * self.tracking_roi_left_margin
+        roi_right = frame_width * (1.0 - self.tracking_roi_right_margin)
+        
+        target_exists = False
+        if self.target_track_id is not None and self.target_track_id not in self.hello_done_track_ids:
+            for det in detections:
+                if det['track_id'] == self.target_track_id:
+                    # ROI 영역 체크: centroid의 x 좌표가 ROI 영역 내에 있는지 확인
+                    cx, cy = det['centroid']
+                    if roi_left <= cx <= roi_right:
+                        target_exists = True
+                    break
         
         # 상태 머신 처리
         if not detections:
@@ -698,11 +731,45 @@ class TrackingFSMNode(Node):
                                             f"종료 후 {time_since_stopped:.2f}초 < {self.routine_stopped_confirmation_time}초"
                                         )
                                 else:
-                                    # 루틴 종료 시간이 아직 기록되지 않음 (최소 대기 시간은 지났지만)
-                                    self.get_logger().debug(
-                                        f"[HELLO 대기 중] 루틴 종료 시간 미기록, "
-                                        f"current_routine_running={self.current_routine_running}"
-                                    )
+                                    # 루틴 종료 시간이 아직 기록되지 않았지만, 루틴이 비어있고 충분한 시간이 지났으면 SEARCHING으로 전환
+                                    # 루틴이 비어있으면 종료된 것으로 간주하고 전환 (사람이 없어도 전환)
+                                    if elapsed_time >= self.hello_feedback_delay + self.routine_stopped_confirmation_time:
+                                        self.get_logger().info(
+                                            f"[HELLO 조건 체크] 루틴 종료 시간 미기록이지만 충분한 시간 경과: "
+                                            f"경과={elapsed_time:.2f}초 >= {self.hello_feedback_delay + self.routine_stopped_confirmation_time}초, "
+                                            f"루틴 실행 중={self.current_routine_running}"
+                                        )
+                                        
+                                        # HELLO를 한 track_id 저장
+                                        if self.target_track_id is not None:
+                                            self.hello_done_track_ids.add(self.target_track_id)
+                                            self.get_logger().info(
+                                                f"HELLO 완료 ID 저장: track_id={self.target_track_id} "
+                                                f"(총 {len(self.hello_done_track_ids)}개 ID)"
+                                            )
+                                        
+                                        # 타겟이 없어도 SEARCHING으로 전환 (사람이 없어도 전환)
+                                        self.state = TrackingState.SEARCHING
+                                        self.target_track_id = None
+                                        self.target_explicitly_set = False
+                                        self.hello_routine_sent = False
+                                        self.hello_routine_sent_time = None
+                                        self.current_routine_running = False
+                                        self.routine_stopped_time = None
+                                        # SEARCHING 진입 시간 기록 (최초 진입 시에만)
+                                        if self.searching_start_time is None:
+                                            self.searching_start_time = current_time_check
+                                            self.get_logger().info(f"SEARCHING 상태 최초 진입: {self.searching_cooldown_duration}초 동안 사람 탐색 안 함")
+                                        self.get_logger().info(
+                                            f"HELLO 완료: 루틴 비어있음 → SEARCHING 상태로 전환 "
+                                            f"(총 경과 시간: {elapsed_time:.2f}초)"
+                                        )
+                                    else:
+                                        # 루틴 종료 시간이 아직 기록되지 않음 (최소 대기 시간은 지났지만)
+                                        self.get_logger().debug(
+                                            f"[HELLO 대기 중] 루틴 종료 시간 미기록, "
+                                            f"current_routine_running={self.current_routine_running}"
+                                        )
                             else:
                                 # 루틴이 아직 실행 중인 경우
                                 self.get_logger().info(
@@ -995,7 +1062,8 @@ class TrackingFSMNode(Node):
                     'process_time_ms': float(process_time_ms) if process_time_ms else 0.0
                 },
                 'timestamp': time.monotonic(),
-                'manual_mode': self.manual_mode  # GUI 업데이트를 위한 manual_mode 정보 추가
+                'manual_mode': self.manual_mode,  # GUI 업데이트를 위한 manual_mode 정보 추가
+                'target_selected_time': self.target_selected_time  # 타겟 선택 시간 (HELLO 전환 조건 체크용)
             }
             
             # JSON 문자열로 변환하여 발행
@@ -1200,7 +1268,13 @@ class TrackingFSMNode(Node):
             # 루틴이 비어있는지 확인 (루틴 종료 상태)
             nodes = data.get("nodes", [])
             if not nodes or len(nodes) == 0:
-                if self.current_routine_running:  # 이전에 실행 중이었는데 지금 종료됨
+                # 루틴이 비어있으면 종료된 것으로 간주
+                # 이전에 실행 중이었는데 지금 종료된 경우 routine_stopped_time 기록
+                if self.current_routine_running:
+                    self.routine_stopped_time = time.monotonic()
+                # current_routine_running이 이미 False인 경우에도 routine_stopped_time이 None이면 현재 시간으로 설정
+                # (handshake 상태에서 루틴 종료 확인을 위해)
+                elif self.routine_stopped_time is None and (self.state == TrackingState.HELLO or self.state == TrackingState.HANDSHAKE):
                     self.routine_stopped_time = time.monotonic()
                 self.current_routine_running = False
                 if self.state == TrackingState.HELLO or self.state == TrackingState.HANDSHAKE:

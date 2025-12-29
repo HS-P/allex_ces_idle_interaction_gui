@@ -11,7 +11,7 @@ import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, Duration
 from sensor_msgs.msg import CompressedImage
-from std_msgs.msg import String
+from std_msgs.msg import String, Int32MultiArray
 import cv2
 import numpy as np
 
@@ -103,23 +103,23 @@ class RoutineController:
         self.expected_routine_name = None
         self.expected_routine_start_time = None
         
-        # 모든 루틴에 대해 PAUSE 명령 발행 (0.05초 간격)
+        # 모든 루틴에 대해 PAUSE 명령 발행 (0.2초 간격)
         for routine_name in all_routine_names:
             pause_command = f"{self.robot_name}::ROUTINE::{routine_name}::PAUSE"
             self.publish_command(pause_command)
-            time.sleep(0.05)
+            time.sleep(0.2)
         
-        # 모든 루틴에 대해 RESET 명령 발행 (0.05초 간격)
+        # 모든 루틴에 대해 RESET 명령 발행 (0.2초 간격)
         for routine_name in all_routine_names:
             reset_command = f"{self.robot_name}::ROUTINE::{routine_name}::RESET"
             self.publish_command(reset_command)
-            time.sleep(0.05)
+            time.sleep(0.2)
         
         self.node.get_logger().info(f"[PAUSE/RESET ALL] PAUSE/RESET 명령 발행 (현재 nodes={self.node.routine_nodes_count})")
     
     def start_pause_reset_single_routine(self, routine_name: str):
         """
-        특정 루틴에 대해 PAUSE -> RESET 명령 발행 (0.05초 간격)
+        특정 루틴에 대해 PAUSE -> RESET 명령 발행 (0.2초 간격)
         """
         # RESET 완료 플래그 초기화
         self.node.routine_reset_complete_flag = False
@@ -132,12 +132,12 @@ class RoutineController:
         # 특정 루틴에 대해 PAUSE 명령 발행
         pause_command = f"{self.robot_name}::ROUTINE::{routine_name}::PAUSE"
         self.publish_command(pause_command)
-        time.sleep(0.05)
+        time.sleep(0.2)
         
         # 특정 루틴에 대해 RESET 명령 발행
         reset_command = f"{self.robot_name}::ROUTINE::{routine_name}::RESET"
         self.publish_command(reset_command)
-        time.sleep(0.05)
+        time.sleep(0.2)
         
         self.node.get_logger().info(f"[PAUSE/RESET] {routine_name} PAUSE/RESET 명령 발행 (현재 nodes={self.node.routine_nodes_count})")
     
@@ -153,7 +153,7 @@ class RoutineController:
     
     def transition_to_routine(self, from_routine: Optional[str], to_routine: str, old_state: TrackingState, new_state: TrackingState):
         """
-        루틴 전환: 현재 루틴 PAUSE/RESET (0.05초 간격) → 피드백 확인 → 목표 루틴 START
+        루틴 전환: 현재 루틴 PAUSE/RESET (0.2초 간격) → 피드백 확인 → 목표 루틴 START
         
         Args:
             from_routine: 현재 실행 중인 루틴 이름 (None이면 실행 중이 아님)
@@ -190,7 +190,7 @@ class RoutineController:
                 f"{old_state.value} → {new_state.value}: {from_routine or 'None'} PAUSE → RESET → {to_routine} 시작"
             )
         else:
-            # RESET 미완료: 현재 루틴 PAUSE/RESET 계속 발행 (0.05초 간격)
+            # RESET 미완료: 현재 루틴 PAUSE/RESET 계속 발행 (0.2초 간격)
             self.waiting_for_reset = True
             if from_routine:
                 self.start_pause_reset_single_routine(from_routine)
@@ -384,11 +384,22 @@ class AllexIdleInteractionNode(Node):
             10
         )
         
+        # Neck articulation 상태 구독 (READY 상태 체크용)
+        self.neck_articulation_subscription = self.create_subscription(
+            Int32MultiArray,
+            "/robot_outbound_data/theOne_neck/articulation_now",
+            self._neck_articulation_callback,
+            10
+        )
+        
         # 현재 실행 중인 루틴 이름 추적 (실제 실행 중인 루틴)
         self.actual_running_routine = None  # 실제 실행 중인 루틴 이름
         self.routine_nodes_count = 0  # 최신 nodes 개수 저장 (피드백 기반 제어용)
         self.routine_reset_complete_flag = False  # RESET 완료 플래그 (콜백에서 설정)
         self.waiting_for_stop = False  # STOP 대기 중인지
+        
+        # Neck articulation 상태 저장 (data[1]의 값: 4=READY, 5=RUN)
+        self.neck_articulation_status = None  # None=알 수 없음, 4=READY, 5=RUN
         
         # RoutineController 초기화
         self.routine_controller = RoutineController(self, robot_name="X")
@@ -411,9 +422,34 @@ class AllexIdleInteractionNode(Node):
         self.get_logger().info("ALLEX Idle Interaction Node 초기화 완료")
         self.get_logger().info("대기 중: RUN 명령을 기다립니다...")
     
+    def _neck_articulation_callback(self, msg: Int32MultiArray):
+        """Neck articulation 상태 콜백 - READY 상태 체크용"""
+        try:
+            if len(msg.data) > 4:
+                # data[1]이 상태 (값 4=READY, 값 5=RUN)
+                # 사용자 설명에 따르면 인덱스 1의 값이 상태를 나타냄
+                status_value = msg.data[1]
+                self.neck_articulation_status = status_value
+                # 디버깅: 상태 변경 시에만 로그 출력
+                if status_value == 4:
+                    self.get_logger().debug(f"Neck articulation 상태: READY (data[1]={status_value})")
+                elif status_value == 5:
+                    self.get_logger().debug(f"Neck articulation 상태: RUN (data[1]={status_value})")
+            else:
+                self.get_logger().warn(f"Neck articulation 데이터 길이 부족: {len(msg.data)}")
+        except Exception as e:
+            self.get_logger().warn(f"Neck articulation 상태 파싱 실패: {e}")
+    
     def _routine_status_callback(self, msg: String):
         """루틴 상태 피드백 콜백 - /debug/routine 토픽에서 실제 실행 중인 루틴 추적"""
         try:
+            # Neck articulation 상태 체크: READY이면 RUN으로 변경 (2Hz마다 체크)
+            # data[1]의 값이 4면 READY, 5면 RUN
+            if self.neck_articulation_status == 4:  # READY (값 4)
+                self.get_logger().info("Neck articulation이 READY 상태입니다. RUN으로 전환합니다.")
+                status_run_command = "theOne_neck,theOne_waist::STATUS::RUN"
+                self.routine_controller.publish_command(status_run_command)
+            
             data = json.loads(msg.data)
             
             # 루틴이 비어있는지 확인 (루틴 종료 상태)
@@ -473,9 +509,27 @@ class AllexIdleInteractionNode(Node):
             for node in nodes:
                 node_name = node.get("name", "")
                 # 루틴 이름 패턴 확인 (idling_heart_rt, idling_handshake_rt, idle_breathing_rt)
-                if node_name and ("_rt" in node_name or "idling" in node_name or "breathing" in node_name):
-                    actual_routine_name = node_name
-                    break
+                # 전체 이름이 루틴 이름과 일치하거나, 루틴 이름이 포함되어 있는 경우
+                if node_name:
+                    # 정확한 루틴 이름 매치
+                    if node_name in ("idle_breathing_rt", "idling_heart_rt", "idling_handshake_rt"):
+                        actual_routine_name = node_name
+                        break
+                    # 부분 매치 (루틴 이름이 노드 이름에 포함된 경우)
+                    elif "_rt" in node_name and ("idling" in node_name or "breathing" in node_name):
+                        # 더 구체적인 매치를 위해 정확한 이름 확인
+                        if "idling_heart_rt" in node_name:
+                            actual_routine_name = "idling_heart_rt"
+                            break
+                        elif "idling_handshake_rt" in node_name:
+                            actual_routine_name = "idling_handshake_rt"
+                            break
+                        elif "idle_breathing_rt" in node_name:
+                            actual_routine_name = "idle_breathing_rt"
+                            break
+                        # 정확한 매치가 없으면 첫 번째로 찾은 것을 사용
+                        elif actual_routine_name is None and "_rt" in node_name:
+                            actual_routine_name = node_name
             
             # 단일 루틴 RESET 완료 확인: RESET 중인 루틴이 실행 중이 아니면 RESET 완료
             if self.routine_controller.waiting_for_reset and self.routine_controller.resetting_routine_name:
@@ -522,7 +576,17 @@ class AllexIdleInteractionNode(Node):
                             # handshake/hello 루틴인 경우: Sequence 노드 확인 또는 실제 루틴 이름 확인
                             elif expected_routine in ("idling_heart_rt", "idling_handshake_rt"):
                                 # Sequence 노드이거나 실제 루틴 이름이 일치하면 성공
-                                if root_name == "Sequence" or actual_routine_name == expected_routine:
+                                # handshake/hello 루틴은 루트 노드가 Sequence이므로, Sequence가 확인되면 성공으로 간주
+                                if root_name == "Sequence":
+                                    self.get_logger().info(
+                                        f"[ROUTINE START 확인] {expected_routine} 루틴 시작 확인됨 "
+                                        f"(루트 노드: {root_name}, 실제 루틴: {actual_routine_name if actual_routine_name else 'N/A (Sequence 루트 노드로 확인)'}, 경과 시간: {elapsed:.3f}초)"
+                                    )
+                                    # 플래그 초기화
+                                    self.routine_controller.expected_routine_name = None
+                                    self.routine_controller.expected_routine_start_time = None
+                                elif actual_routine_name == expected_routine:
+                                    # 실제 루틴 이름으로도 확인 가능
                                     self.get_logger().info(
                                         f"[ROUTINE START 확인] {expected_routine} 루틴 시작 확인됨 "
                                         f"(루트 노드: {root_name}, 실제 루틴: {actual_routine_name}, 경과 시간: {elapsed:.3f}초)"
@@ -804,6 +868,11 @@ class AllexIdleInteractionNode(Node):
         # 현재 실행 중인 루틴 확인
         current_routine = self.routine_controller.current_routine
         
+        # RESET 대기 중이면 루틴 전환을 하지 않음 (이미 전환 진행 중)
+        if self.routine_controller.waiting_for_reset:
+            self.get_logger().debug(f"{old_state.value} → {new_state.value}: RESET 대기 중이므로 루틴 전환 건너뜀")
+            return
+        
         # 같은 루틴이면 아무것도 하지 않음 (breathing -> breathing 등)
         if current_routine == target_routine:
             self.get_logger().debug(f"{old_state.value} → {new_state.value}: 동일 루틴 ({target_routine}) 유지")
@@ -863,22 +932,8 @@ class AllexIdleInteractionNode(Node):
                 tracker_command['target_id'] = target_id
                 self.get_logger().info(f"상태 설정: {state_str}, 타겟 ID: {target_id}")
                 
-                # 상태 변경 시 루틴 전환 처리 (RUN 중일 때만)
-                if self.is_running:
-                    try:
-                        new_state = TrackingState[state_str.upper()]
-                        old_state = self.previous_state
-                        
-                        # 상태가 실제로 변경되는 경우에만 루틴 전환 처리
-                        if new_state != old_state:
-                            self.get_logger().info(f"[MANUAL STATE CHANGE] {old_state.value} -> {new_state.value}")
-                            # 상태 변경 처리 (루틴 전환 포함)
-                            self._handle_state_change(old_state, new_state)
-                            # previous_state 업데이트 (tracking_result_callback에서도 업데이트되지만, 
-                            # 명시적으로 여기서도 업데이트하여 중복 처리 방지)
-                            self.previous_state = new_state
-                    except (KeyError, AttributeError) as e:
-                        self.get_logger().warn(f"알 수 없는 상태: {state_str}, 오류: {e}")
+                # set_state 명령은 tracker로 전송만 하고, 실제 상태 변경은 tracking_result_callback에서 처리
+                # (중복 처리 방지를 위해 여기서는 루틴 전환을 하지 않음)
             
             elif cmd_type == 'set_target':
                 target_id = command.get('target_id')
