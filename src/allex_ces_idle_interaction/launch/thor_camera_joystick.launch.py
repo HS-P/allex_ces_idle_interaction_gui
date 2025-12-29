@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """
-THOR 노드 Launch 파일
+THOR 카메라 및 조이스틱 Launch 파일
 - 카메라 스트리밍 (orbbec_camera)
 - 조이스틱 제어 노드
-- GUI 노드
 """
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
@@ -32,18 +31,8 @@ def generate_launch_description():
         output='screen',
     )
     
-    # 3. GUI 노드
-    gui_node = Node(
-        package='allex_ces_idle_interaction',
-        executable='idle_interaction_gui_node',
-        name='idle_interaction_gui_node',
-        output='screen',
-    )
-    
     return LaunchDescription([
         orbbec_camera_launch,
         joystick_control_node,
-        # GUI는 별도로 실행 (run.bash에서 마지막에 실행)
-        # gui_node,
     ])
 
