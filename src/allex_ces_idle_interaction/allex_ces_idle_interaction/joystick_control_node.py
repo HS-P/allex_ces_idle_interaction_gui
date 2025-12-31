@@ -10,6 +10,7 @@ from pynput import keyboard
 import threading
 import json
 import time
+import math
 from typing import Set, Optional, List, Dict
 
 from .tracking_fsm_node import TrackingState
@@ -60,7 +61,7 @@ class JoystickControlNode(Node):
         self.get_logger().info("=" * 60)
         self.get_logger().info("Joystick Control Node 시작")
         self.get_logger().info("모든 명령은 j 키와 함께 눌러야 작동합니다.")
-        self.get_logger().info("j+c: Auto Run, j+d: Manual Run")
+        self.get_logger().info("j+c: Auto Run, j+d: Manual Run, j+f: Stop")
         self.get_logger().info("j+k: 타겟 선택 (왼쪽), j+m: 타겟 선택 (오른쪽)")
         self.get_logger().info("j+i: Handshake State, j+h: Idle State, j+g: Hello State")
         self.get_logger().info("ESC 키를 누르면 종료합니다.")
@@ -164,6 +165,8 @@ class JoystickControlNode(Node):
             self._handle_auto_run()
         elif key == 'd':
             self._handle_manual_run()
+        elif key == 'f':
+            self._handle_stop()
         elif key == 'k':
             self._handle_target_left()
         elif key == 'm':
@@ -192,7 +195,7 @@ class JoystickControlNode(Node):
             # 현재 타겟 ID 업데이트
             self.current_target_id = data.get('target_track_id', None)
             
-            # 추적 객체 목록 업데이트 및 정렬 (x 좌표 기준)
+            # 추적 객체 목록 업데이트
             tracked_objects_data = data.get('tracked_objects', [])
             self.tracked_objects = []
             for obj_data in tracked_objects_data:
@@ -205,11 +208,47 @@ class JoystickControlNode(Node):
                         'centroid': tuple(centroid)
                     })
             
-            # x 좌표(centroid[0]) 기준으로 정렬
-            self.tracked_objects_sorted = sorted(
-                self.tracked_objects,
-                key=lambda obj: obj['centroid'][0]
-            )
+            # 정렬 로직: 초기(타겟이 없을 때)는 중심 기준 좌우 분리, 타겟이 있으면 x 좌표 순서대로
+            if self.current_target_id is None:
+                # 초기: 화면 중심 기준으로 좌우 분리 후 거리 순 정렬
+                if len(self.tracked_objects) > 0:
+                    # 화면 중심 추정 (모든 객체의 centroid 범위를 사용하여 중심 계산)
+                    all_x = [obj['centroid'][0] for obj in self.tracked_objects]
+                    all_y = [obj['centroid'][1] for obj in self.tracked_objects]
+                    center_x = (min(all_x) + max(all_x)) / 2.0 if all_x else 640.0
+                    center_y = (min(all_y) + max(all_y)) / 2.0 if all_y else 360.0
+                else:
+                    center_x, center_y = 640.0, 360.0
+                
+                # 좌측/우측 분리
+                left_objects = []  # 중심선 기준 좌측
+                right_objects = []  # 중심선 기준 우측
+                
+                for obj in self.tracked_objects:
+                    cx, cy = obj['centroid']
+                    # 중심선 기준 좌측/우측 판단
+                    if cx < center_x:
+                        # 좌측: 중심선으로부터의 거리 계산 (음수로 표시하여 정렬 시 좌측 우선)
+                        distance = -math.sqrt((cx - center_x)**2 + (cy - center_y)**2)
+                        left_objects.append((distance, obj))
+                    else:
+                        # 우측: 중심선으로부터의 거리 계산
+                        distance = math.sqrt((cx - center_x)**2 + (cy - center_y)**2)
+                        right_objects.append((distance, obj))
+                
+                # 좌측: 거리 순으로 정렬 (음수이므로 절댓값이 작은 것부터 = 가까운 것부터)
+                left_objects.sort(key=lambda x: -x[0])  # 음수이므로 내림차순 정렬
+                # 우측: 거리 순으로 정렬 (양수이므로 오름차순 정렬)
+                right_objects.sort(key=lambda x: x[0])
+                
+                # 좌측 + 우측 순서로 합치기 (좌측 먼저, 그 다음 우측)
+                self.tracked_objects_sorted = [obj for _, obj in left_objects] + [obj for _, obj in right_objects]
+            else:
+                # 타겟이 있으면: x 좌표(centroid[0]) 기준으로 정렬 (좌측부터)
+                self.tracked_objects_sorted = sorted(
+                    self.tracked_objects,
+                    key=lambda obj: obj['centroid'][0]
+                )
             
         except json.JSONDecodeError as e:
             self.get_logger().warn(f"추적 결과 파싱 실패: {e}")
@@ -238,6 +277,14 @@ class JoystickControlNode(Node):
         command = {
             'type': 'run',
             'manual': True  # Manual 모드
+        }
+        self._publish_command(command)
+    
+    def _handle_stop(self):
+        """j+f: Stop"""
+        self.get_logger().info("[JOYSTICK] Stop 명령")
+        command = {
+            'type': 'stop'
         }
         self._publish_command(command)
     
@@ -372,8 +419,14 @@ def main(args=None):
     except KeyboardInterrupt:
         pass
     finally:
+        try:
         node.destroy_node()
+        except:
+            pass
+        try:
         rclpy.shutdown()
+        except:
+            pass
 
 
 if __name__ == '__main__':

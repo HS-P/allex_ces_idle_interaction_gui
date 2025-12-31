@@ -246,7 +246,16 @@ class TrackingFSMNode(Node):
             track_id = det['track_id']
             current_frame_ids.add(track_id)
             # 처음 보는 track_id면 등장 시간 기록
+            # 단, SEARCHING 상태에서는 5초 이후부터만 기록 (후보군 선정 시간은 5초 이후부터 카운트)
             if track_id not in self.track_id_first_seen:
+                # SEARCHING 상태이고 5초가 지나지 않았으면 기록하지 않음
+                if (self.state == TrackingState.SEARCHING and 
+                    self.searching_start_time is not None):
+                    elapsed_since_searching = current_time - self.searching_start_time
+                    if elapsed_since_searching < self.searching_cooldown_duration:
+                        # 5초가 지나지 않았으면 후보군 선정 시간 기록하지 않음
+                        continue
+                # 5초 이후이거나 SEARCHING 상태가 아니면 기록
                 self.track_id_first_seen[track_id] = current_time
         
         # 사라진 track_id 제거 (메모리 관리)
@@ -277,6 +286,19 @@ class TrackingFSMNode(Node):
             
             if track_id in self.track_id_first_seen:
                 duration = current_time - self.track_id_first_seen[track_id]
+                # SEARCHING 상태에서는 5초 이후부터만 후보군 선정 시간 카운트
+                if self.state == TrackingState.SEARCHING and self.searching_start_time is not None:
+                    elapsed_since_searching = current_time - self.searching_start_time
+                    if elapsed_since_searching < self.searching_cooldown_duration:
+                        # 5초가 지나지 않았으면 후보군 선정 시간을 카운트하지 않음
+                        # 즉, duration 계산 시 5초 이후부터만 카운트
+                        if self.track_id_first_seen[track_id] < self.searching_start_time + self.searching_cooldown_duration:
+                            # 5초 이전에 기록된 경우, 5초 이후부터 카운트
+                            effective_start_time = self.searching_start_time + self.searching_cooldown_duration
+                            duration = current_time - effective_start_time
+                        else:
+                            # 5초 이후에 기록된 경우, 그대로 사용
+                            pass
                 if duration >= self.min_target_duration:
                     valid_detections.append(det)
         
@@ -318,12 +340,17 @@ class TrackingFSMNode(Node):
         elif state == TrackingState.WAITING:
             self.idle_start_time = None  # WAITING 진입 시 IDLE 타이머 초기화
 
-        # HELLO/HANDSHAKE 전환 요청은 Auto 모드에서도 허용 (Controller에서 수신)
-        if state == TrackingState.HELLO or state == TrackingState.HANDSHAKE:
+        # HELLO/HANDSHAKE/SEARCHING 전환 요청은 Auto 모드에서도 허용 (Controller에서 수신)
+        if state == TrackingState.HELLO or state == TrackingState.HANDSHAKE or state == TrackingState.SEARCHING:
             self.state = state
             if target_track_id is not None:
                 self.target_track_id = int(target_track_id)
                 self.target_explicitly_set = True
+            else:
+                # SEARCHING으로 전환할 때는 타겟 초기화
+                if state == TrackingState.SEARCHING:
+                    self.target_track_id = None
+                    self.target_explicitly_set = False
             self.lost_frames = 0
             return
 
@@ -771,11 +798,8 @@ class TrackingFSMNode(Node):
                                             f"current_routine_running={self.current_routine_running}"
                                         )
                             else:
-                                # 루틴이 아직 실행 중인 경우
-                                self.get_logger().info(
-                                    f"[HELLO 대기 중] 루틴이 아직 실행 중: "
-                                    f"current_routine_running={self.current_routine_running}"
-                                )
+                                # 루틴이 아직 실행 중인 경우 (로그 제거 - 불필요한 반복 로그)
+                                pass
                         else:
                             # 아직 대기 시간이 지나지 않음
                             self.get_logger().debug(
@@ -904,11 +928,8 @@ class TrackingFSMNode(Node):
                                             f"current_routine_running={self.current_routine_running}"
                                         )
                             else:
-                                # 루틴이 아직 실행 중인 경우
-                                self.get_logger().info(
-                                    f"[HANDSHAKE 대기 중] 루틴이 아직 실행 중: "
-                                    f"current_routine_running={self.current_routine_running}"
-                                )
+                                # 루틴이 아직 실행 중인 경우 (로그 제거)
+                                pass
                         else:
                             # 아직 대기 시간이 지나지 않음
                             self.get_logger().debug(
@@ -1403,16 +1424,7 @@ class TrackingFSMNode(Node):
             old_depth = self.target_depth_map.get(track_id)
             self.target_depth_map[track_id] = depth_m
             
-            # 디버깅: depth 값 업데이트 로그 (값이 변경되었을 때만)
-            if old_depth is None or abs(old_depth - depth_m) > 0.1:  # 새 값이거나 10cm 이상 변경 시
-                self.get_logger().info(
-                    f"[Depth 추출] track_id={track_id}, "
-                    f"depth={depth_m:.3f}m ({depth_m*1000:.1f}mm), "
-                    f"color_centroid=({centroid_x:.1f}, {centroid_y:.1f}), "
-                    f"depth_centroid=({depth_center_x}, {depth_center_y}), "
-                    f"scale=({scale_x:.3f}, {scale_y:.3f}), "
-                    f"color_shape={frame_shape}, depth_shape={depth_shape}"
-                )
+            # Depth 추출 로그 제거
 
 
 def main(args=None):

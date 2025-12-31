@@ -12,6 +12,7 @@ import sys
 import json
 import math
 import threading
+import numpy as np
 from pathlib import Path
 from typing import Dict, Optional, Any
 from collections import namedtuple
@@ -1036,12 +1037,51 @@ class GuiNode(Node, QMainWindow):
                 self.get_logger().info("[GUI] STOP UI 업데이트 완료")
     
     def _update_target_buttons(self):
-        """타겟 버튼 업데이트"""
+        """타겟 버튼 업데이트 - 화면 중심에서 가장 가까운 사람 중 좌측/우측 순서로 정렬"""
         if not self.target_buttons:
             return
         
-        # 가로축 기준 좌측부터 정렬 (centroid의 x 좌표 기준)
-        sorted_objects = sorted(self.tracked_objects, key=lambda obj: obj.centroid[0])
+        # 화면 중심 좌표 (GUI 창 크기 기준, 실제 이미지 크기는 알 수 없으므로 추정)
+        # 실제로는 이미지 크기를 받아와야 하지만, 여기서는 centroid 좌표만 사용
+        # 화면 중심을 기준으로 좌측/우측 분리 후 거리 순으로 정렬
+        if not self.tracked_objects:
+            # 객체가 없으면 모든 버튼 숨김
+            for btn in self.target_buttons:
+                btn.setVisible(False)
+            return
+        
+        # 화면 중심 추정 (모든 객체의 centroid 범위를 사용하여 중심 계산)
+        if len(self.tracked_objects) > 0:
+            all_x = [obj.centroid[0] for obj in self.tracked_objects]
+            all_y = [obj.centroid[1] for obj in self.tracked_objects]
+            center_x = (min(all_x) + max(all_x)) / 2.0 if all_x else 640.0  # 기본값 640 (1280/2)
+            center_y = (min(all_y) + max(all_y)) / 2.0 if all_y else 360.0  # 기본값 360 (720/2)
+        else:
+            center_x, center_y = 640.0, 360.0
+        
+        # 좌측/우측 분리
+        left_objects = []  # 중심선 기준 좌측
+        right_objects = []  # 중심선 기준 우측
+        
+        for obj in self.tracked_objects:
+            cx, cy = obj.centroid
+            # 중심선 기준 좌측/우측 판단
+            if cx < center_x:
+                # 좌측: 중심선으로부터의 거리 계산 (음수로 표시하여 정렬 시 좌측 우선)
+                distance = -np.sqrt((cx - center_x)**2 + (cy - center_y)**2)
+                left_objects.append((distance, obj))
+            else:
+                # 우측: 중심선으로부터의 거리 계산
+                distance = np.sqrt((cx - center_x)**2 + (cy - center_y)**2)
+                right_objects.append((distance, obj))
+        
+        # 좌측: 거리 순으로 정렬 (음수이므로 절댓값이 작은 것부터 = 가까운 것부터)
+        left_objects.sort(key=lambda x: -x[0])  # 음수이므로 내림차순 정렬
+        # 우측: 거리 순으로 정렬 (양수이므로 오름차순 정렬)
+        right_objects.sort(key=lambda x: x[0])
+        
+        # 좌측 + 우측 순서로 합치기 (좌측 먼저, 그 다음 우측)
+        sorted_objects = [obj for _, obj in left_objects] + [obj for _, obj in right_objects]
         tracked_ids = [obj.track_id for obj in sorted_objects][:10]
         current_target_id = self.current_target_info.track_id if self.current_target_info else None
         

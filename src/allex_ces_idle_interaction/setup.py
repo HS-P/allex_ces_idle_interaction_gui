@@ -55,6 +55,7 @@ setup(
             'joystick_control_node = allex_ces_idle_interaction.joystick_control_node:main',
             'camera_test = allex_ces_idle_interaction.camera_test:main',
             'camera_depth_checker_node = allex_ces_idle_interaction.camera_depth_checker_node:main',
+            'bash_controller_node = allex_ces_idle_interaction.bash_controller_node:main',
         ],
     },
 )

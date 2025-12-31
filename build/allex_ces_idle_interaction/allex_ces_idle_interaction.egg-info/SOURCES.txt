@@ -3,6 +3,7 @@ setup.cfg
 setup.py
 allex_ces_idle_interaction/__init__.py
 allex_ces_idle_interaction/allex_idle_interaction_node.py
+allex_ces_idle_interaction/bash_controller_node.py
 allex_ces_idle_interaction/camera_depth_checker_node.py
 allex_ces_idle_interaction/camera_test.py
 allex_ces_idle_interaction/gaze_controller_neck_waist_node.py
@@ -20,5 +21,8 @@ allex_ces_idle_interaction.egg-info/zip-safe
 config/botsort.yaml
 config/topics.json
 launch/allex_idle_interaction.launch.py
+launch/bash_controller.launch.py
+launch/thor_camera_joystick.launch.py
+launch/thor_gui.launch.py
 launch/thor_nodes.launch.py
 resource/allex_ces_idle_interaction

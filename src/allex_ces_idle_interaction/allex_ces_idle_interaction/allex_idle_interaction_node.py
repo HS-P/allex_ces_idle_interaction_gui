@@ -11,7 +11,7 @@ import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, Duration
 from sensor_msgs.msg import CompressedImage
-from std_msgs.msg import String, Int32MultiArray
+from std_msgs.msg import String, Int32MultiArray, Float64MultiArray
 import cv2
 import numpy as np
 
@@ -38,21 +38,57 @@ class RoutineController:
         self.expected_routine_name = None  # START 명령 발행 시 예상하는 루틴 이름
         self.expected_routine_start_time = None  # START 명령 발행 시각
         
-        # HMI 명령 Publisher
+        # 루틴 제어 Publisher: hmi/robot_command (모든 루틴 명령 제어용)
         self.command_pub = node.create_publisher(
             String,
             'hmi/robot_command',
             10
         )
         
+        # External Topic Publisher: /robot_inbound/routine/external_data (서브 루틴 제어용)
+        qos_t1 = QoSProfile(
+            depth=10,
+            reliability=ReliabilityPolicy.RELIABLE
+        )
+        self.external_topic_pub = node.create_publisher(
+            Float64MultiArray,
+            '/robot_inbound/routine/external_data',
+            qos_t1
+        )
+        
+        # idle_interaction_selector_rt 실행 상태 추적
+        self.selector_routine_running = False
+        
+        # Handshake/Hello 완료 감지용
+        self.handshake_start_time = None  # Handshake 루틴 시작 시간
+        self.hello_start_time = None  # Hello 루틴 시작 시간
+        self.handshake_complete_check_started = False  # Handshake 완료 확인 시작 여부
+        self.hello_complete_check_started = False  # Hello 완료 확인 시작 여부
+        
+        # 루틴 이름 -> External Topic 명령 코드 매핑
+        self.routine_to_cmd_code = {
+            "idle_breathing_rt": 21.0,      # Breathing RT
+            "idling_heart_rt": 22.0,        # Heart RT
+            "idling_handshake_rt": 23.0,    # Handshake RT
+        }
+        
         node.get_logger().info(f"RoutineController 초기화 완료 (로봇: {robot_name})")
     
     def publish_command(self, command: str):
-        """명령을 토픽으로 발행"""
+        """명령을 /hmi/robot_command 토픽으로 발행 (모든 루틴 명령 제어용)"""
         msg = String()
         msg.data = command
         self.command_pub.publish(msg)
         self.node.get_logger().info(f"Routine 명령 발행: {command}")
+        time.sleep(0.01)  # 명령 처리 시간 대기
+    
+    def send_external_command(self, cmd_code: float):
+        """External Topic으로 서브 루틴 명령 전송"""
+        msg = Float64MultiArray()
+        msg.data = [2.0, cmd_code]  # [2, 명령코드]
+        self.external_topic_pub.publish(msg)
+        self.node.get_logger().info(f"External Topic 명령 발행: {msg.data}")
+        time.sleep(0.01)  # 명령 처리 시간 대기
     
     def is_routine_idle(self) -> bool:
         """루틴이 Idle 상태인지 확인 (nodes.length == 0)"""
@@ -85,61 +121,95 @@ class RoutineController:
         self.node.get_logger().warn(f"Idle 상태 확인 타임아웃 ({timeout}초, 현재 nodes={self.node.routine_nodes_count})")
         return False
     
+    def wait_for_routine_running(self, routine_name: str, timeout=3.0, check_interval=0.1) -> bool:
+        """
+        특정 루틴이 실행 중인지 확인 (블로킹)
+        
+        Args:
+            routine_name: 확인할 루틴 이름
+            timeout: 최대 대기 시간 (초)
+            check_interval: 확인 간격 (초)
+        
+        Returns:
+            True: 루틴 실행 중 확인
+            False: 타임아웃
+        """
+        import rclpy
+        start_time = time.monotonic()
+        while (time.monotonic() - start_time) < timeout:
+            rclpy.spin_once(self.node, timeout_sec=check_interval)
+            
+            # 실제 실행 중인 루틴 확인
+            if self.node.actual_running_routine == routine_name:
+                elapsed = time.monotonic() - start_time
+                self.node.get_logger().info(f"{routine_name} 루틴 실행 확인 완료 (대기 시간: {elapsed:.2f}초)")
+                return True
+        
+        self.node.get_logger().warn(f"{routine_name} 루틴 실행 확인 타임아웃 ({timeout}초)")
+        return False
+    
+    def wait_for_selector_running(self, timeout=3.0, check_interval=0.1) -> bool:
+        """
+        idle_interaction_selector_rt가 실행 중인지 확인 (블로킹)
+        
+        Args:
+            timeout: 최대 대기 시간 (초)
+            check_interval: 확인 간격 (초)
+        
+        Returns:
+            True: selector 루틴 실행 중 확인
+            False: 타임아웃
+        """
+        import rclpy
+        start_time = time.monotonic()
+        while (time.monotonic() - start_time) < timeout:
+            rclpy.spin_once(self.node, timeout_sec=check_interval)
+            
+            # /debug/routine에서 IdleInteractionSelector 노드 확인
+            if self.node.routine_nodes_count > 0:
+                # 루트 노드가 IdleInteractionSelector인지 확인
+                # (실제로는 _routine_status_callback에서 확인하지만, 여기서는 nodes_count로 간접 확인)
+                elapsed = time.monotonic() - start_time
+                self.node.get_logger().info(f"idle_interaction_selector_rt 실행 확인 완료 (대기 시간: {elapsed:.2f}초)")
+                return True
+        
+        self.node.get_logger().warn(f"idle_interaction_selector_rt 실행 확인 타임아웃 ({timeout}초)")
+        return False
+    
     def start_pause_reset_all_routines(self):
         """
-        모든 루틴에 대해 PAUSE -> RESET 명령 발행 (STOP 명령 시에만 사용)
+        idle_interaction_selector_rt에 대해 PAUSE -> RESET 명령 발행 (STOP 명령 시에만 사용)
         (RESET 완료될 때까지 계속 호출됨)
         """
-        # 모든 루틴 이름 목록 (현재 사용 중인 루틴들)
-        all_routine_names = [
-            "idle_breathing_rt",
-            "idling_heart_rt",
-            "idling_handshake_rt"
-        ]
-        
         # RESET 완료 플래그 초기화
         self.node.routine_reset_complete_flag = False
         # START 확인 플래그 초기화 (PAUSE/RESET 시작 시)
         self.expected_routine_name = None
         self.expected_routine_start_time = None
         
-        # 모든 루틴에 대해 PAUSE 명령 발행 (0.2초 간격)
-        for routine_name in all_routine_names:
-            pause_command = f"{self.robot_name}::ROUTINE::{routine_name}::PAUSE"
-            self.publish_command(pause_command)
-            time.sleep(0.2)
+        # idle_interaction_selector_rt에 대해 PAUSE 명령 발행
+        pause_command = f"{self.robot_name}::ROUTINE::idle_interaction_selector_rt::PAUSE"
+        self.publish_command(pause_command)
+        time.sleep(0.02)  # PAUSE 처리 대기 (최소 20ms)
         
-        # 모든 루틴에 대해 RESET 명령 발행 (0.2초 간격)
-        for routine_name in all_routine_names:
-            reset_command = f"{self.robot_name}::ROUTINE::{routine_name}::RESET"
-            self.publish_command(reset_command)
-            time.sleep(0.2)
+        # idle_interaction_selector_rt에 대해 RESET 명령 발행
+        reset_command = f"{self.robot_name}::ROUTINE::idle_interaction_selector_rt::RESET"
+        self.publish_command(reset_command)
+        time.sleep(0.1)  # RESET 처리 대기
         
+        self.selector_routine_running = False
         self.node.get_logger().info(f"[PAUSE/RESET ALL] PAUSE/RESET 명령 발행 (현재 nodes={self.node.routine_nodes_count})")
     
-    def start_pause_reset_single_routine(self, routine_name: str):
+    def reset_current_routine_external(self):
         """
-        특정 루틴에 대해 PAUSE -> RESET 명령 발행 (0.2초 간격)
+        External Topic으로 현재 실행 중인 루틴 Reset (빠른 전환용)
+        일반 루틴 전환 시 사용 (Handshake -> Hello, Hello -> Tracking 등)
         """
-        # RESET 완료 플래그 초기화
-        self.node.routine_reset_complete_flag = False
-        # START 확인 플래그 초기화 (PAUSE/RESET 시작 시)
-        self.expected_routine_name = None
-        self.expected_routine_start_time = None
-        # RESET 중인 루틴 이름 저장
-        self.resetting_routine_name = routine_name
-        
-        # 특정 루틴에 대해 PAUSE 명령 발행
-        pause_command = f"{self.robot_name}::ROUTINE::{routine_name}::PAUSE"
-        self.publish_command(pause_command)
-        time.sleep(0.2)
-        
-        # 특정 루틴에 대해 RESET 명령 발행
-        reset_command = f"{self.robot_name}::ROUTINE::{routine_name}::RESET"
-        self.publish_command(reset_command)
-        time.sleep(0.2)
-        
-        self.node.get_logger().info(f"[PAUSE/RESET] {routine_name} PAUSE/RESET 명령 발행 (현재 nodes={self.node.routine_nodes_count})")
+        # External Topic으로 Reset 명령 전송 (100 = Reset)
+        self.send_external_command(100.0)
+        self.node.get_logger().info(f"[EXTERNAL RESET] 현재 루틴 Reset 명령 발송 (External Topic: [2, 100])")
+        # Reset 명령 발송 후 피드백 확인을 위한 로그
+        self.node.get_logger().info(f"[EXTERNAL RESET] Reset 명령 발송 완료, 피드백 대기 중...")
     
     def is_reset_complete(self) -> bool:
         """
@@ -153,7 +223,8 @@ class RoutineController:
     
     def transition_to_routine(self, from_routine: Optional[str], to_routine: str, old_state: TrackingState, new_state: TrackingState):
         """
-        루틴 전환: 현재 루틴 PAUSE/RESET (0.2초 간격) → 피드백 확인 → 목표 루틴 START
+        루틴 전환: External Topic으로 빠른 전환 (Reset 후 새 루틴 시작)
+        Handshake -> Hello, Hello -> Tracking 등 일반 전환 시 사용
         
         Args:
             from_routine: 현재 실행 중인 루틴 이름 (None이면 실행 중이 아님)
@@ -161,146 +232,137 @@ class RoutineController:
             old_state: 이전 상태
             new_state: 새로운 상태
         """
-        # RESET 완료 확인
-        if self.is_reset_complete():
-            # RESET 완료: 목표 루틴 START
-            self.waiting_for_reset = False
-            self.resetting_routine_name = None
-            
-            # RESET 후 시스템 안정화 대기 (1초)
-            time.sleep(1.0)
-            
-            # 목표 루틴 START
-            command = f"{self.robot_name}::ROUTINE::{to_routine}::START"
-            self.current_routine = to_routine
-            
-            # breathing 루틴인지 확인
-            if to_routine == "idle_breathing_rt":
-                self.breathing_routine_running = True
+        # idle_interaction_selector_rt가 실행 중이 아니면 먼저 START
+        if not self.selector_routine_running:
+            selector_start_command = f"{self.robot_name}::ROUTINE::idle_interaction_selector_rt::START"
+            self.publish_command(selector_start_command)
+            # 피드백 확인: selector 루틴이 실행 중인지 확인
+            if self.wait_for_selector_running(timeout=2.0):
+                self.selector_routine_running = True
             else:
-                self.breathing_routine_running = False
-            
-            self.publish_command(command)
-            
-            # START 명령 확인용 플래그 설정
-            self.expected_routine_name = to_routine
-            self.expected_routine_start_time = time.monotonic()
-            
-            self.node.get_logger().info(
-                f"{old_state.value} → {new_state.value}: {from_routine or 'None'} PAUSE → RESET → {to_routine} 시작"
-            )
+                self.node.get_logger().warn("idle_interaction_selector_rt 시작 확인 실패, 계속 진행...")
+                self.selector_routine_running = True  # 일단 진행
+        
+        # 현재 루틴이 있으면 External Topic으로 Reset
+        if from_routine:
+            self.reset_current_routine_external()
+            # 피드백 확인: Idle 상태가 되었는지 확인 (최대 1초)
+            self.wait_for_idle(timeout=1.0)
+        
+        # 목표 루틴을 External Topic으로 시작
+        cmd_code = self.routine_to_cmd_code.get(to_routine)
+        if cmd_code is None:
+            self.node.get_logger().error(f"알 수 없는 루틴 이름: {to_routine}")
+            return
+        
+        self.current_routine = to_routine
+        
+        # breathing 루틴인지 확인
+        if to_routine == "idle_breathing_rt":
+            self.breathing_routine_running = True
         else:
-            # RESET 미완료: 현재 루틴 PAUSE/RESET 계속 발행 (0.2초 간격)
-            self.waiting_for_reset = True
-            if from_routine:
-                self.start_pause_reset_single_routine(from_routine)
-            else:
-                # 현재 루틴이 없으면 바로 목표 루틴 START
-                self.waiting_for_reset = False
-                self.resetting_routine_name = None
-                
-                command = f"{self.robot_name}::ROUTINE::{to_routine}::START"
-                self.current_routine = to_routine
-                
-                if to_routine == "idle_breathing_rt":
-                    self.breathing_routine_running = True
-                else:
-                    self.breathing_routine_running = False
-                
-                self.publish_command(command)
-                
-                self.expected_routine_name = to_routine
-                self.expected_routine_start_time = time.monotonic()
-                
-                self.node.get_logger().info(
-                    f"{old_state.value} → {new_state.value}: 현재 루틴 없음, {to_routine} 시작"
-                )
+            self.breathing_routine_running = False
+        
+        # External Topic으로 서브 루틴 시작 (Reliable QoS이므로 확인 로직 제거)
+        self.send_external_command(cmd_code)
+        
+        # Handshake/Hello 루틴 시작 시간 기록
+        if to_routine == "idling_handshake_rt":
+            self.handshake_start_time = time.monotonic()
+            self.handshake_complete_check_started = False
+            self.node.get_logger().info(f"Handshake 루틴 시작 시간 기록: {self.handshake_start_time}")
+        elif to_routine == "idling_heart_rt" and new_state == TrackingState.HELLO:
+            self.hello_start_time = time.monotonic()
+            self.hello_complete_check_started = False
+            self.node.get_logger().info(f"Hello 루틴 시작 시간 기록: {self.hello_start_time}")
+        
+        self.node.get_logger().info(
+            f"{old_state.value} → {new_state.value}: {from_routine or 'None'} Reset([2,100]) → {to_routine}([2,{int(cmd_code)}]) 전환 완료"
+        )
     
     def start_breathing(self):
-        """숨쉬기 루틴 시작 (무한 반복) - 기존 루틴이 없을 경우 바로 실행"""
+        """숨쉬기 루틴 시작 (무한 반복) - 항상 Reset(100) 후 Breathing(21) 시작, 피드백 확인"""
         # 이미 실행 중이면 중복 시작 방지
         if self.breathing_routine_running and self.current_routine == "idle_breathing_rt":
             self.node.get_logger().warn("idle_breathing_rt가 이미 실행 중입니다. 중복 시작 건너뜀.")
             return
         
-        time.sleep(0.07)
-        # RESET 이후 RUN 상태로 전환 (Waist와 Head가 READY 상태가 되는 것을 방지)
-        status_run_command = "theOne_neck,theOne_waist::STATUS::RUN"
-        self.publish_command(status_run_command)
-        self.node.get_logger().info("STATUS::RUN 명령 발행 (Waist/Head RUN 상태로 전환)")
+        # idle_interaction_selector_rt가 실행 중이 아니면 먼저 START
+        if not self.selector_routine_running:
+            selector_start_command = f"{self.robot_name}::ROUTINE::idle_interaction_selector_rt::START"
+            self.publish_command(selector_start_command)
+            # 피드백 확인: selector 루틴이 실행 중인지 확인
+            if self.wait_for_selector_running(timeout=2.0):
+                self.selector_routine_running = True
+            else:
+                self.node.get_logger().warn("idle_interaction_selector_rt 시작 확인 실패, 계속 진행...")
+                self.selector_routine_running = True  # 일단 진행
         
-        # STATUS::RUN 명령 처리 대기
-        time.sleep(0.07)
+        # 항상 먼저 Reset (100) 전송
+        self.node.get_logger().info("기존 루틴 Reset 후 Breathing 시작")
+        self.send_external_command(100.0)  # Reset
+        # 피드백 확인: Idle 상태가 되었는지 확인 (최대 1초)
+        self.wait_for_idle(timeout=1.0)
         
-        # 루틴 시작
+        # 루틴 시작 (External Topic으로 Breathing RT 시작)
         routine_name = "idle_breathing_rt"
-        command = f"{self.robot_name}::ROUTINE::{routine_name}::START"
+        cmd_code = self.routine_to_cmd_code[routine_name]  # 21.0
         self.current_routine = routine_name
         self.breathing_routine_running = True
-        self.publish_command(command)
+        self.send_external_command(cmd_code)
         
-        # START 명령 확인용 플래그 설정
-        self.expected_routine_name = routine_name
-        self.expected_routine_start_time = time.monotonic()
-        
-        self.node.get_logger().info(f"idle_breathing_rt 시작: {routine_name} (명령 발행 완료, 시작 확인 대기 중)")
+        # Reliable QoS이므로 확인 로직 제거, 명령 발행 완료
+        self.node.get_logger().info(f"idle_breathing_rt 시작: {routine_name} (Reset[2,100] -> Breathing[2,{int(cmd_code)}])")
     
-    def stop_current_routine(self):
+    def stop_routine(self):
+        """STOP 명령 시 현재 루틴 Reset(100)만 수행, 피드백 확인"""
+        self.node.get_logger().info("STOP 명령: 현재 루틴 Reset")
+        
+        # idle_interaction_selector_rt가 실행 중이 아니면 Reset 불필요
+        if not self.selector_routine_running:
+            self.node.get_logger().info("STOP: selector 루틴이 실행 중이 아니므로 Reset 불필요")
+            return
+        
+        # 현재 루틴이 있으면 Reset (100) 전송
+        if self.current_routine is not None:
+            self.node.get_logger().info(f"STOP: 기존 루틴({self.current_routine}) Reset")
+            self.send_external_command(100.0)  # Reset
+            # 피드백 확인: Idle 상태가 되었는지 확인 (최대 2초)
+            self.wait_for_idle(timeout=2.0)
+            # 상태 초기화
+            self.current_routine = None
+            self.breathing_routine_running = False
+            self.node.get_logger().info("STOP: 루틴 Reset 완료")
+        else:
+            self.node.get_logger().info("STOP: 실행 중인 루틴이 없음")
+    
+    def cleanup_on_shutdown(self):
         """
-        모든 루틴 중단: 모든 루틴 PAUSE → RESET → STOP (GUI STOP 명령 시 호출)
-        (블로킹 없이, 콜백에서 플래그 확인하여 처리)
+        노드 종료 시(Ctrl+C) 루틴 정리
+        오직 노드 종료 시에만 호출됨
         """
-        # 처음 호출: PAUSE/RESET 명령 발행 및 STOP 대기 플래그 설정
-        self.node.get_logger().info(f"[STOP] 모든 루틴 중단 시작")
-        self.node.waiting_for_stop = True
+        self.node.get_logger().info("[SHUTDOWN] 노드 종료 중... 루틴 정리 시작")
+        
         # START 확인 플래그 초기화
         self.expected_routine_name = None
         self.expected_routine_start_time = None
-        self.start_pause_reset_all_routines()
-    
-    def _complete_stop(self):
-        """
-        STOP 완료 처리 (콜백에서 호출)
-        RESET 완료 후 모든 루틴 STOP 및 트래커/컨트롤러 STOP 명령 전송
-        """
-        if not self.node.waiting_for_stop:
-            return
         
-        self.node.get_logger().info("[STOP] 모든 루틴 RESET 완료 확인: Idle 상태 도달")
-        self.node.waiting_for_stop = False
-        self.waiting_for_reset = False
+        # idle_interaction_selector_rt에 대해 PAUSE -> RESET 명령 발행
+        # (블로킹 대기 없이 명령만 발행하고 즉시 반환)
+        pause_command = f"{self.robot_name}::ROUTINE::idle_interaction_selector_rt::PAUSE"
+        self.publish_command(pause_command)
+        time.sleep(0.02)  # PAUSE 처리 대기 (최소 20ms)
         
-        # 모든 루틴에 대해 STOP 명령
-        all_routine_names = [
-            "idle_breathing_rt",
-            "idling_heart_rt",
-            "idling_handshake_rt"
-        ]
-        for routine_name in all_routine_names:
-            stop_command = f"{self.robot_name}::ROUTINE::{routine_name}::STOP"
-            self.publish_command(stop_command)
-            self.node.get_logger().info(f"[STOP] 루틴 STOP: {routine_name}")
+        reset_command = f"{self.robot_name}::ROUTINE::idle_interaction_selector_rt::RESET"
+        self.publish_command(reset_command)
         
-        # 트래커와 컨트롤러에 STOP 명령 전송
-        tracker_command = {'type': 'stop'}
-        controller_command = {'type': 'stop'}
-        
-        from std_msgs.msg import String
-        tracker_msg = String()
-        tracker_msg.data = json.dumps(tracker_command)
-        self.node.tracker_control_publisher.publish(tracker_msg)
-        
-        controller_msg = String()
-        controller_msg.data = json.dumps(controller_command)
-        self.node.controller_control_publisher.publish(controller_msg)
-        
-        self.node.get_logger().info("[STOP] 트래커/컨트롤러 STOP 명령 전송 완료")
+        self.node.get_logger().info("[SHUTDOWN] 루틴 정리 명령 발행 완료 (PAUSE -> RESET)")
         
         # 상태 초기화
         self.current_routine = None
         self.breathing_routine_running = False
+        self.selector_routine_running = False
         self.node.actual_running_routine = None
-        self.node.get_logger().info(f"[STOP] 모든 루틴 완전 중단 완료")
 
 
 class AllexIdleInteractionNode(Node):
@@ -394,9 +456,14 @@ class AllexIdleInteractionNode(Node):
         
         # 현재 실행 중인 루틴 이름 추적 (실제 실행 중인 루틴)
         self.actual_running_routine = None  # 실제 실행 중인 루틴 이름
+        
+        # 루틴 찾기 로그 최소화용 (상태가 바뀔 때만 출력)
+        self.last_handshake_node_id = None
+        self.last_handshake_node_status = None
+        self.last_heart_node_id = None
+        self.last_heart_node_status = None
         self.routine_nodes_count = 0  # 최신 nodes 개수 저장 (피드백 기반 제어용)
         self.routine_reset_complete_flag = False  # RESET 완료 플래그 (콜백에서 설정)
-        self.waiting_for_stop = False  # STOP 대기 중인지
         
         # Neck articulation 상태 저장 (data[1]의 값: 4=READY, 5=RUN)
         self.neck_articulation_status = None  # None=알 수 없음, 4=READY, 5=RUN
@@ -440,16 +507,219 @@ class AllexIdleInteractionNode(Node):
         except Exception as e:
             self.get_logger().warn(f"Neck articulation 상태 파싱 실패: {e}")
     
+    def _check_handshake_markers(self, sequence_id: int, all_nodes: list) -> bool:
+        """
+        Sequence 노드의 하위에 handshake 마커가 있는지 확인
+        
+        Args:
+            sequence_id: 확인할 Sequence 노드의 ID
+            all_nodes: 모든 노드 리스트
+            
+        Returns:
+            True: handshake 마커가 있음 (handshake_routine_)
+            False: handshake 마커가 없음 (heart_routine_)
+        """
+        # sequence_id의 직접 자식 찾기
+        direct_children = [n for n in all_nodes if n.get("parent") == sequence_id]
+        
+        # GoToCartePoint나 hand_shaking 관련 trajectory 확인
+        for child in direct_children:
+            child_type = child.get("type", "")
+            child_name = child.get("name", "").lower()
+            
+            # GoToCartePoint가 있으면 handshake
+            if child_type == "GoToCartePoint":
+                return True
+            
+            # hand_shaking 관련 trajectory가 있으면 handshake
+            if "hand_shaking" in child_name or "handshake" in child_name:
+                return True
+            
+            # 재귀적으로 확인 (Parallel 내부 등)
+            if child_type in ["Parallel", "Sequence"]:
+                if self._check_handshake_markers(child.get("id"), all_nodes):
+                    return True
+        
+        return False
+    
+    def _check_all_children_completed(self, node_id: int, all_nodes: list) -> bool:
+        """
+        노드의 모든 직접 자식 노드가 완료되었는지 확인 (status=2 또는 status=0)
+        
+        Args:
+            node_id: 확인할 노드의 ID
+            all_nodes: 모든 노드 리스트
+            
+        Returns:
+            True: 모든 직접 자식 노드가 완료됨 (status=2 또는 status=0)
+            False: 아직 실행 중인 자식 노드가 있음
+        """
+        direct_children = [n for n in all_nodes if n.get("parent") == node_id]
+        
+        if len(direct_children) == 0:
+            return False  # 자식이 없으면 완료로 간주하지 않음
+        
+        # 모든 직접 자식 노드가 완료되었는지 확인
+        for child in direct_children:
+            child_status = child.get("status", 0)
+            # status=1 (RUNNING)이면 아직 실행 중
+            if child_status == 1:
+                return False
+        
+        # 모든 자식 노드가 status=0 (IDLE) 또는 status=2 (SUCCESS) 또는 status=3 (FAILURE)
+        return True
+    
+    def _find_children_range(self, node_id: int, all_nodes: list) -> tuple[int, int]:
+        """
+        노드의 자식 노드 범위 찾기 (부모 노드가 0인 다음 노드 전까지가 자식 노드들)
+        
+        Args:
+            node_id: 확인할 노드의 ID
+            all_nodes: 모든 노드 리스트 (ID 순서대로 정렬되어 있다고 가정)
+            
+        Returns:
+            (start_idx, end_idx): 자식 노드들의 시작 인덱스와 끝 인덱스 (end_idx는 포함하지 않음)
+            자식 노드가 없으면 (None, None) 반환
+        """
+        # 노드를 ID 순서대로 정렬
+        sorted_nodes = sorted(all_nodes, key=lambda n: n.get("id", 0))
+        
+        # node_id의 자식 노드 찾기
+        children = []
+        for node in sorted_nodes:
+            if node.get("parent") == node_id:
+                children.append(node)
+        
+        if len(children) == 0:
+            return (None, None)
+        
+        # 자식 노드들의 ID 범위 찾기
+        child_ids = [c.get("id") for c in children]
+        min_child_id = min(child_ids)
+        max_child_id = max(child_ids)
+        
+        # 부모 노드가 0인 다음 노드 찾기 (자식 노드 범위의 끝)
+        # max_child_id 다음에 오는 노드 중 parent가 0인 노드 찾기
+        end_id = None
+        for node in sorted_nodes:
+            node_id_val = node.get("id", 0)
+            if node_id_val > max_child_id and node.get("parent") == 0:
+                end_id = node_id_val
+                break
+        
+        # 자식 노드 범위의 끝 인덱스 찾기
+        if end_id is not None:
+            # end_id 이전까지가 자식 노드 범위
+            end_idx = None
+            for idx, node in enumerate(sorted_nodes):
+                if node.get("id") == end_id:
+                    end_idx = idx
+                    break
+        else:
+            # 부모 노드가 0인 다음 노드가 없으면, 모든 노드의 끝까지
+            end_idx = len(sorted_nodes)
+        
+        # 시작 인덱스 찾기
+        start_idx = None
+        for idx, node in enumerate(sorted_nodes):
+            if node.get("id") == min_child_id:
+                start_idx = idx
+                break
+        
+        return (start_idx, end_idx)
+    
+    def _check_all_descendants_completed(self, node_id: int, all_nodes: list, exclude_types: list = None) -> tuple[bool, Optional[int]]:
+        """
+        노드의 모든 자식 노드(직접 자식 + 하위 자식)가 완료되었는지 확인
+        부모 노드가 0인 다음 노드 전까지가 자식 노드 범위로 간주
+        
+        Args:
+            node_id: 확인할 노드의 ID
+            all_nodes: 모든 노드 리스트
+            exclude_types: 제외할 노드 타입 리스트 (예: ["WaitTrajectory"])
+            
+        Returns:
+            (is_completed, current_index): 
+            - is_completed: True면 모든 자식 노드가 완료됨, False면 아직 실행 중인 노드가 있음
+            - current_index: 현재 실행 중인 노드의 인덱스 (완료되었으면 None)
+        """
+        if exclude_types is None:
+            exclude_types = []
+        
+        # 노드를 ID 순서대로 정렬
+        sorted_nodes = sorted(all_nodes, key=lambda n: n.get("id", 0))
+        
+        # 자식 노드 범위 찾기
+        start_idx, end_idx = self._find_children_range(node_id, sorted_nodes)
+        
+        if start_idx is None or end_idx is None:
+            return (False, None)  # 자식 노드가 없으면 완료로 간주하지 않음
+        
+        # 범위 내의 모든 노드가 완료되었는지 확인
+        for idx in range(start_idx, end_idx):
+            if idx >= len(sorted_nodes):
+                break
+            node = sorted_nodes[idx]
+            node_type = node.get("type", "")
+            node_name = node.get("name", "")
+            
+            # 제외할 타입인지 확인
+            should_exclude = False
+            for exclude_type in exclude_types:
+                if exclude_type.lower() in node_type.lower() or exclude_type.lower() in node_name.lower():
+                    should_exclude = True
+                    break
+            
+            if should_exclude:
+                continue  # 제외할 노드는 체크하지 않음
+            
+            node_status = node.get("status", 0)
+            # status=1 (RUNNING)이면 아직 실행 중
+            if node_status == 1:
+                return (False, idx)  # 현재 실행 중인 인덱스 반환
+        
+        # 범위 내의 모든 노드가 status=0 (IDLE) 또는 status=2 (SUCCESS) 또는 status=3 (FAILURE)
+        return (True, None)
+    
+    def _find_last_nominal_gain_group(self, node_id: int, all_nodes: list) -> Optional[dict]:
+        """
+        노드의 자식 노드 범위에서 마지막 nominal_gain_group 노드 찾기
+        
+        Args:
+            node_id: 확인할 노드의 ID
+            all_nodes: 모든 노드 리스트
+            
+        Returns:
+            마지막 nominal_gain_group 노드 또는 None
+        """
+        # 노드를 ID 순서대로 정렬
+        sorted_nodes = sorted(all_nodes, key=lambda n: n.get("id", 0))
+        
+        # 자식 노드 범위 찾기
+        start_idx, end_idx = self._find_children_range(node_id, sorted_nodes)
+        
+        if start_idx is None or end_idx is None:
+            return None
+        
+        # 범위 내에서 nominal_gain_group 찾기 (역순으로 검색하여 마지막 것 찾기)
+        last_nominal_gain = None
+        for idx in range(end_idx - 1, start_idx - 1, -1):
+            if idx < 0 or idx >= len(sorted_nodes):
+                continue
+            node = sorted_nodes[idx]
+            node_type = node.get("type", "")
+            node_name = node.get("name", "")
+            
+            # nominal_gain_group 찾기
+            if "nominal_gain_group" in node_type.lower() or "nominal_gain_group" in node_name.lower():
+                last_nominal_gain = node
+                break
+        
+        return last_nominal_gain
+    
     def _routine_status_callback(self, msg: String):
         """루틴 상태 피드백 콜백 - /debug/routine 토픽에서 실제 실행 중인 루틴 추적"""
         try:
-            # Neck articulation 상태 체크: READY이면 RUN으로 변경 (2Hz마다 체크)
-            # data[1]의 값이 4면 READY, 5면 RUN
-            if self.neck_articulation_status == 4:  # READY (값 4)
-                self.get_logger().info("Neck articulation이 READY 상태입니다. RUN으로 전환합니다.")
-                status_run_command = "theOne_neck,theOne_waist::STATUS::RUN"
-                self.routine_controller.publish_command(status_run_command)
-            
             data = json.loads(msg.data)
             
             # 루틴이 비어있는지 확인 (루틴 종료 상태)
@@ -466,9 +736,6 @@ class AllexIdleInteractionNode(Node):
                     if not self.routine_reset_complete_flag:
                         self.get_logger().info(f"[ROUTINE STATUS] RESET 완료 확인: nodes={old_nodes_count} -> 0 (플래그=True로 설정)")
                     self.routine_reset_complete_flag = True
-                    # STOP 대기 중이면 STOP 완료 처리
-                    if self.waiting_for_stop:
-                        self.routine_controller._complete_stop()
                 else:
                     self.routine_reset_complete_flag = False
             else:
@@ -477,70 +744,204 @@ class AllexIdleInteractionNode(Node):
                 if not self.routine_reset_complete_flag:
                     self.get_logger().info(f"[ROUTINE STATUS] RESET 완료 확인: nodes={old_nodes_count} -> 0 (플래그=True로 설정)")
                 self.routine_reset_complete_flag = True
-                # STOP 대기 중이면 STOP 완료 처리
-                if self.waiting_for_stop:
-                    self.routine_controller._complete_stop()
             
-            if not nodes or len(nodes) == 0:
+            # RESET 상태 확인: nodes가 비어있으면 RESET 상태
+            is_reset_state = (not nodes or len(nodes) == 0)
+            
+            if is_reset_state:
                 self.actual_running_routine = None
-                # START 명령 확인: nodes가 비어있어도 타임아웃 체크는 계속 수행
-                # (START 명령 후 루틴이 시작되지 않은 경우 감지)
-                if self.routine_controller.expected_routine_name and self.routine_controller.expected_routine_start_time:
-                    elapsed = time.monotonic() - self.routine_controller.expected_routine_start_time
-                    if elapsed > 0.5:  # 0.5초 후에도 시작되지 않으면 경고
-                        self.get_logger().warn(
-                            f"[ROUTINE START 경고] {self.routine_controller.expected_routine_name} 루틴이 "
-                            f"START 명령 후 {elapsed:.3f}초 동안 시작되지 않음. (nodes가 비어있음)"
-                        )
-                        # 플래그 초기화 (경고 후에도 계속 확인하지 않음)
-                        self.routine_controller.expected_routine_name = None
-                        self.routine_controller.expected_routine_start_time = None
+                # Handshake/Hello 완료 확인 (RESET 상태: nodes가 비어있음)
+                # 이 경우는 루틴이 완전히 종료된 상태이므로 완료로 간주
+                current_time = time.monotonic()
+                
+                # Handshake 완료 확인
+                if (self.routine_controller.handshake_start_time is not None and 
+                    self.routine_controller.current_routine == "idling_handshake_rt"):
+                    elapsed = current_time - self.routine_controller.handshake_start_time
+                    if elapsed >= 2.0:
+                        self.get_logger().info(f"[Handshake 완료 확인] RESET 상태 감지 (nodes=0), SEARCHING 상태로 전환")
+                        # Tracker에 SEARCHING 상태 전환 요청
+                        tracker_command = {
+                            'type': 'set_state',
+                            'state': 'searching',
+                            'target_id': None
+                        }
+                        tracker_msg = String()
+                        tracker_msg.data = json.dumps(tracker_command)
+                        self.tracker_control_publisher.publish(tracker_msg)
+                        # 초기화
+                        self.routine_controller.handshake_start_time = None
+                        self.routine_controller.handshake_complete_check_started = False
+                        self.routine_controller.current_routine = None
+                
+                # Hello 완료 확인
+                if (self.routine_controller.hello_start_time is not None and 
+                    self.routine_controller.current_routine == "idling_heart_rt"):
+                    elapsed = current_time - self.routine_controller.hello_start_time
+                    if elapsed >= 2.0:
+                        self.get_logger().info(f"[Hello 완료 확인] RESET 상태 감지 (nodes=0), SEARCHING 상태로 전환")
+                        # Tracker에 SEARCHING 상태 전환 요청
+                        tracker_command = {
+                            'type': 'set_state',
+                            'state': 'searching',
+                            'target_id': None
+                        }
+                        tracker_msg = String()
+                        tracker_msg.data = json.dumps(tracker_command)
+                        self.tracker_control_publisher.publish(tracker_msg)
+                        # 초기화
+                        self.routine_controller.hello_start_time = None
+                        self.routine_controller.hello_complete_check_started = False
+                        self.routine_controller.current_routine = None
+                
                 return
             
-            # 루트 노드 찾기 (parent == -1)
+            # 루트 노드 찾기 (parent == -1, type이 IdleInteractionSelector)
             root_node = None
+            root_node_id = None
             for node in nodes:
                 if node.get("parent") == -1:
-                    root_node = node
-                    break
-            
-            # 실제 루틴 이름 찾기: nodes 배열에서 루틴 이름 패턴 찾기
-            actual_routine_name = None
-            for node in nodes:
-                node_name = node.get("name", "")
-                # 루틴 이름 패턴 확인 (idling_heart_rt, idling_handshake_rt, idle_breathing_rt)
-                # 전체 이름이 루틴 이름과 일치하거나, 루틴 이름이 포함되어 있는 경우
-                if node_name:
-                    # 정확한 루틴 이름 매치
-                    if node_name in ("idle_breathing_rt", "idling_heart_rt", "idling_handshake_rt"):
-                        actual_routine_name = node_name
+                    root_node_type = node.get("type", "")
+                    # type이 IdleInteractionSelector인지 확인
+                    if "IdleInteractionSelector" in root_node_type or "idleinteractionselector" in root_node_type.lower():
+                        root_node = node
+                        root_node_id = node.get("id")
                         break
-                    # 부분 매치 (루틴 이름이 노드 이름에 포함된 경우)
-                    elif "_rt" in node_name and ("idling" in node_name or "breathing" in node_name):
-                        # 더 구체적인 매치를 위해 정확한 이름 확인
-                        if "idling_heart_rt" in node_name:
-                            actual_routine_name = "idling_heart_rt"
-                            break
-                        elif "idling_handshake_rt" in node_name:
-                            actual_routine_name = "idling_handshake_rt"
-                            break
-                        elif "idle_breathing_rt" in node_name:
+            
+            # 실제 루틴 이름 찾기: IdleInteractionSelector의 자식 노드에서 status와 type으로 찾기
+            actual_routine_name = None
+            handshake_node = None  # Handshake 루틴 노드
+            heart_node = None  # Heart 루틴 노드
+            
+            # 루트 노드의 자식 노드에서 실제 루틴 찾기 (status와 type으로 판단)
+            if root_node_id is not None:
+                # 먼저 모든 자식 노드를 수집
+                child_nodes = []
+                for node in nodes:
+                    if node.get("parent") == root_node_id:
+                        child_nodes.append(node)
+                
+                # 1단계: Breathing 루틴 찾기 (LoopWhile 타입 - 명확함)
+                for node in child_nodes:
+                    node_type = node.get("type", "")
+                    node_status = node.get("status", 0)
+                    if node_type == "LoopWhile":
+                        if node_status == 1:  # RUNNING
                             actual_routine_name = "idle_breathing_rt"
+                        break
+                
+                # 2단계: Handshake 루틴 찾기 (하위 구조 확인)
+                # status와 관계없이 handshake_node를 찾아야 함 (완료 확인을 위해)
+                for node in child_nodes:
+                    node_type = node.get("type", "")
+                    node_status = node.get("status", 0)
+                    node_name = node.get("name", "").lower()
+                    node_id = node.get("id")
+                    
+                    # 타입이나 이름으로 명확히 handshake인 경우
+                    if ("handshake" in node_type.lower() or "torque" in node_type.lower() or 
+                        "handshake" in node_name):
+                        handshake_node = node
+                        self.get_logger().debug(f"[루틴 찾기] handshake_node 찾음 (이름/타입): id={node_id}, status={node_status}")
+                        if node_status == 1:  # RUNNING
+                            actual_routine_name = "idling_handshake_rt"
+                        break
+                    
+                    # Sequence 타입인 경우, 하위 구조 확인
+                    if node_type == "Sequence":
+                        has_handshake_marker = self._check_handshake_markers(node_id, nodes)
+                        self.get_logger().debug(f"[루틴 찾기] Sequence(id={node_id}, status={node_status}) handshake 마커 확인: {has_handshake_marker}")
+                        if has_handshake_marker:
+                            handshake_node = node
+                            # status와 관계없이 handshake_node로 설정 (완료 확인을 위해)
+                            if node_status == 1:  # RUNNING
+                                actual_routine_name = "idling_handshake_rt"
+                            
+                            # 상태가 바뀔 때만 로그 출력
+                            if (self.last_handshake_node_id != node_id or 
+                                self.last_handshake_node_status != node_status):
+                                if node_status == 1:  # RUNNING
+                                    self.get_logger().info(f"[루틴 찾기] handshake_node 찾음 (Sequence, RUNNING): id={node_id}, status={node_status}")
+                                elif node_status == 2:  # SUCCESS
+                                    self.get_logger().info(f"[루틴 찾기] handshake_node 찾음 (Sequence, SUCCESS): id={node_id}, status={node_status}")
+                                else:
+                                    self.get_logger().debug(f"[루틴 찾기] handshake_node 찾음 (Sequence, 기타): id={node_id}, status={node_status}")
+                                self.last_handshake_node_id = node_id
+                                self.last_handshake_node_status = node_status
                             break
-                        # 정확한 매치가 없으면 첫 번째로 찾은 것을 사용
-                        elif actual_routine_name is None and "_rt" in node_name:
-                            actual_routine_name = node_name
+                
+                # 3단계: Heart 루틴 찾기 (나머지 Sequence 노드)
+                # Handshake가 실행 중이면 heart_node 찾기 건너뛰기
+                if actual_routine_name != "idling_handshake_rt":
+                    # Handshake가 실행 중이 아니면 heart_node 찾기
+                    for node in child_nodes:
+                        node_type = node.get("type", "")
+                        node_status = node.get("status", 0)
+                        node_name = node.get("name", "").lower()
+                        node_id = node.get("id")
+                        
+                        # 타입이나 이름으로 명확히 heart인 경우
+                        if "heart" in node_type.lower() or "heart" in node_name:
+                            heart_node = node
+                            # RUNNING 상태일 때만 info 로그, 그 외는 debug
+                            if node_status == 1:  # RUNNING
+                                self.get_logger().info(f"[루틴 찾기] heart_node 찾음 (이름/타입): id={node_id}, status={node_status}")
+                                actual_routine_name = "idling_heart_rt"
+                            else:
+                                self.get_logger().debug(f"[루틴 찾기] heart_node 찾음 (이름/타입, 비활성): id={node_id}, status={node_status}")
+                            break
+                        
+                        # Sequence 타입이고 handshake 마커가 없는 경우 heart로 간주
+                        if node_type == "Sequence":
+                            # 이미 handshake_node로 확인된 경우 제외
+                            if handshake_node is not None and handshake_node.get("id") == node_id:
+                                self.get_logger().debug(f"[루틴 찾기] Sequence(id={node_id})는 이미 handshake_node로 확인됨")
+                                continue
+                            # handshake 마커가 없는 Sequence는 heart_routine_
+                            has_handshake_marker = self._check_handshake_markers(node_id, nodes)
+                            self.get_logger().debug(f"[루틴 찾기] Sequence(id={node_id}, status={node_status}) handshake 마커 확인: {has_handshake_marker}")
+                            if not has_handshake_marker:
+                                heart_node = node
+                                if node_status == 1:  # RUNNING
+                                    actual_routine_name = "idling_heart_rt"
+                                
+                                # 상태가 바뀔 때만 로그 출력
+                                if (self.last_heart_node_id != node_id or 
+                                    self.last_heart_node_status != node_status):
+                                    if node_status == 1:  # RUNNING
+                                        self.get_logger().info(f"[루틴 찾기] heart_node 찾음: id={node_id}, status={node_status}, type={node_type}")
+                                    else:
+                                        self.get_logger().debug(f"[루틴 찾기] heart_node 찾음 (비활성): id={node_id}, status={node_status}, type={node_type}")
+                                    self.last_heart_node_id = node_id
+                                    self.last_heart_node_status = node_status
+                                break
+                            else:
+                                self.get_logger().debug(f"[루틴 찾기] Sequence(id={node_id})는 handshake 마커가 있어서 제외됨")
             
             # 단일 루틴 RESET 완료 확인: RESET 중인 루틴이 실행 중이 아니면 RESET 완료
             if self.routine_controller.waiting_for_reset and self.routine_controller.resetting_routine_name:
                 # 단일 루틴 RESET의 경우: 해당 루틴이 실행 중이 아니면 RESET 완료
                 resetting_routine = self.routine_controller.resetting_routine_name
                 is_resetting_routine_running = False
-                for node in nodes:
-                    node_name = node.get("name", "")
-                    if resetting_routine in node_name:
-                        is_resetting_routine_running = True
-                        break
+                
+                # 루트 노드의 자식 노드에서 status로 확인
+                if root_node_id is not None:
+                    for node in nodes:
+                        if node.get("parent") == root_node_id:
+                            node_status = node.get("status", 0)
+                            node_type = node.get("type", "").lower()
+                            
+                            # status가 1(RUNNING)이고, type이 해당 루틴과 일치하면 실행 중
+                            if node_status == 1:  # RUNNING
+                                if resetting_routine == "idling_heart_rt" and "heart" in node_type:
+                                    is_resetting_routine_running = True
+                                    break
+                                elif resetting_routine == "idling_handshake_rt" and "handshake" in node_type:
+                                    is_resetting_routine_running = True
+                                    break
+                                elif resetting_routine == "idle_breathing_rt" and "breathing" in node_type:
+                                    is_resetting_routine_running = True
+                                    break
                 
                 if not is_resetting_routine_running and not self.routine_reset_complete_flag:
                     self.get_logger().info(f"[ROUTINE STATUS] 단일 루틴 RESET 완료 확인: {resetting_routine} 루틴이 실행 중이 아님 (플래그=True로 설정)")
@@ -548,82 +949,381 @@ class AllexIdleInteractionNode(Node):
                     self.routine_controller.resetting_routine_name = None
             
             if root_node:
-                status = root_node.get("status")
+                root_status = root_node.get("status", 0)
                 root_name = root_node.get("name", "")
                 
                 # status: 0=IDLE, 1=RUNNING, 2=SUCCESS, 3=FAILURE
-                if status == 1:  # RUNNING인 경우만 실행 중으로 판단
-                    # 실제 루틴 이름이 있으면 사용, 없으면 루트 노드 이름 사용
-                    routine_name = actual_routine_name if actual_routine_name else root_name
-                    if routine_name:
-                        self.actual_running_routine = routine_name
+                # RESET 상태: 루트 노드가 IDLE 상태 (nodes는 이미 위에서 확인함)
+                is_reset_state = (root_status == 0)
+                
+                if root_status == 1:  # RUNNING인 경우
+                    # 실제 루틴 이름이 있으면 사용 (자식 노드의 status=1인 경우)
+                    if actual_routine_name:
+                        self.actual_running_routine = actual_routine_name
+                    else:
+                        # 자식 노드가 RUNNING 상태가 아니면 루틴이 실행 중이 아님
+                        self.actual_running_routine = None
+                    
+                    # 현재 상태 확인 (Tracking State에서는 Handshake/Hello 완료 확인 안 함)
+                    current_state_str = None
+                    try:
+                        state_msg = self.tracker_state_subscription.msg if hasattr(self.tracker_state_subscription, 'msg') else None
+                        if state_msg is None:
+                            # 직접 상태 요청 (간접 확인)
+                            current_state_str = None
+                    except:
+                        current_state_str = None
+                    
+                    # Handshake/Hello 완료 확인 (2초 후부터 확인, Status 기반)
+                    # Tracking State가 아니고, handshake_start_time이 설정되어 있을 때만 확인
+                    # Tracking State에서는 handshake_start_time이 None이어야 함 (_handle_state_change에서 초기화)
+                    current_time = time.monotonic()
+                    
+                    # Handshake 완료 확인 (하위 노드의 status 기반)
+                    # handshake_start_time이 설정되어 있고, 실제로 Handshake 루틴이 실행 중일 때만 확인
+                    if (self.routine_controller.handshake_start_time is not None and 
+                        actual_routine_name == "idling_handshake_rt"):
+                        elapsed = current_time - self.routine_controller.handshake_start_time
                         
-                        # START 명령 확인: 예상한 루틴이 시작되었는지 확인
-                        if self.routine_controller.expected_routine_name and self.routine_controller.expected_routine_start_time:
-                            expected_routine = self.routine_controller.expected_routine_name
-                            elapsed = time.monotonic() - self.routine_controller.expected_routine_start_time
+                        # 2초 후부터 확인 시작 (타임아웃 완전 제거 - 무한 대기)
+                        if elapsed >= 2.0:
+                            # handshake_node가 있고 status=2 (SUCCESS)이면 완료로 간주
+                            if handshake_node is not None:
+                                handshake_status = handshake_node.get("status", 0)
+                                handshake_node_id = handshake_node.get("id")
+                                
+                                if not self.routine_controller.handshake_complete_check_started:
+                                    self.routine_controller.handshake_complete_check_started = True
+                                    self.get_logger().info(f"[Handshake 완료 확인 시작] 경과 시간: {elapsed:.2f}초, handshake_node: id={handshake_node_id}, status={handshake_status}")
+                                
+                                # id나 status가 바뀔 때만 로그 출력
+                                should_log = (self.last_handshake_node_id != handshake_node_id or 
+                                            self.last_handshake_node_status != handshake_status)
+                                
+                                if should_log:
+                                    self.get_logger().info(f"[Handshake 완료 확인] handshake_node 찾음: id={handshake_node_id}, status={handshake_status}, elapsed={elapsed:.2f}초")
+                                    self.last_handshake_node_id = handshake_node_id
+                                    self.last_handshake_node_status = handshake_status
+                                
+                                # reset()이 정상 작동하므로 부모 노드의 status만 확인
+                                # handshake_node의 status가 2 (SUCCESS)이면 완료로 간주
+                                is_completed = False
+                                if handshake_status == 2:  # SUCCESS
+                                    is_completed = True
+                                    if should_log:
+                                        self.get_logger().info(f"[Handshake 완료 확인] handshake_node status=2 (SUCCESS) 감지 - 부모 노드 완료 확인")
+                                else:
+                                    # RUNNING 상태 - 대기 중
+                                    if should_log:
+                                        self.get_logger().debug(f"[Handshake 완료 확인] handshake_node(id={handshake_node_id}) status={handshake_status} (RUNNING) - 대기 중")
+                                
+                                if is_completed:
+                                    self.get_logger().info(f"[Handshake 완료 확인] 완료 감지, Reset 명령 발송 후 SEARCHING 상태로 전환")
+                                    # Handshake 완료 시 Reset 명령 발송
+                                    self.routine_controller.reset_current_routine_external()
+                                    # Tracker에 SEARCHING 상태 전환 요청
+                                    tracker_command = {
+                                        'type': 'set_state',
+                                        'state': 'searching',
+                                        'target_id': None
+                                    }
+                                    tracker_msg = String()
+                                    tracker_msg.data = json.dumps(tracker_command)
+                                    self.tracker_control_publisher.publish(tracker_msg)
+                                    # 초기화
+                                    self.routine_controller.handshake_start_time = None
+                                    self.routine_controller.handshake_complete_check_started = False
+                                    self.routine_controller.current_routine = None
+                            else:
+                                # handshake_node를 찾지 못한 경우
+                                # 모든 Sequence 노드를 다시 확인하여 완료된 handshake 노드 찾기
+                                if should_log:
+                                    self.get_logger().debug(f"[Handshake 완료 확인] handshake_node를 찾지 못함, elapsed={elapsed:.2f}초, current_routine={self.routine_controller.current_routine}")
+                                if root_node_id is not None:
+                                    for node in nodes:
+                                        if node.get("parent") == root_node_id:
+                                            node_type = node.get("type", "")
+                                            node_status = node.get("status", 0)
+                                            node_id = node.get("id")
+                                            if node_type == "Sequence":
+                                                # handshake 마커 확인
+                                                if self._check_handshake_markers(node_id, nodes):
+                                                    # reset()이 정상 작동하므로 부모 노드의 status만 확인
+                                                    is_completed = False
+                                                    if node_status == 2:  # SUCCESS
+                                                        is_completed = True
+                                                        self.get_logger().info(f"[Handshake 완료 확인] 재검색으로 handshake_node 찾음: id={node_id}, status={node_status} (SUCCESS) - 부모 노드 완료 확인")
+                                                    
+                                                    if is_completed:
+                                                        # Handshake 완료 시 Reset 명령 발송
+                                                        self.routine_controller.reset_current_routine_external()
+                                                        # Tracker에 SEARCHING 상태 전환 요청
+                                                        tracker_command = {
+                                                            'type': 'set_state',
+                                                            'state': 'searching',
+                                                            'target_id': None
+                                                        }
+                                                        tracker_msg = String()
+                                                        tracker_msg.data = json.dumps(tracker_command)
+                                                        self.tracker_control_publisher.publish(tracker_msg)
+                                                        # 초기화
+                                                        self.routine_controller.handshake_start_time = None
+                                                        self.routine_controller.handshake_complete_check_started = False
+                                                        self.routine_controller.current_routine = None
+                                                        break
+                    
+                    # Hello 완료 확인 (하위 노드의 status 기반)
+                    # hello_start_time이 설정되어 있고, 실제로 Hello 루틴이 실행 중일 때만 확인
+                    if (self.routine_controller.hello_start_time is not None and 
+                        actual_routine_name == "idling_heart_rt"):
+                        elapsed = current_time - self.routine_controller.hello_start_time
+                        
+                        # heart_node가 있고 status=2 (SUCCESS)이면 완료로 간주
+                        if heart_node is not None:
+                            heart_node_id = heart_node.get("id")
+                            heart_node_status = heart_node.get("status", 0)
                             
-                            # breathing 루틴인 경우: LoopWhile 노드 확인
-                            if expected_routine == "idle_breathing_rt":
-                                if root_name == "LoopWhile" or actual_routine_name == expected_routine:
-                                    self.get_logger().info(
-                                        f"[ROUTINE START 확인] {expected_routine} 루틴 시작 확인됨 "
-                                        f"(루트 노드: {root_name}, 실제 루틴: {actual_routine_name}, 경과 시간: {elapsed:.3f}초)"
-                                    )
-                                    # 플래그 초기화
-                                    self.routine_controller.expected_routine_name = None
-                                    self.routine_controller.expected_routine_start_time = None
-                            # handshake/hello 루틴인 경우: Sequence 노드 확인 또는 실제 루틴 이름 확인
-                            elif expected_routine in ("idling_heart_rt", "idling_handshake_rt"):
-                                # Sequence 노드이거나 실제 루틴 이름이 일치하면 성공
-                                # handshake/hello 루틴은 루트 노드가 Sequence이므로, Sequence가 확인되면 성공으로 간주
-                                if root_name == "Sequence":
-                                    self.get_logger().info(
-                                        f"[ROUTINE START 확인] {expected_routine} 루틴 시작 확인됨 "
-                                        f"(루트 노드: {root_name}, 실제 루틴: {actual_routine_name if actual_routine_name else 'N/A (Sequence 루트 노드로 확인)'}, 경과 시간: {elapsed:.3f}초)"
-                                    )
-                                    # 플래그 초기화
-                                    self.routine_controller.expected_routine_name = None
-                                    self.routine_controller.expected_routine_start_time = None
-                                elif actual_routine_name == expected_routine:
-                                    # 실제 루틴 이름으로도 확인 가능
-                                    self.get_logger().info(
-                                        f"[ROUTINE START 확인] {expected_routine} 루틴 시작 확인됨 "
-                                        f"(루트 노드: {root_name}, 실제 루틴: {actual_routine_name}, 경과 시간: {elapsed:.3f}초)"
-                                    )
-                                    # 플래그 초기화
-                                    self.routine_controller.expected_routine_name = None
-                                    self.routine_controller.expected_routine_start_time = None
-                                elif elapsed > 0.5:
-                                    # 0.5초 후에도 Sequence가 아니면 재시도
-                                    self.get_logger().warn(
-                                        f"[ROUTINE START 재시도] {expected_routine} 루틴이 Sequence로 시작되지 않음 "
-                                        f"(루트 노드: {root_name}, 실제 루틴: {actual_routine_name}), 재시도 중..."
-                                    )
-                                    # 재시도: START 명령 다시 발행
-                                    command = f"{self.routine_controller.robot_name}::ROUTINE::{expected_routine}::START"
-                                    self.routine_controller.publish_command(command)
-                                    self.routine_controller.expected_routine_start_time = time.monotonic()
+                            # 2초 후부터 확인 시작
+                            if elapsed >= 2.0:
+                                if not self.routine_controller.hello_complete_check_started:
+                                    self.routine_controller.hello_complete_check_started = True
+                                    self.get_logger().info(f"[Hello 완료 확인 시작] 경과 시간: {elapsed:.2f}초, heart_node: id={heart_node_id}, status={heart_node_status}")
+                                
+                                # id나 status가 바뀔 때만 로그 출력
+                                should_log_hello = (self.last_heart_node_id != heart_node_id or 
+                                                   self.last_heart_node_status != heart_node_status)
+                                
+                                if should_log_hello:
+                                    self.get_logger().info(f"[Hello 완료 확인] heart_node 찾음: id={heart_node_id}, status={heart_node_status}, elapsed={elapsed:.2f}초")
+                                    self.last_heart_node_id = heart_node_id
+                                    self.last_heart_node_status = heart_node_status
+                                
+                                # reset()이 정상 작동하므로 부모 노드의 status만 확인
+                                # heart_node의 status가 2 (SUCCESS)이면 완료로 간주
+                                is_completed = False
+                                if heart_node_status == 2:  # SUCCESS
+                                    is_completed = True
+                                    if should_log_hello:
+                                        self.get_logger().info(f"[Hello 완료 확인] heart_node status=2 (SUCCESS) 감지 - 부모 노드 완료 확인")
+                                else:
+                                    # RUNNING 상태 - 대기 중
+                                    if should_log_hello:
+                                        self.get_logger().debug(f"[Hello 완료 확인] heart_node(id={heart_node_id}) status={heart_node_status} (RUNNING) - 대기 중")
+                                
+                                if is_completed:
+                                    self.get_logger().info(f"[Hello 완료 확인] 완료 감지, Reset 명령 발송 후 SEARCHING 상태로 전환")
+                                    # Hello 완료 시 Reset 명령 발송
+                                    self.routine_controller.reset_current_routine_external()
+                                    # Tracker에 SEARCHING 상태 전환 요청
+                                    tracker_command = {
+                                        'type': 'set_state',
+                                        'state': 'searching',
+                                        'target_id': None
+                                    }
+                                    tracker_msg = String()
+                                    tracker_msg.data = json.dumps(tracker_command)
+                                    self.tracker_control_publisher.publish(tracker_msg)
+                                    # 초기화
+                                    self.routine_controller.hello_start_time = None
+                                    self.routine_controller.hello_complete_check_started = False
+                                    self.routine_controller.current_routine = None
+                            else:
+                                # heart_node를 찾지 못한 경우
+                                # 모든 Sequence 노드를 다시 확인하여 완료된 heart 노드 찾기
+                                if elapsed >= 2.0:
+                                    should_log_hello = (self.last_heart_node_id is not None)
+                                    if should_log_hello:
+                                        self.get_logger().debug(f"[Hello 완료 확인] heart_node를 찾지 못함, elapsed={elapsed:.2f}초, current_routine={self.routine_controller.current_routine}")
+                                    
+                                    # 루트 노드의 자식 노드에서 heart 노드 재검색
+                                    if root_node_id is not None:
+                                        for node in nodes:
+                                            if node.get("parent") == root_node_id:
+                                                node_type = node.get("type", "")
+                                                node_status = node.get("status", 0)
+                                                node_id = node.get("id")
+                                                node_name = node.get("name", "").lower()
+                                                
+                                                # heart 루틴 마커 확인 (heart, hello 등이 이름에 포함)
+                                                if node_type == "Sequence" and ("heart" in node_name or "hello" in node_name):
+                                                    # reset()이 정상 작동하므로 부모 노드의 status만 확인
+                                                    is_completed = False
+                                                    if node_status == 2:  # SUCCESS
+                                                        is_completed = True
+                                                        self.get_logger().info(f"[Hello 완료 확인] 재검색으로 heart_node 찾음: id={node_id}, status={node_status} (SUCCESS) - 부모 노드 완료 확인")
+                                                    
+                                                    if is_completed:
+                                                        # Hello 완료 시 Reset 명령 발송
+                                                        self.routine_controller.reset_current_routine_external()
+                                                        # Tracker에 SEARCHING 상태 전환 요청
+                                                        tracker_command = {
+                                                            'type': 'set_state',
+                                                            'state': 'searching',
+                                                            'target_id': None
+                                                        }
+                                                        tracker_msg = String()
+                                                        tracker_msg.data = json.dumps(tracker_command)
+                                                        self.tracker_control_publisher.publish(tracker_msg)
+                                                        # 초기화
+                                                        self.routine_controller.hello_start_time = None
+                                                        self.routine_controller.hello_complete_check_started = False
+                                                        self.routine_controller.current_routine = None
+                                                        break
+                elif root_status == 2:  # SUCCESS: 루트 노드가 SUCCESS 상태
+                    self.actual_running_routine = None
+                    # Handshake/Hello 완료 확인 (루트 노드 SUCCESS 또는 하위 노드 status 확인)
+                    current_time = time.monotonic()
+                    
+                    # Handshake 완료 확인 (하위 노드의 status 확인)
+                    if self.routine_controller.handshake_start_time is not None:
+                        elapsed = current_time - self.routine_controller.handshake_start_time
+                        
+                        if elapsed >= 2.0:
+                            # reset()이 정상 작동하므로 부모 노드의 status만 확인
+                            if handshake_node is not None:
+                                handshake_status = handshake_node.get("status", 0)
+                                handshake_node_id = handshake_node.get("id")
+                                
+                                is_completed = False
+                                if handshake_status == 2:  # SUCCESS
+                                    is_completed = True
+                                    self.get_logger().info(f"[Handshake 완료 확인] handshake_node status={handshake_status} (SUCCESS) - 부모 노드 완료 확인")
+                                
+                                if is_completed:
+                                    self.get_logger().info(f"[Handshake 완료 확인] 완료 감지, Reset 명령 발송 후 SEARCHING 상태로 전환")
+                                    # Handshake 완료 시 Reset 명령 발송
+                                    self.routine_controller.reset_current_routine_external()
+                                    # Tracker에 SEARCHING 상태 전환 요청
+                                    tracker_command = {
+                                        'type': 'set_state',
+                                        'state': 'searching',
+                                        'target_id': None
+                                    }
+                                    tracker_msg = String()
+                                    tracker_msg.data = json.dumps(tracker_command)
+                                    self.tracker_control_publisher.publish(tracker_msg)
+                                    # 초기화
+                                    self.routine_controller.handshake_start_time = None
+                                    self.routine_controller.handshake_complete_check_started = False
+                                    self.routine_controller.current_routine = None
+                            else:
+                                # 루트 노드 SUCCESS로 완료 판단
+                                self.get_logger().info(f"[Handshake 완료 확인] 루트 노드 SUCCESS 상태, SEARCHING 상태로 전환")
+                                # Handshake 완료 시 Reset 명령 발송
+                                self.routine_controller.reset_current_routine_external()
+                                tracker_command = {
+                                    'type': 'set_state',
+                                    'state': 'searching',
+                                    'target_id': None
+                                }
+                                tracker_msg = String()
+                                tracker_msg.data = json.dumps(tracker_command)
+                                self.tracker_control_publisher.publish(tracker_msg)
+                                # 초기화
+                                self.routine_controller.handshake_start_time = None
+                                self.routine_controller.handshake_complete_check_started = False
+                                self.routine_controller.current_routine = None
+                    
+                    # Hello 완료 확인 (하위 노드의 status 확인)
+                    if self.routine_controller.hello_start_time is not None:
+                        elapsed = current_time - self.routine_controller.hello_start_time
+                        
+                        if elapsed >= 2.0:
+                            # reset()이 정상 작동하므로 부모 노드의 status만 확인
+                            if heart_node is not None:
+                                heart_status = heart_node.get("status", 0)
+                                heart_node_id = heart_node.get("id")
+                                
+                                is_completed = False
+                                if heart_status == 2:  # SUCCESS
+                                    is_completed = True
+                                    self.get_logger().info(f"[Hello 완료 확인] heart_node status={heart_status} (SUCCESS) - 부모 노드 완료 확인")
+                                
+                                if is_completed:
+                                    self.get_logger().info(f"[Hello 완료 확인] 완료 감지, Reset 명령 발송 후 SEARCHING 상태로 전환")
+                                    # Hello 완료 시 Reset 명령 발송
+                                    self.routine_controller.reset_current_routine_external()
+                                    # Tracker에 SEARCHING 상태 전환 요청
+                                    tracker_command = {
+                                        'type': 'set_state',
+                                        'state': 'searching',
+                                        'target_id': None
+                                    }
+                                    tracker_msg = String()
+                                    tracker_msg.data = json.dumps(tracker_command)
+                                    self.tracker_control_publisher.publish(tracker_msg)
+                                    # 초기화
+                                    self.routine_controller.hello_start_time = None
+                                    self.routine_controller.hello_complete_check_started = False
+                                    self.routine_controller.current_routine = None
+                            else:
+                                # 루트 노드 SUCCESS로 완료 판단
+                                self.get_logger().info(f"[Hello 완료 확인] 루트 노드 SUCCESS 상태, SEARCHING 상태로 전환")
+                                # Hello 완료 시 Reset 명령 발송
+                                self.routine_controller.reset_current_routine_external()
+                                tracker_command = {
+                                    'type': 'set_state',
+                                    'state': 'searching',
+                                    'target_id': None
+                                }
+                                tracker_msg = String()
+                                tracker_msg.data = json.dumps(tracker_command)
+                                self.tracker_control_publisher.publish(tracker_msg)
+                                # 초기화
+                                self.routine_controller.hello_start_time = None
+                                self.routine_controller.hello_complete_check_started = False
+                                self.routine_controller.current_routine = None
+                elif is_reset_state:  # RESET 상태: nodes가 비어있거나 루트 노드가 IDLE
+                    self.actual_running_routine = None
+                    # Handshake/Hello 완료 확인 (RESET 상태)
+                    current_time = time.monotonic()
+                    
+                    # Handshake 완료 확인
+                    if (self.routine_controller.handshake_start_time is not None and 
+                        self.routine_controller.current_routine == "idling_handshake_rt"):
+                        elapsed = current_time - self.routine_controller.handshake_start_time
+                        if elapsed >= 2.0:
+                            self.get_logger().info(f"[Handshake 완료 확인] RESET 상태 감지 (nodes={len(nodes)}, root_status={root_status}), SEARCHING 상태로 전환")
+                            # Tracker에 SEARCHING 상태 전환 요청
+                            tracker_command = {
+                                'type': 'set_state',
+                                'state': 'searching',
+                                'target_id': None
+                            }
+                            tracker_msg = String()
+                            tracker_msg.data = json.dumps(tracker_command)
+                            self.tracker_control_publisher.publish(tracker_msg)
+                            # 초기화
+                            self.routine_controller.handshake_start_time = None
+                            self.routine_controller.handshake_complete_check_started = False
+                            self.routine_controller.current_routine = None
+                    
+                    # Hello 완료 확인
+                    if (self.routine_controller.hello_start_time is not None and 
+                        self.routine_controller.current_routine == "idling_heart_rt"):
+                        elapsed = current_time - self.routine_controller.hello_start_time
+                        if elapsed >= 2.0:
+                            self.get_logger().info(f"[Hello 완료 확인] RESET 상태 감지 (nodes={len(nodes)}, root_status={root_status}), SEARCHING 상태로 전환")
+                            # Tracker에 SEARCHING 상태 전환 요청
+                            tracker_command = {
+                                'type': 'set_state',
+                                'state': 'searching',
+                                'target_id': None
+                            }
+                            tracker_msg = String()
+                            tracker_msg.data = json.dumps(tracker_command)
+                            self.tracker_control_publisher.publish(tracker_msg)
+                            # 초기화
+                            self.routine_controller.hello_start_time = None
+                            self.routine_controller.hello_complete_check_started = False
+                            self.routine_controller.current_routine = None
                 else:
-                    # RUNNING이 아니면 실행 중이 아님
+                    # 루트 노드가 RUNNING/SUCCESS/RESET이 아니면 실행 중이 아님
                     self.actual_running_routine = None
             else:
                 # 루트 노드를 찾을 수 없으면 루틴이 없는 것으로 간주
                 self.actual_running_routine = None
             
-            # START 명령 확인: 일정 시간(0.5초) 후에도 루틴이 시작되지 않으면 경고
-            if self.routine_controller.expected_routine_name and self.routine_controller.expected_routine_start_time:
-                elapsed = time.monotonic() - self.routine_controller.expected_routine_start_time
-                if elapsed > 0.5:  # 0.5초 후에도 시작되지 않으면 경고
-                    self.get_logger().warn(
-                        f"[ROUTINE START 경고] {self.routine_controller.expected_routine_name} 루틴이 "
-                        f"START 명령 후 {elapsed:.3f}초 동안 시작되지 않음. "
-                        f"현재 실행 중인 루틴: {self.actual_running_routine}"
-                    )
-                    # 플래그 초기화 (경고 후에도 계속 확인하지 않음)
-                    self.routine_controller.expected_routine_name = None
-                    self.routine_controller.expected_routine_start_time = None
-                
         except json.JSONDecodeError as e:
             self.get_logger().warn(f"루틴 상태 피드백 JSON 파싱 실패: {e}")
         except Exception as e:
@@ -851,6 +1551,13 @@ class AllexIdleInteractionNode(Node):
         3. 같으면 아무것도 하지 않음 (breathing -> breathing 등)
         4. 다르면 현재 루틴 PAUSE/RESET → 피드백 확인 → 목표 루틴 START
         """
+        # Tracking State로 전환 시 handshake/hello_start_time 초기화
+        if new_state == TrackingState.TRACKING:
+            self.routine_controller.handshake_start_time = None
+            self.routine_controller.hello_start_time = None
+            self.routine_controller.handshake_complete_check_started = False
+            self.routine_controller.hello_complete_check_started = False
+        
         # 제외 케이스: TRACKING -> LOST, IDLE -> WAITING -> TRACKING
         if old_state == TrackingState.TRACKING and new_state == TrackingState.LOST:
             return  # 제외
@@ -878,9 +1585,6 @@ class AllexIdleInteractionNode(Node):
             self.get_logger().debug(f"{old_state.value} → {new_state.value}: 동일 루틴 ({target_routine}) 유지")
             return
         
-        # STOP 플래그 초기화 (interaction 상태 전환 시)
-        if new_state in (TrackingState.HELLO, TrackingState.HANDSHAKE):
-            self.waiting_for_stop = False
         
         # 루틴 전환 필요: 현재 루틴 PAUSE/RESET → 목표 루틴 START
         self.routine_controller.transition_to_routine(current_routine, target_routine, old_state, new_state)
@@ -913,11 +1617,10 @@ class AllexIdleInteractionNode(Node):
             
             elif cmd_type == 'stop':
                 self.is_running = False
-                # STOP 처리: 루틴 PAUSE/RESET부터 시작 (RESET 완료 후 트래커/컨트롤러 STOP은 _complete_stop에서 처리)
-                if not self.routine_controller.waiting_for_reset:
-                    self.routine_controller.stop_current_routine()
+                # STOP 처리: 현재 루틴 Reset(100)만 수행
+                self.routine_controller.stop_routine()
                 self.previous_state = TrackingState.IDLE
-                self.get_logger().info("RUN 중지: 루틴 RESET 대기 중...")
+                self.get_logger().info("RUN 중지: 루틴 Reset 완료")
             
             elif cmd_type == 'set_mode':
                 if self.is_running:
@@ -947,23 +1650,33 @@ class AllexIdleInteractionNode(Node):
                 controller_command['parameters'] = parameters
                 self.get_logger().info(f"파라미터 설정 요청: {parameters}")
             
-            # Tracker에 명령 전송 (STOP은 RESET 완료 후 _complete_stop에서 전송)
-            if cmd_type != 'stop':
-                tracker_msg = String()
-                tracker_msg.data = json.dumps(tracker_command)
-                self.tracker_control_publisher.publish(tracker_msg)
+            # Tracker에 명령 전송
+            tracker_msg = String()
+            tracker_msg.data = json.dumps(tracker_command)
+            self.tracker_control_publisher.publish(tracker_msg)
             
-            # Controller에 명령 전송 (run, stop, set_parameters) (STOP은 RESET 완료 후 _complete_stop에서 전송)
+            # Controller에 명령 전송
             if cmd_type in ['run', 'stop', 'set_parameters']:
-                if cmd_type != 'stop':
-                    controller_msg = String()
-                    controller_msg.data = json.dumps(controller_command)
-                    self.controller_control_publisher.publish(controller_msg)
+                controller_msg = String()
+                controller_msg.data = json.dumps(controller_command)
+                self.controller_control_publisher.publish(controller_msg)
                 
         except json.JSONDecodeError as e:
             self.get_logger().error(f"Manual 제어 명령 파싱 실패: {e}")
         except Exception as e:
             self.get_logger().error(f"Manual 제어 처리 실패: {e}")
+    
+    def destroy_node(self):
+        """노드 파괴 시 루틴 정리 (launch로 실행될 때도 작동)"""
+        self.get_logger().info("[SHUTDOWN] 노드 파괴 시작, 루틴 정리 수행...")
+        try:
+            # 루틴 정리
+            self.routine_controller.cleanup_on_shutdown()
+        except Exception as e:
+            self.get_logger().error(f"[SHUTDOWN] 루틴 정리 중 오류: {e}")
+        finally:
+            # 부모 클래스의 destroy_node 호출
+            super().destroy_node()
 
 
 def main(args=None):
@@ -976,6 +1689,7 @@ def main(args=None):
     except KeyboardInterrupt:
         pass
     finally:
+        # destroy_node에서 cleanup이 호출되므로 여기서는 destroy_node만 호출
         node.destroy_node()
         rclpy.shutdown()
 
