@@ -1,0 +1,1 @@
+/home/dgx_allex_one/allex_ces_idle_interaction_gui/build/allex_ces_idle_interaction/launch/pc2_camera.launch.py
