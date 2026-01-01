@@ -1526,8 +1526,8 @@ class GazeControllerNode(Node):
                     if self.last_neck_target_yaw is not None:
                         max_neck_target_delta = math.radians(3.125)  # TRACKING과 동일: 현재의 50%: 6.25 * 0.5 = 3.125도/프레임
                         neck_target_delta = neck_target_yaw - self.last_neck_target_yaw
-                        # 루틴 완료 후 미세한 움직임 방지: 변화량이 매우 작으면(0.1도 미만) 움직임 멈춤
-                        if abs(neck_target_delta) < math.radians(0.1):
+                        # 루틴 완료 후 미세한 움직임 방지: 변화량이 매우 작으면(0.3도 미만) 움직임 멈춤
+                        if abs(neck_target_delta) < math.radians(0.3):
                             neck_target_yaw = self.last_neck_target_yaw  # 이전 위치 유지
                         else:
                             neck_target_delta = max(-max_neck_target_delta, min(max_neck_target_delta, neck_target_delta))
@@ -1545,8 +1545,8 @@ class GazeControllerNode(Node):
                     # 루틴 완료 후 미세한 움직임 방지: 허리 타겟 변화량이 매우 작으면 움직임 멈춤
                     if self.last_waist_command is not None:
                         waist_target_delta = waist_target_yaw - self.last_waist_command
-                        # 변화량이 매우 작으면(0.1도 미만) 이전 위치 유지
-                        if abs(waist_target_delta) < math.radians(0.1):
+                        # 변화량이 매우 작으면(0.3도 미만) 이전 위치 유지
+                        if abs(waist_target_delta) < math.radians(0.3):
                             waist_target_yaw = self.last_waist_command  # 이전 위치 유지
                     
                     # 허리 제어: 목 각도를 천천히 회수하도록 추종 (TRACKING과 동일)
