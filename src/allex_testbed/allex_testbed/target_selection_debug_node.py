@@ -40,12 +40,12 @@ class TargetSelectionDebugNode(Node):
         # 토픽명 파라미터
         self.declare_parameter('camera_image_topic', '/camera/color/image_raw/compressed')
         self.declare_parameter('tracking_result_topic', '/allex_camera/tracking_result')
-        self.declare_parameter('controller_control_topic', '/allex_camera/controller_control')
+        self.declare_parameter('manual_control_topic', '/allex_camera/manual_control')
         self.declare_parameter('output_image_topic', '/allex_camera/debug_image/compressed')
         
         camera_image_topic = self.get_parameter('camera_image_topic').get_parameter_value().string_value
         tracking_result_topic = self.get_parameter('tracking_result_topic').get_parameter_value().string_value
-        controller_control_topic = self.get_parameter('controller_control_topic').get_parameter_value().string_value
+        manual_control_topic = self.get_parameter('manual_control_topic').get_parameter_value().string_value
         output_image_topic = self.get_parameter('output_image_topic').get_parameter_value().string_value
         
         # 입력 이미지 구독
@@ -56,19 +56,11 @@ class TargetSelectionDebugNode(Node):
             qos_profile,
         )
         
-        # Controller 제어 명령 구독 (RUN/STOP)
-        self.controller_control_subscription = self.create_subscription(
+        # Manual 제어 명령 구독 (타겟 ID 변경용)
+        self.manual_control_subscription = self.create_subscription(
             String,
-            controller_control_topic,
-            self.controller_control_callback,
-            10
-        )
-        
-        # Tracking 결과 구독 (선택적, 없어도 작동)
-        self.tracking_result_subscription = self.create_subscription(
-            String,
-            tracking_result_topic,
-            self.tracking_result_callback,
+            manual_control_topic,
+            self.manual_control_callback,
             10
         )
         
@@ -79,22 +71,28 @@ class TargetSelectionDebugNode(Node):
             10
         )
         
+        # Tracking 결과 발행 (YOLO Detection 결과를 tracking_result로 발행)
+        self.tracking_result_publisher = self.create_publisher(
+            String,
+            tracking_result_topic,
+            10
+        )
+        
         # YOLO 모델 초기화
         self._init_yolo_model()
         
         # 현재 상태 저장
         self.current_image = None
-        self.current_target_id = None
+        self.current_target_id = None  # Joystick으로 선택된 타겟 ID
         self.tracked_objects = []  # [{'track_id': int, 'bbox': [x1, y1, x2, y2], 'centroid': (x, y)}, ...]
-        self.is_running = False
         
         self.get_logger().info("=" * 60)
         self.get_logger().info("Target Selection Debug Node 시작")
         self.get_logger().info(f"입력 이미지: {camera_image_topic}")
-        self.get_logger().info(f"Tracking 결과: {tracking_result_topic} (선택적)")
-        self.get_logger().info(f"Controller 제어: {controller_control_topic}")
+        self.get_logger().info(f"Tracking 결과 발행: {tracking_result_topic}")
+        self.get_logger().info(f"Manual 제어 구독: {manual_control_topic}")
         self.get_logger().info(f"출력 이미지: {output_image_topic}")
-        self.get_logger().info("RUN 명령을 보내면 YOLO Detection 시작")
+        self.get_logger().info("즉시 YOLO Detection 시작 (GAZE 명령 없음, 시각화만)")
         self.get_logger().info("=" * 60)
     
     def _init_yolo_model(self):
@@ -129,28 +127,8 @@ class TargetSelectionDebugNode(Node):
         
         self.get_logger().info("YOLO 모델 초기화 완료")
     
-    def controller_control_callback(self, msg: String):
-        """Controller 제어 명령 수신 콜백"""
-        try:
-            data = json.loads(msg.data)
-            cmd_type = data.get('type', '')
-            
-            if cmd_type == 'run':
-                self.is_running = True
-                self.get_logger().info("[DEBUG NODE] RUN 명령 수신: YOLO Detection 시작")
-            elif cmd_type == 'stop':
-                self.is_running = False
-                self.get_logger().info("[DEBUG NODE] STOP 명령 수신: YOLO Detection 중지")
-        except json.JSONDecodeError as e:
-            self.get_logger().warn(f"제어 명령 파싱 실패: {e}")
-        except Exception as e:
-            self.get_logger().warn(f"제어 명령 처리 실패: {e}")
-    
     def image_callback(self, msg: CompressedImage):
-        """이미지 수신 콜백"""
-        if not self.is_running:
-            return
-        
+        """이미지 수신 콜백 - YOLO Detection 수행"""
         try:
             # CompressedImage를 OpenCV 이미지로 변환
             np_arr = np.frombuffer(msg.data, np.uint8)
@@ -163,6 +141,9 @@ class TargetSelectionDebugNode(Node):
             
             # YOLO Detection 수행
             self._perform_yolo_detection(frame)
+            
+            # Tracking 결과 발행 (Joystick Node가 subscribe)
+            self._publish_tracking_result()
             
             # 시각화 업데이트
             self._update_visualization()
@@ -201,17 +182,61 @@ class TargetSelectionDebugNode(Node):
         except Exception as e:
             self.get_logger().error(f"YOLO Detection 오류: {e}")
     
-    def tracking_result_callback(self, msg: String):
-        """Tracking 결과 수신 콜백 (현재 타겟 ID 업데이트용)"""
+    def _publish_tracking_result(self):
+        """Tracking 결과 발행 (Joystick Node가 subscribe)"""
+        try:
+            # tracking_result 메시지 생성
+            # 정렬하지 않고 YOLO Detection 결과 순서 그대로 발행
+            # Joystick Node에서 x 좌표 기준으로 정렬함
+            tracking_data = {
+                'state': 'tracking',  # 디버그 노드는 항상 tracking 상태
+                'target_track_id': self.current_target_id,  # 현재 선택된 타겟 ID (None일 수 있음)
+                'tracked_objects': []
+            }
+            
+            # tracked_objects 형식으로 변환 (정렬하지 않음, Joystick Node에서 정렬)
+            for obj in self.tracked_objects:
+                tracking_data['tracked_objects'].append({
+                    'track_id': obj['track_id'],
+                    'bbox': obj['bbox'],
+                    'centroid': list(obj['centroid'])
+                })
+            
+            # 메시지 발행
+            msg = String()
+            msg.data = json.dumps(tracking_data, ensure_ascii=False)
+            self.tracking_result_publisher.publish(msg)
+        except Exception as e:
+            self.get_logger().error(f"Tracking 결과 발행 오류: {e}")
+    
+    def manual_control_callback(self, msg: String):
+        """Manual 제어 명령 콜백 (타겟 ID 변경)"""
         try:
             data = json.loads(msg.data)
+            cmd_type = data.get('type', '')
             
-            # 현재 타겟 ID만 업데이트 (YOLO Detection은 자체 수행)
-            self.current_target_id = data.get('target_track_id', None)
+            if cmd_type == 'set_target':
+                # 타겟 ID 변경
+                new_target_id = data.get('target_id', None)
+                if new_target_id is not None:
+                    self.current_target_id = int(new_target_id)
+                    self.get_logger().info(f"[DEBUG NODE] 타겟 ID 변경: {self.current_target_id}")
+                    # 이미지가 있으면 시각화 업데이트
+                    if self.current_image is not None:
+                        self._update_visualization()
+            elif cmd_type == 'set_state':
+                # 상태 변경 (타겟 ID 포함)
+                new_target_id = data.get('target_id', None)
+                if new_target_id is not None:
+                    self.current_target_id = int(new_target_id)
+                    self.get_logger().info(f"[DEBUG NODE] 상태 변경 + 타겟 ID: {self.current_target_id}")
+                    # 이미지가 있으면 시각화 업데이트
+                    if self.current_image is not None:
+                        self._update_visualization()
         except json.JSONDecodeError as e:
-            self.get_logger().debug(f"Tracking 결과 파싱 실패: {e}")
+            self.get_logger().warn(f"Manual 제어 명령 파싱 실패: {e}")
         except Exception as e:
-            self.get_logger().debug(f"Tracking 결과 처리 실패: {e}")
+            self.get_logger().warn(f"Manual 제어 명령 처리 실패: {e}")
     
     def _update_visualization(self):
         """이미지에 박스와 번호 그리기"""

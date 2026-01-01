@@ -1,0 +1,17 @@
+[0.692s] Invoking command in '/home/dgx_allex_one/allex_ces_idle_interaction_gui/build/irim_doio_macro_panel': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/dgx_allex_one/allex_ces_idle_interaction_gui/build/irim_doio_macro_panel/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/dgx_allex_one/allex_ces_idle_interaction_gui/install/irim_doio_macro_panel/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/dgx_allex_one/allex_ces_idle_interaction_gui/build/irim_doio_macro_panel/build --no-deps symlink_data
+[0.854s] running develop
+[0.938s] running egg_info
+[0.947s] writing irim_doio_macro_panel.egg-info/PKG-INFO
+[0.947s] writing dependency_links to irim_doio_macro_panel.egg-info/dependency_links.txt
+[0.947s] writing entry points to irim_doio_macro_panel.egg-info/entry_points.txt
+[0.947s] writing requirements to irim_doio_macro_panel.egg-info/requires.txt
+[0.947s] writing top-level names to irim_doio_macro_panel.egg-info/top_level.txt
+[0.964s] reading manifest file 'irim_doio_macro_panel.egg-info/SOURCES.txt'
+[0.964s] writing manifest file 'irim_doio_macro_panel.egg-info/SOURCES.txt'
+[0.998s] running build_ext
+[0.998s] Creating /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/irim_doio_macro_panel/lib/python3.12/site-packages/irim-doio-macro-panel.egg-link (link to .)
+[0.999s] Installing doio_macro_panel script to /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/irim_doio_macro_panel/lib/irim_doio_macro_panel
+[0.999s] 
+[0.999s] Installed /home/dgx_allex_one/allex_ces_idle_interaction_gui/build/irim_doio_macro_panel
+[0.999s] running symlink_data
+[1.026s] Invoked command in '/home/dgx_allex_one/allex_ces_idle_interaction_gui/build/irim_doio_macro_panel' returned '0': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/dgx_allex_one/allex_ces_idle_interaction_gui/build/irim_doio_macro_panel/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/dgx_allex_one/allex_ces_idle_interaction_gui/install/irim_doio_macro_panel/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/dgx_allex_one/allex_ces_idle_interaction_gui/build/irim_doio_macro_panel/build --no-deps symlink_data

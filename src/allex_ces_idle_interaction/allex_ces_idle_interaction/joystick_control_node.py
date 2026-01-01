@@ -10,6 +10,7 @@ from pynput import keyboard
 import threading
 import json
 import time
+import os
 from typing import Set, Optional, List, Dict
 
 from .tracking_fsm_node import TrackingState
@@ -52,6 +53,7 @@ class JoystickControlNode(Node):
         self.current_target_id = None
         self.tracked_objects = []  # [{'track_id': int, 'bbox': [x1,y1,x2,y2], 'centroid': (x,y)}, ...]
         self.tracked_objects_sorted = []  # x 좌표 기준 정렬된 리스트
+        self.current_manual_mode = False  # 현재 Manual Mode 여부
         
         # 키보드 리스너 스레드 시작
         self.running = True
@@ -230,8 +232,22 @@ class JoystickControlNode(Node):
             except (KeyError, AttributeError):
                 self.current_state = TrackingState.IDLE
             
+            # Manual Mode 업데이트
+            self.current_manual_mode = data.get('manual_mode', False)
+            
             # 현재 타겟 ID 업데이트
-            self.current_target_id = data.get('target_track_id', None)
+            # tracking_result에서 target_track_id 또는 target_info.track_id 가져오기
+            target_track_id = data.get('target_track_id', None)
+            if target_track_id is None:
+                # target_info에서 가져오기 (tracking_fsm_node는 target_info.track_id로 발행)
+                target_info = data.get('target_info', {})
+                if isinstance(target_info, dict):
+                    target_track_id = target_info.get('track_id', None)
+            self.current_target_id = target_track_id
+            if self.current_target_id is not None:
+                self.get_logger().debug(f"[JOYSTICK] 타겟 ID 업데이트: {self.current_target_id}")
+            elif self.current_target_id is None and len(self.tracked_objects_sorted) > 0:
+                self.get_logger().debug(f"[JOYSTICK] 타겟 ID가 None입니다. tracking_result 데이터: {list(data.keys())}")
             
             # 추적 객체 목록 업데이트 및 정렬 (x 좌표 기준)
             tracked_objects_data = data.get('tracked_objects', [])
@@ -252,10 +268,61 @@ class JoystickControlNode(Node):
                 key=lambda obj: obj['centroid'][0]
             )
             
+            # 상세 디버그 출력 (화면 clear 후 표 형식으로 표시)
+            self._print_detailed_status()
+            
         except json.JSONDecodeError as e:
             self.get_logger().warn(f"추적 결과 파싱 실패: {e}")
         except Exception as e:
             self.get_logger().warn(f"추적 결과 처리 실패: {e}")
+    
+    def _print_detailed_status(self):
+        """상세 상태를 터미널에 표 형식으로 출력 (화면 clear)"""
+        try:
+            # 화면 clear (ANSI escape code)
+            print('\033[2J\033[H', end='')  # Clear screen and move cursor to top
+            
+            # 헤더
+            print("=" * 80)
+            print("JOYSTICK CONTROL NODE - 타겟 선택 상태")
+            print("=" * 80)
+            print(f"현재 상태: {self.current_state.value.upper()}")
+            print(f"현재 타겟 ID: {self.current_target_id if self.current_target_id is not None else 'None'}")
+            print(f"추적 중인 객체 수: {len(self.tracked_objects_sorted)}")
+            print("-" * 80)
+            
+            if len(self.tracked_objects_sorted) == 0:
+                print("추적 중인 객체가 없습니다.")
+            else:
+                # 표 헤더
+                print(f"{'인덱스':<8} {'Track ID':<12} {'X 좌표':<12} {'Y 좌표':<12} {'상태':<10}")
+                print("-" * 80)
+                
+                # 각 객체 출력
+                for i, obj in enumerate(self.tracked_objects_sorted):
+                    track_id = obj['track_id']
+                    x_coord = obj['centroid'][0]
+                    y_coord = obj['centroid'][1]
+                    
+                    # 현재 타겟인지 확인
+                    is_current = (track_id == self.current_target_id)
+                    
+                    # 현재 타겟은 강조 표시
+                    if is_current:
+                        marker = ">>> "
+                        status = "CURRENT"
+                    else:
+                        marker = "    "
+                        status = ""
+                    
+                    print(f"{marker}{i:<5} {track_id:<12} {x_coord:>10.1f} {y_coord:>10.1f} {status:<10}")
+            
+            print("=" * 80)
+            print("명령: j+k (왼쪽), j+m (오른쪽), j+c (Auto Run), j+d (Manual Run), j+f (Stop)")
+            print("=" * 80)
+            
+        except Exception as e:
+            self.get_logger().error(f"상세 상태 출력 오류: {e}")
     
     def _publish_command(self, command: Dict):
         """명령을 토픽으로 발행"""
@@ -265,22 +332,44 @@ class JoystickControlNode(Node):
         self.get_logger().info(f"[JOYSTICK] 명령 발행: {command}")
     
     def _handle_auto_run(self):
-        """j+c: Auto Run (Manual Stop)"""
-        self.get_logger().info("[JOYSTICK] Auto Run 명령")
-        command = {
+        """j+c: Auto Run (Manual Stop) - set_mode으로 IDLE 전환 후 run"""
+        self.get_logger().info("[JOYSTICK] Auto Run 명령 (IDLE 전환 후 run)")
+        # Manual Mode에서 Auto Mode로 전환하는 경우 IDLE로 전환
+        if self.current_manual_mode:
+            mode_command = {
+                'type': 'set_mode',
+                'manual': False  # Auto 모드
+            }
+            self._publish_command(mode_command)
+            # 잠시 대기하여 set_mode가 처리되도록 함
+            import time
+            time.sleep(0.1)
+        # run 명령
+        run_command = {
             'type': 'run',
             'manual': False  # Auto 모드
         }
-        self._publish_command(command)
+        self._publish_command(run_command)
     
     def _handle_manual_run(self):
-        """j+d: Manual Run (Auto Stop)"""
-        self.get_logger().info("[JOYSTICK] Manual Run 명령")
-        command = {
+        """j+d: Manual Run (Auto Stop) - set_mode으로 IDLE 전환 후 run"""
+        self.get_logger().info("[JOYSTICK] Manual Run 명령 (IDLE 전환 후 run)")
+        # Auto Mode에서 Manual Mode로 전환하는 경우 IDLE로 전환
+        if not self.current_manual_mode:
+            mode_command = {
+                'type': 'set_mode',
+                'manual': True  # Manual 모드
+            }
+            self._publish_command(mode_command)
+            # 잠시 대기하여 set_mode가 처리되도록 함
+            import time
+            time.sleep(0.1)
+        # run 명령
+        run_command = {
             'type': 'run',
             'manual': True  # Manual 모드
         }
-        self._publish_command(command)
+        self._publish_command(run_command)
     
     def _handle_target_left(self):
         """j+k: 타겟 선택 (왼쪽으로 이동)"""
@@ -298,11 +387,28 @@ class JoystickControlNode(Node):
         
         self.get_logger().info(f"[JOYSTICK LEFT] 현재 타겟 ID: {self.current_target_id}, 인덱스: {current_index}, 총 객체 수: {len(self.tracked_objects_sorted)}")
         
-        # 타겟을 찾지 못한 경우 (current_index == -1): 가장 왼쪽 타겟 선택
+        # 상세 상태 출력
+        self._print_detailed_status()
+        
+        # 타겟을 찾지 못한 경우 (current_index == -1): 화면 중앙(640)에서 가장 가까운 사람 선택
         if current_index == -1:
-            # 타겟이 없으면 가장 왼쪽 타겟 선택
-            new_target_id = self.tracked_objects_sorted[0]['track_id']
-            self.get_logger().info(f"[JOYSTICK LEFT] 타겟을 찾지 못함, 가장 왼쪽 타겟 선택: {new_target_id}")
+            # 화면 중앙 x 좌표 (1280 / 2 = 640)
+            screen_center_x = 640.0
+            
+            # 중앙에서 가장 가까운 객체 찾기
+            closest_obj = min(
+                self.tracked_objects_sorted,
+                key=lambda obj: abs(obj['centroid'][0] - screen_center_x)
+            )
+            closest_index = next(
+                i for i, obj in enumerate(self.tracked_objects_sorted)
+                if obj['track_id'] == closest_obj['track_id']
+            )
+            new_target_id = closest_obj['track_id']
+            self.get_logger().info(
+                f"[JOYSTICK LEFT] 타겟을 찾지 못함, 중앙({screen_center_x})에서 가장 가까운 타겟 선택: "
+                f"ID{new_target_id} (인덱스 {closest_index}, x={closest_obj['centroid'][0]:.1f})"
+            )
             if self.current_state == TrackingState.IDLE:
                 command = {
                     'type': 'set_state',
@@ -320,11 +426,13 @@ class JoystickControlNode(Node):
         # 왼쪽으로 이동 (인덱스 감소)
         if current_index <= 0:
             # 가장 왼쪽에 있으면 무시
-            self.get_logger().info(f"[JOYSTICK LEFT] 이미 가장 왼쪽에 있음 (인덱스: {current_index})")
+            self.get_logger().info(f"[JOYSTICK LEFT] 이미 가장 왼쪽에 있음 (인덱스: {current_index}, 총 {len(self.tracked_objects_sorted)}개)")
             return
         
         # 이전 타겟 선택 (왼쪽으로)
-        new_target_id = self.tracked_objects_sorted[current_index - 1]['track_id']
+        prev_index = current_index - 1
+        new_target_id = self.tracked_objects_sorted[prev_index]['track_id']
+        self.get_logger().info(f"[JOYSTICK LEFT] 인덱스 이동: {current_index} -> {prev_index}, 타겟 ID: {self.current_target_id} -> {new_target_id}")
         
         # IDLE 상태면 TRACKING으로 변경
         if self.current_state == TrackingState.IDLE:
@@ -360,11 +468,28 @@ class JoystickControlNode(Node):
         
         self.get_logger().info(f"[JOYSTICK RIGHT] 현재 타겟 ID: {self.current_target_id}, 인덱스: {current_index}, 총 객체 수: {len(self.tracked_objects_sorted)}")
         
-        # 타겟을 찾지 못한 경우 (current_index == -1): 가장 왼쪽 타겟 선택
+        # 상세 상태 출력
+        self._print_detailed_status()
+        
+        # 타겟을 찾지 못한 경우 (current_index == -1): 화면 중앙(640)에서 가장 가까운 사람 선택
         if current_index == -1:
-            # 타겟이 없으면 가장 왼쪽 타겟 선택
-            new_target_id = self.tracked_objects_sorted[0]['track_id']
-            self.get_logger().info(f"[JOYSTICK RIGHT] 타겟을 찾지 못함, 가장 왼쪽 타겟 선택: {new_target_id}")
+            # 화면 중앙 x 좌표 (1280 / 2 = 640)
+            screen_center_x = 640.0
+            
+            # 중앙에서 가장 가까운 객체 찾기
+            closest_obj = min(
+                self.tracked_objects_sorted,
+                key=lambda obj: abs(obj['centroid'][0] - screen_center_x)
+            )
+            closest_index = next(
+                i for i, obj in enumerate(self.tracked_objects_sorted)
+                if obj['track_id'] == closest_obj['track_id']
+            )
+            new_target_id = closest_obj['track_id']
+            self.get_logger().info(
+                f"[JOYSTICK RIGHT] 타겟을 찾지 못함, 중앙({screen_center_x})에서 가장 가까운 타겟 선택: "
+                f"ID{new_target_id} (인덱스 {closest_index}, x={closest_obj['centroid'][0]:.1f})"
+            )
             if self.current_state == TrackingState.IDLE:
                 command = {
                     'type': 'set_state',
@@ -382,11 +507,13 @@ class JoystickControlNode(Node):
         # 오른쪽으로 이동 (인덱스 증가)
         if current_index >= len(self.tracked_objects_sorted) - 1:
             # 가장 오른쪽에 있으면 무시
-            self.get_logger().info(f"[JOYSTICK RIGHT] 이미 가장 오른쪽에 있음 (인덱스: {current_index})")
+            self.get_logger().info(f"[JOYSTICK RIGHT] 이미 가장 오른쪽에 있음 (인덱스: {current_index}, 총 {len(self.tracked_objects_sorted)}개)")
             return
         
         # 다음 타겟 선택 (오른쪽으로)
-        new_target_id = self.tracked_objects_sorted[current_index + 1]['track_id']
+        next_index = current_index + 1
+        new_target_id = self.tracked_objects_sorted[next_index]['track_id']
+        self.get_logger().info(f"[JOYSTICK RIGHT] 인덱스 이동: {current_index} -> {next_index}, 타겟 ID: {self.current_target_id} -> {new_target_id}")
         
         # IDLE 상태면 TRACKING으로 변경
         if self.current_state == TrackingState.IDLE:
@@ -407,7 +534,10 @@ class JoystickControlNode(Node):
         self._publish_command(command)
     
     def _handle_handshake_state(self):
-        """j+i: Handshake State로 변경"""
+        """j+i: Handshake State로 변경 (Manual Mode에서만 작동)"""
+        if not self.current_manual_mode:
+            self.get_logger().warn("[JOYSTICK] Auto Mode에서는 Handshake State로 변경할 수 없습니다.")
+            return
         self.get_logger().info("[JOYSTICK] Handshake State로 변경")
         command = {
             'type': 'set_state',
@@ -426,7 +556,10 @@ class JoystickControlNode(Node):
         self._publish_command(command)
     
     def _handle_hello_state(self):
-        """j+g: Hello State로 변경"""
+        """j+g: Hello State로 변경 (Manual Mode에서만 작동)"""
+        if not self.current_manual_mode:
+            self.get_logger().warn("[JOYSTICK] Auto Mode에서는 Hello State로 변경할 수 없습니다.")
+            return
         self.get_logger().info("[JOYSTICK] Hello State로 변경")
         command = {
             'type': 'set_state',

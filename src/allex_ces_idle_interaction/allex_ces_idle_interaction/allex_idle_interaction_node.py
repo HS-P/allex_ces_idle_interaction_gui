@@ -200,21 +200,21 @@ class RoutineController:
                 self.resetting_routine_name = None
                 
                 command = f"{self.robot_name}::ROUTINE::{to_routine}::START"
-                self.current_routine = to_routine
-                
-                if to_routine == "idle_breathing_rt":
-                    self.breathing_routine_running = True
-                else:
-                    self.breathing_routine_running = False
-                
-                self.publish_command(command)
-                
-                self.expected_routine_name = to_routine
-                self.expected_routine_start_time = time.monotonic()
-                
-                self.node.get_logger().info(
+        self.current_routine = to_routine
+        
+        if to_routine == "idle_breathing_rt":
+            self.breathing_routine_running = True
+        else:
+            self.breathing_routine_running = False
+        
+        self.publish_command(command)
+        
+        self.expected_routine_name = to_routine
+        self.expected_routine_start_time = time.monotonic()
+        
+        self.node.get_logger().info(
                     f"{old_state.value} → {new_state.value}: 현재 루틴 없음, {to_routine} 시작"
-                )
+        )
     
     def start_breathing(self):
         """숨쉬기 루틴 시작 (무한 반복) - 기존 루틴이 없을 경우 바로 실행"""
@@ -419,6 +419,9 @@ class AllexIdleInteractionNode(Node):
         self.frame_count = 0
         self.last_log_time = time.monotonic()
         
+        # Manual Mode 추적 (tracking_result에서 업데이트)
+        self.current_manual_mode = False
+        
         self.get_logger().info("ALLEX Idle Interaction Node 초기화 완료")
         self.get_logger().info("대기 중: RUN 명령을 기다립니다...")
     
@@ -482,6 +485,34 @@ class AllexIdleInteractionNode(Node):
                     self.routine_controller._complete_stop()
             
             if not nodes or len(nodes) == 0:
+                # nodes가 비어있을 때: 이전에 실행 중이던 루틴이 완료되었을 수 있음
+                # Manual Mode에서 Hello/Handshake 루틴이 완료되었는지 확인
+                if self.actual_running_routine in ("idling_heart_rt", "idling_handshake_rt"):
+                    if self.is_running:
+                        # current_manual_mode는 tracking_result_callback에서 업데이트되므로
+                        # latest_tracking_result에서도 확인
+                        manual_mode = self.current_manual_mode
+                        if 'manual_mode' in self.latest_tracking_result:
+                            manual_mode = self.latest_tracking_result.get('manual_mode', False)
+                        
+                        if manual_mode:
+                            # Manual Mode: 루틴이 완료되어 nodes가 비어있으면 Tracking으로 전환
+                            self.get_logger().info(
+                                f"[{self.actual_running_routine} 완료] Manual Mode: 루틴 완료 감지 (nodes 비어있음) → TRACKING 상태로 전환"
+                            )
+                            tracker_command = {
+                                'type': 'set_state',
+                                'state': 'tracking',
+                                'target_id': None
+                            }
+                            tracker_msg = String()
+                            tracker_msg.data = json.dumps(tracker_command)
+                            self.tracker_control_publisher.publish(tracker_msg)
+                            # 루틴 리셋
+                            self.routine_controller.reset_current_routine_external()
+                            # actual_running_routine 초기화
+                            self.actual_running_routine = None
+                
                 self.actual_running_routine = None
                 # START 명령 확인: nodes가 비어있어도 타임아웃 체크는 계속 수행
                 # (START 명령 후 루틴이 시작되지 않은 경우 감지)
@@ -501,8 +532,8 @@ class AllexIdleInteractionNode(Node):
             root_node = None
             for node in nodes:
                 if node.get("parent") == -1:
-                    root_node = node
-                    break
+                        root_node = node
+                        break
             
             # 실제 루틴 이름 찾기: nodes 배열에서 루틴 이름 패턴 찾기
             actual_routine_name = None
@@ -552,9 +583,71 @@ class AllexIdleInteractionNode(Node):
                 root_name = root_node.get("name", "")
                 
                 # status: 0=IDLE, 1=RUNNING, 2=SUCCESS, 3=FAILURE
+                # 디버그: SUCCESS 상태 감지 로그
+                if status == 2:  # SUCCESS: 루틴 완료
+                    self.get_logger().info(f"[ROUTINE STATUS] 루틴 완료 감지: status=2 (SUCCESS), root_name={root_name}, actual_routine_name={actual_routine_name}")
+                    # 실제 루틴 이름이 있으면 사용, 없으면 루트 노드 이름에서 추론
+                    routine_name = actual_routine_name
+                    if routine_name is None:
+                        # 루트 노드 이름에서 루틴 이름 추론
+                        if "Heart" in root_name or "heart" in root_name.lower():
+                            routine_name = "idling_heart_rt"
+                        elif "Handshake" in root_name or "handshake" in root_name.lower():
+                            routine_name = "idling_handshake_rt"
+                        elif "LoopWhile" in root_name or "breathing" in root_name.lower():
+                            routine_name = "idle_breathing_rt"
+                        else:
+                            routine_name = root_name
+                    
+                    # Hello/Handshake 완료 후 상태 전환
+                    if routine_name in ("idling_heart_rt", "idling_handshake_rt"):
+                        if self.is_running:
+                            # current_manual_mode는 tracking_result_callback에서 업데이트되므로
+                            # latest_tracking_result에서도 확인
+                            manual_mode = self.current_manual_mode
+                            if 'manual_mode' in self.latest_tracking_result:
+                                manual_mode = self.latest_tracking_result.get('manual_mode', False)
+                            
+                            if manual_mode:
+                                # Manual Mode: TRACKING으로 전환
+                                self.get_logger().info(f"[{routine_name} 완료] Manual Mode: TRACKING 상태로 전환 (current_manual_mode={self.current_manual_mode})")
+                                tracker_command = {
+                                    'type': 'set_state',
+                                    'state': 'tracking',
+                                    'target_id': None
+                                }
+                                tracker_msg = String()
+                                tracker_msg.data = json.dumps(tracker_command)
+                                self.tracker_control_publisher.publish(tracker_msg)
+                                # 루틴 리셋
+                                self.routine_controller.reset_current_routine_external()
+                            else:
+                                # Auto Mode: SEARCHING으로 전환 (기존 동작)
+                                self.get_logger().info(f"[{routine_name} 완료] Auto Mode: SEARCHING 상태로 전환")
+                                tracker_command = {
+                                    'type': 'set_state',
+                                    'state': 'searching',
+                                    'target_id': None
+                                }
+                                tracker_msg = String()
+                                tracker_msg.data = json.dumps(tracker_command)
+                                self.tracker_control_publisher.publish(tracker_msg)
+                                # 루틴 리셋
+                                self.routine_controller.reset_current_routine_external()
+                
                 if status == 1:  # RUNNING인 경우만 실행 중으로 판단
-                    # 실제 루틴 이름이 있으면 사용, 없으면 루트 노드 이름 사용
-                    routine_name = actual_routine_name if actual_routine_name else root_name
+                    # 실제 루틴 이름이 있으면 사용, 없으면 루트 노드 이름에서 추론
+                    routine_name = actual_routine_name
+                    if routine_name is None:
+                        # 루트 노드 이름에서 루틴 이름 추론
+                        if "Heart" in root_name or "heart" in root_name.lower():
+                            routine_name = "idling_heart_rt"
+                        elif "Handshake" in root_name or "handshake" in root_name.lower():
+                            routine_name = "idling_handshake_rt"
+                        elif "LoopWhile" in root_name or "breathing" in root_name.lower():
+                            routine_name = "idle_breathing_rt"
+                        else:
+                            routine_name = root_name
                     if routine_name:
                         self.actual_running_routine = routine_name
                         
@@ -573,31 +666,33 @@ class AllexIdleInteractionNode(Node):
                                     # 플래그 초기화
                                     self.routine_controller.expected_routine_name = None
                                     self.routine_controller.expected_routine_start_time = None
-                            # handshake/hello 루틴인 경우: Sequence 노드 확인 또는 실제 루틴 이름 확인
+                            # handshake/hello 루틴인 경우: Sequence 노드 또는 HeartRoutine/HandshakeRoutine 노드 확인
                             elif expected_routine in ("idling_heart_rt", "idling_handshake_rt"):
-                                # Sequence 노드이거나 실제 루틴 이름이 일치하면 성공
-                                # handshake/hello 루틴은 루트 노드가 Sequence이므로, Sequence가 확인되면 성공으로 간주
+                                # Sequence 노드이거나 HeartRoutine/HandshakeRoutine 노드이면 성공
+                                # handshake/hello 루틴은 루트 노드가 Sequence 또는 HeartRoutine(X)/HandshakeRoutine(X)일 수 있음
+                                is_routine_started = False
                                 if root_name == "Sequence":
-                                    self.get_logger().info(
-                                        f"[ROUTINE START 확인] {expected_routine} 루틴 시작 확인됨 "
-                                        f"(루트 노드: {root_name}, 실제 루틴: {actual_routine_name if actual_routine_name else 'N/A (Sequence 루트 노드로 확인)'}, 경과 시간: {elapsed:.3f}초)"
-                                    )
-                                    # 플래그 초기화
-                                    self.routine_controller.expected_routine_name = None
-                                    self.routine_controller.expected_routine_start_time = None
+                                    is_routine_started = True
+                                elif expected_routine == "idling_heart_rt" and ("Heart" in root_name or "heart" in root_name.lower()):
+                                    is_routine_started = True
+                                elif expected_routine == "idling_handshake_rt" and ("Handshake" in root_name or "handshake" in root_name.lower()):
+                                    is_routine_started = True
                                 elif actual_routine_name == expected_routine:
                                     # 실제 루틴 이름으로도 확인 가능
+                                    is_routine_started = True
+                                
+                                if is_routine_started:
                                     self.get_logger().info(
                                         f"[ROUTINE START 확인] {expected_routine} 루틴 시작 확인됨 "
-                                        f"(루트 노드: {root_name}, 실제 루틴: {actual_routine_name}, 경과 시간: {elapsed:.3f}초)"
+                                        f"(루트 노드: {root_name}, 실제 루틴: {actual_routine_name if actual_routine_name else 'N/A (루트 노드로 확인)'}, 경과 시간: {elapsed:.3f}초)"
                                     )
                                     # 플래그 초기화
                                     self.routine_controller.expected_routine_name = None
                                     self.routine_controller.expected_routine_start_time = None
                                 elif elapsed > 0.5:
-                                    # 0.5초 후에도 Sequence가 아니면 재시도
+                                    # 0.5초 후에도 시작되지 않으면 재시도
                                     self.get_logger().warn(
-                                        f"[ROUTINE START 재시도] {expected_routine} 루틴이 Sequence로 시작되지 않음 "
+                                        f"[ROUTINE START 재시도] {expected_routine} 루틴이 시작되지 않음 "
                                         f"(루트 노드: {root_name}, 실제 루틴: {actual_routine_name}), 재시도 중..."
                                     )
                                     # 재시도: START 명령 다시 발행
@@ -623,7 +718,7 @@ class AllexIdleInteractionNode(Node):
                     # 플래그 초기화 (경고 후에도 계속 확인하지 않음)
                     self.routine_controller.expected_routine_name = None
                     self.routine_controller.expected_routine_start_time = None
-                
+            
         except json.JSONDecodeError as e:
             self.get_logger().warn(f"루틴 상태 피드백 JSON 파싱 실패: {e}")
         except Exception as e:
@@ -646,6 +741,9 @@ class AllexIdleInteractionNode(Node):
         try:
             data = json.loads(msg.data)
             self.latest_tracking_result = data
+            
+            # Manual Mode 추적 (tracking_result에서 manual_mode 가져오기)
+            self.current_manual_mode = data.get('manual_mode', False)
             
             # 상태 변경 감지 및 루틴 전환 처리 (RUN 중일 때만)
             if self.is_running:
@@ -923,7 +1021,11 @@ class AllexIdleInteractionNode(Node):
                 if self.is_running:
                     manual_mode = command.get('manual', False)
                     tracker_command['manual'] = manual_mode
-                    self.get_logger().info(f"Manual 모드 설정: {manual_mode}")
+                    # Manual <-> Auto 전환 시 IDLE 상태로 변경
+                    tracker_command['type'] = 'set_state'
+                    tracker_command['state'] = 'idle'
+                    tracker_command['target_id'] = None
+                    self.get_logger().info(f"Manual 모드 설정: {manual_mode} (IDLE 상태로 전환)")
             
             elif cmd_type == 'set_state':
                 state_str = command.get('state', 'idle')

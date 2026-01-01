@@ -686,44 +686,53 @@ class TrackingFSMNode(Node):
                         
                         # 루틴이 종료되었으면 (실행 중이 아니면) SEARCHING으로 전이
                         # 최소 대기 시간 경과 후에만 전환 (명령이 전달될 시간 확보)
+                        # Manual Mode에서는 allex_idle_interaction_node에서 루틴 완료를 감지하므로 여기서는 상태 전환하지 않음
                         if elapsed_time >= self.hello_feedback_delay:
                             if not self.current_routine_running:
                                 # 루틴 종료 확인 후 추가 대기 시간 체크 (Ready 상태 확실히 확인)
                                 if self.routine_stopped_time is not None:
                                     time_since_stopped = current_time_check - self.routine_stopped_time
                                     if time_since_stopped >= self.routine_stopped_confirmation_time:
-                                        # 디버깅: 조건 확인 상세 로그
-                                        self.get_logger().info(
-                                            f"[HELLO 조건 체크] 루틴 종료 확인 완료: "
-                                            f"경과={elapsed_time:.2f}초 >= {self.hello_feedback_delay}초, "
-                                            f"루틴 종료 후 {time_since_stopped:.2f}초 경과 >= {self.routine_stopped_confirmation_time}초, "
-                                            f"루틴 실행 중={self.current_routine_running}"
-                                        )
-                                        
-                                        # HELLO를 한 track_id 저장 (더 이상 타겟으로 선택하지 않음)
-                                        if self.target_track_id is not None:
-                                            self.hello_done_track_ids.add(self.target_track_id)
-                                            self.get_logger().info(
-                                                f"HELLO 완료 ID 저장: track_id={self.target_track_id} "
-                                                f"(총 {len(self.hello_done_track_ids)}개 ID, 이제 타겟으로 선택되지 않음)"
+                                        # Manual Mode에서는 allex_idle_interaction_node에서 루틴 완료를 감지하므로 상태 전환하지 않음
+                                        if self.manual_mode:
+                                            self.get_logger().debug(
+                                                f"[HELLO 조건 체크] Manual Mode: 루틴 종료 확인 완료하지만 상태 전환은 allex_idle_interaction_node에서 처리 "
+                                                f"(경과={elapsed_time:.2f}초, 종료 후 {time_since_stopped:.2f}초)"
                                             )
-                                        
-                                        # 타겟이 없어도 SEARCHING으로 전환 (상대방이 사라진 경우 대응)
-                                        self.state = TrackingState.SEARCHING
-                                        self.target_track_id = None
-                                        self.target_explicitly_set = False
-                                        self.hello_routine_sent = False
-                                        self.hello_routine_sent_time = None
-                                        self.current_routine_running = False
-                                        self.routine_stopped_time = None
-                                        # SEARCHING 진입 시간 기록 (최초 진입 시에만)
-                                        if self.searching_start_time is None:
-                                            self.searching_start_time = current_time_check
-                                            self.get_logger().info(f"SEARCHING 상태 최초 진입: {self.searching_cooldown_duration}초 동안 사람 탐색 안 함")
-                                        self.get_logger().info(
-                                            f"HELLO 완료: 루틴 종료 → SEARCHING 상태로 전환 "
-                                            f"(총 경과 시간: {elapsed_time:.2f}초, 종료 확인 후: {time_since_stopped:.2f}초)"
-                                        )
+                                        else:
+                                            # Auto Mode: SEARCHING으로 전환
+                                            # 디버깅: 조건 확인 상세 로그
+                                            self.get_logger().info(
+                                                f"[HELLO 조건 체크] 루틴 종료 확인 완료: "
+                                                f"경과={elapsed_time:.2f}초 >= {self.hello_feedback_delay}초, "
+                                                f"루틴 종료 후 {time_since_stopped:.2f}초 경과 >= {self.routine_stopped_confirmation_time}초, "
+                                                f"루틴 실행 중={self.current_routine_running}"
+                                            )
+                                            
+                                            # HELLO를 한 track_id 저장 (더 이상 타겟으로 선택하지 않음)
+                                            if self.target_track_id is not None:
+                                                self.hello_done_track_ids.add(self.target_track_id)
+                                                self.get_logger().info(
+                                                    f"HELLO 완료 ID 저장: track_id={self.target_track_id} "
+                                                    f"(총 {len(self.hello_done_track_ids)}개 ID, 이제 타겟으로 선택되지 않음)"
+                                                )
+                                            
+                                            # 타겟이 없어도 SEARCHING으로 전환 (상대방이 사라진 경우 대응)
+                                            self.state = TrackingState.SEARCHING
+                                            self.target_track_id = None
+                                            self.target_explicitly_set = False
+                                            self.hello_routine_sent = False
+                                            self.hello_routine_sent_time = None
+                                            self.current_routine_running = False
+                                            self.routine_stopped_time = None
+                                            # SEARCHING 진입 시간 기록 (최초 진입 시에만)
+                                            if self.searching_start_time is None:
+                                                self.searching_start_time = current_time_check
+                                                self.get_logger().info(f"SEARCHING 상태 최초 진입: {self.searching_cooldown_duration}초 동안 사람 탐색 안 함")
+                                            self.get_logger().info(
+                                                f"HELLO 완료: 루틴 종료 → SEARCHING 상태로 전환 "
+                                                f"(총 경과 시간: {elapsed_time:.2f}초, 종료 확인 후: {time_since_stopped:.2f}초)"
+                                            )
                                     else:
                                         # 루틴 종료 후 추가 대기 중
                                         self.get_logger().debug(
@@ -819,44 +828,53 @@ class TrackingFSMNode(Node):
                         
                         # 루틴이 종료되었으면 (실행 중이 아니면) SEARCHING으로 전이
                         # 최소 대기 시간 경과 후에만 전환 (명령이 전달될 시간 확보)
+                        # Manual Mode에서는 allex_idle_interaction_node에서 루틴 완료를 감지하므로 여기서는 상태 전환하지 않음
                         if elapsed_time >= self.handshake_feedback_delay:
                             if not self.current_routine_running:
                                 # 루틴 종료 확인 후 추가 대기 시간 체크 (Ready 상태 확실히 확인)
                                 if self.routine_stopped_time is not None:
                                     time_since_stopped = current_time_check - self.routine_stopped_time
                                     if time_since_stopped >= self.routine_stopped_confirmation_time:
-                                        # 디버깅: 조건 확인 상세 로그
-                                        self.get_logger().info(
-                                            f"[HANDSHAKE 조건 체크] 루틴 종료 확인 완료: "
-                                            f"경과={elapsed_time:.2f}초 >= {self.handshake_feedback_delay}초, "
-                                            f"루틴 종료 후 {time_since_stopped:.2f}초 경과 >= {self.routine_stopped_confirmation_time}초, "
-                                            f"루틴 실행 중={self.current_routine_running}"
-                                        )
-                                        
-                                        # HANDSHAKE를 한 track_id 저장 (더 이상 타겟으로 선택하지 않음)
-                                        if self.target_track_id is not None:
-                                            self.hello_done_track_ids.add(self.target_track_id)
-                                            self.get_logger().info(
-                                                f"HANDSHAKE 완료 ID 저장: track_id={self.target_track_id} "
-                                                f"(총 {len(self.hello_done_track_ids)}개 ID, 이제 타겟으로 선택되지 않음)"
+                                        # Manual Mode에서는 allex_idle_interaction_node에서 루틴 완료를 감지하므로 상태 전환하지 않음
+                                        if self.manual_mode:
+                                            self.get_logger().debug(
+                                                f"[HANDSHAKE 조건 체크] Manual Mode: 루틴 종료 확인 완료하지만 상태 전환은 allex_idle_interaction_node에서 처리 "
+                                                f"(경과={elapsed_time:.2f}초, 종료 후 {time_since_stopped:.2f}초)"
                                             )
-                                        
-                                        # 타겟이 없어도 SEARCHING으로 전환 (상대방이 사라진 경우 대응)
-                                        self.state = TrackingState.SEARCHING
-                                        self.target_track_id = None
-                                        self.target_explicitly_set = False
-                                        self.handshake_routine_sent = False
-                                        self.handshake_routine_sent_time = None
-                                        self.current_routine_running = False
-                                        self.routine_stopped_time = None
-                                        # SEARCHING 진입 시간 기록 (최초 진입 시에만)
-                                        if self.searching_start_time is None:
-                                            self.searching_start_time = current_time_check
-                                            self.get_logger().info(f"SEARCHING 상태 최초 진입: {self.searching_cooldown_duration}초 동안 사람 탐색 안 함")
-                                        self.get_logger().info(
-                                            f"HANDSHAKE 완료: 루틴 종료 → SEARCHING 상태로 전환 "
-                                            f"(총 경과 시간: {elapsed_time:.2f}초, 종료 확인 후: {time_since_stopped:.2f}초)"
-                                        )
+                                        else:
+                                            # Auto Mode: SEARCHING으로 전환
+                                            # 디버깅: 조건 확인 상세 로그
+                                            self.get_logger().info(
+                                                f"[HANDSHAKE 조건 체크] 루틴 종료 확인 완료: "
+                                                f"경과={elapsed_time:.2f}초 >= {self.handshake_feedback_delay}초, "
+                                                f"루틴 종료 후 {time_since_stopped:.2f}초 경과 >= {self.routine_stopped_confirmation_time}초, "
+                                                f"루틴 실행 중={self.current_routine_running}"
+                                            )
+                                            
+                                            # HANDSHAKE를 한 track_id 저장 (더 이상 타겟으로 선택하지 않음)
+                                            if self.target_track_id is not None:
+                                                self.hello_done_track_ids.add(self.target_track_id)
+                                                self.get_logger().info(
+                                                    f"HANDSHAKE 완료 ID 저장: track_id={self.target_track_id} "
+                                                    f"(총 {len(self.hello_done_track_ids)}개 ID, 이제 타겟으로 선택되지 않음)"
+                                                )
+                                            
+                                            # 타겟이 없어도 SEARCHING으로 전환 (상대방이 사라진 경우 대응)
+                                            self.state = TrackingState.SEARCHING
+                                            self.target_track_id = None
+                                            self.target_explicitly_set = False
+                                            self.handshake_routine_sent = False
+                                            self.handshake_routine_sent_time = None
+                                            self.current_routine_running = False
+                                            self.routine_stopped_time = None
+                                            # SEARCHING 진입 시간 기록 (최초 진입 시에만)
+                                            if self.searching_start_time is None:
+                                                self.searching_start_time = current_time_check
+                                                self.get_logger().info(f"SEARCHING 상태 최초 진입: {self.searching_cooldown_duration}초 동안 사람 탐색 안 함")
+                                            self.get_logger().info(
+                                                f"HANDSHAKE 완료: 루틴 종료 → SEARCHING 상태로 전환 "
+                                                f"(총 경과 시간: {elapsed_time:.2f}초, 종료 확인 후: {time_since_stopped:.2f}초)"
+                                            )
                                     else:
                                         # 루틴 종료 후 추가 대기 중
                                         self.get_logger().debug(
@@ -866,37 +884,45 @@ class TrackingFSMNode(Node):
                                 else:
                                     # 루틴 종료 시간이 아직 기록되지 않았지만, 루틴이 비어있고 충분한 시간이 지났으면 SEARCHING으로 전환
                                     # 루틴이 비어있으면 종료된 것으로 간주하고 전환
+                                    # Manual Mode에서는 allex_idle_interaction_node에서 루틴 완료를 감지하므로 상태 전환하지 않음
                                     if elapsed_time >= self.handshake_feedback_delay + self.routine_stopped_confirmation_time:
-                                        self.get_logger().info(
-                                            f"[HANDSHAKE 조건 체크] 루틴 종료 시간 미기록이지만 충분한 시간 경과: "
-                                            f"경과={elapsed_time:.2f}초 >= {self.handshake_feedback_delay + self.routine_stopped_confirmation_time}초, "
-                                            f"루틴 실행 중={self.current_routine_running}"
-                                        )
-                                        
-                                        # HANDSHAKE를 한 track_id 저장
-                                        if self.target_track_id is not None:
-                                            self.hello_done_track_ids.add(self.target_track_id)
-                                            self.get_logger().info(
-                                                f"HANDSHAKE 완료 ID 저장: track_id={self.target_track_id} "
-                                                f"(총 {len(self.hello_done_track_ids)}개 ID)"
+                                        if self.manual_mode:
+                                            self.get_logger().debug(
+                                                f"[HANDSHAKE 조건 체크] Manual Mode: 루틴 종료 시간 미기록이지만 충분한 시간 경과, "
+                                                f"상태 전환은 allex_idle_interaction_node에서 처리 (경과={elapsed_time:.2f}초)"
                                             )
-                                        
-                                        # SEARCHING으로 전환
-                                        self.state = TrackingState.SEARCHING
-                                        self.target_track_id = None
-                                        self.target_explicitly_set = False
-                                        self.handshake_routine_sent = False
-                                        self.handshake_routine_sent_time = None
-                                        self.current_routine_running = False
-                                        self.routine_stopped_time = None
-                                        # SEARCHING 진입 시간 기록 (최초 진입 시에만)
-                                        if self.searching_start_time is None:
-                                            self.searching_start_time = current_time_check
-                                            self.get_logger().info(f"SEARCHING 상태 최초 진입: {self.searching_cooldown_duration}초 동안 사람 탐색 안 함")
-                                        self.get_logger().info(
-                                            f"HANDSHAKE 완료: 루틴 비어있음 → SEARCHING 상태로 전환 "
-                                            f"(총 경과 시간: {elapsed_time:.2f}초)"
-                                        )
+                                        else:
+                                            # Auto Mode: SEARCHING으로 전환
+                                            self.get_logger().info(
+                                                f"[HANDSHAKE 조건 체크] 루틴 종료 시간 미기록이지만 충분한 시간 경과: "
+                                                f"경과={elapsed_time:.2f}초 >= {self.handshake_feedback_delay + self.routine_stopped_confirmation_time}초, "
+                                                f"루틴 실행 중={self.current_routine_running}"
+                                            )
+                                            
+                                            # HANDSHAKE를 한 track_id 저장
+                                            if self.target_track_id is not None:
+                                                self.hello_done_track_ids.add(self.target_track_id)
+                                                self.get_logger().info(
+                                                    f"HANDSHAKE 완료 ID 저장: track_id={self.target_track_id} "
+                                                    f"(총 {len(self.hello_done_track_ids)}개 ID)"
+                                                )
+                                            
+                                            # SEARCHING으로 전환
+                                            self.state = TrackingState.SEARCHING
+                                            self.target_track_id = None
+                                            self.target_explicitly_set = False
+                                            self.handshake_routine_sent = False
+                                            self.handshake_routine_sent_time = None
+                                            self.current_routine_running = False
+                                            self.routine_stopped_time = None
+                                            # SEARCHING 진입 시간 기록 (최초 진입 시에만)
+                                            if self.searching_start_time is None:
+                                                self.searching_start_time = current_time_check
+                                                self.get_logger().info(f"SEARCHING 상태 최초 진입: {self.searching_cooldown_duration}초 동안 사람 탐색 안 함")
+                                            self.get_logger().info(
+                                                f"HANDSHAKE 완료: 루틴 비어있음 → SEARCHING 상태로 전환 "
+                                                f"(총 경과 시간: {elapsed_time:.2f}초)"
+                                            )
                                     else:
                                         # 루틴 종료 시간이 아직 기록되지 않음 (최소 대기 시간은 지났지만)
                                         self.get_logger().debug(
@@ -1095,10 +1121,21 @@ class TrackingFSMNode(Node):
                 self.get_logger().info("RUN 중지: IDLE 상태로 전환")
             
             elif cmd_type == 'set_mode':
-                if self.is_running:
-                    manual_mode = command.get('manual', False)
+                manual_mode = command.get('manual', False)
+                # Manual <-> Auto 전환 시 IDLE 상태로 변경
+                if self.manual_mode != manual_mode:
                     self.set_manual_mode(manual_mode)
-                    self.get_logger().info(f"Manual 모드 설정: {manual_mode}")
+                    if self.is_running:
+                        self.set_state(TrackingState.IDLE, None)
+                        self.target_track_id = None
+                        self.target_explicitly_set = False
+                        self.get_logger().info(f"Manual 모드 전환: {self.manual_mode} -> {manual_mode} (IDLE 상태로 전환)")
+                    else:
+                        self.set_manual_mode(manual_mode)
+                        self.get_logger().info(f"Manual 모드 설정: {manual_mode} (RUN 중이 아니므로 상태 변경 없음)")
+                else:
+                    self.set_manual_mode(manual_mode)
+                    self.get_logger().debug(f"Manual 모드는 이미 {manual_mode}입니다.")
             
             elif cmd_type == 'set_state':
                 state_str = command.get('state', 'idle')
@@ -1115,10 +1152,18 @@ class TrackingFSMNode(Node):
                 if self.manual_mode:
                     target_id = command.get('target_id')
                     if target_id is not None:
-                        self.set_target(int(target_id))
-                        self.state = TrackingState.TRACKING
-                        self.lost_frames = 0
-                        self.get_logger().info(f"타겟 변경: {self.target_track_id}")
+                        # HELLO/HANDSHAKE 상태에서는 상태를 유지, 그 외에는 TRACKING으로 변경
+                        if self.state in (TrackingState.HELLO, TrackingState.HANDSHAKE):
+                            # 상태 유지: 타겟만 변경
+                            self.target_track_id = int(target_id)
+                            self.target_explicitly_set = True
+                            self.lost_frames = 0
+                            self.target_selected_time = time.monotonic()
+                            self.get_logger().info(f"타겟 변경: {self.target_track_id} (상태 유지: {self.state.value})")
+                        else:
+                            # 상태 변경: set_target 사용 (TRACKING으로 변경)
+                            self.set_target(int(target_id))
+                            self.get_logger().info(f"타겟 변경: {self.target_track_id} (상태: TRACKING)")
                 else:
                     self.get_logger().warn("Auto Mode에서는 타겟 변경이 허용되지 않습니다.")
                     
