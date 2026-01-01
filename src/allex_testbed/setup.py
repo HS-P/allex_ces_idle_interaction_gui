@@ -38,6 +38,8 @@ setup(
             'testbed_gui_node = allex_testbed.testbed_gui_node:main',
             'testbed_gaze_tracking_node = allex_testbed.testbed_gaze_tracking_node:main',
             'testbed_gaze_tracking_gui_node = allex_testbed.testbed_gaze_tracking_gui_node:main',
+            'target_selection_debug_node = allex_testbed.target_selection_debug_node:main',
+            'image_file_publisher_node = allex_testbed.image_file_publisher_node:main',
         ],
     },
 )

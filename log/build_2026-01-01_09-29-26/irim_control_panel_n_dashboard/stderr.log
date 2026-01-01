@@ -1,0 +1,2 @@
+/home/dgx_allex_one/.local/lib/python3.12/site-packages/setuptools/command/easy_install.py:339: UserWarning: Unbuilt egg for allex-testbed [unknown version] (/home/dgx_allex_one/allex_ces_idle_interaction_gui/build/allex_testbed)
+  self.local_index = Environment(self.shadow_path + sys.path)

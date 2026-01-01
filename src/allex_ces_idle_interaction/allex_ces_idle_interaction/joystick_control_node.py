@@ -63,6 +63,7 @@ class JoystickControlNode(Node):
         self.get_logger().info("j+c: Auto Run, j+d: Manual Run")
         self.get_logger().info("j+k: 타겟 선택 (왼쪽), j+m: 타겟 선택 (오른쪽)")
         self.get_logger().info("j+i: Handshake State, j+h: Idle State, j+g: Hello State")
+        self.get_logger().info("j+f: Stop")
         self.get_logger().info("ESC 키를 누르면 종료합니다.")
         self.get_logger().info("=" * 60)
         
@@ -74,39 +75,71 @@ class JoystickControlNode(Node):
         def on_press(key):
             """키가 눌렸을 때 호출"""
             try:
-                # j 키 확인
-                if hasattr(key, 'char') and key.char == 'j':
-                    if not self.j_key_pressed:
-                        self.j_key_pressed = True
-                        self._on_key_state_changed()
+                # Shift+Space (IME 전환) 감지: 모든 키 상태 초기화
+                if key == keyboard.Key.space or key == keyboard.Key.shift or key == keyboard.Key.shift_l or key == keyboard.Key.shift_r:
+                    # IME 전환 중에는 키 상태를 초기화하지 않고 그냥 무시 (on_release에서 처리)
                     return
                 
-                # 일반 키 (char 속성이 있는 경우)
+                # j 키 확인
                 if hasattr(key, 'char') and key.char is not None:
-                    if key.char not in self.pressed_key_chars:
-                        self.pressed_key_chars.add(key.char)
-                        self._on_key_state_changed()
+                    char_lower = key.char.lower() if hasattr(key.char, 'lower') else key.char
+                    if char_lower == 'j':
+                        if not self.j_key_pressed:
+                            self.j_key_pressed = True
+                            self.get_logger().debug("[KEY DEBUG] j 키 누름")
+                            self._on_key_state_changed()
+                        return
+                
+                # 일반 키 (char 속성이 있는 경우)
+                # 한글 입력 방지: ASCII 문자만 처리
+                if hasattr(key, 'char') and key.char is not None:
+                    # ASCII 문자이고 출력 가능한 문자만 처리 (한글 제외)
+                    # 'f' 키의 경우 대소문자 모두 처리 (소문자로 통일)
+                    char_lower = key.char.lower() if hasattr(key.char, 'lower') else key.char
+                    if char_lower.isascii() and char_lower.isprintable() and len(str(char_lower)) == 1:
+                        if char_lower not in self.pressed_key_chars:
+                            self.pressed_key_chars.add(char_lower)
+                            self.get_logger().debug(f"[KEY DEBUG] 키 누름 감지: '{char_lower}' (원본: '{key.char}')")
+                            self._on_key_state_changed()
                 else:
-                    # 특수 키 (Key 객체)
-                    if key not in self.pressed_keys:
-                        self.pressed_keys.add(key)
-                        self._on_key_state_changed()
-            except AttributeError:
+                    # 특수 키 (Key 객체) - Shift, Space는 제외 (IME 전환용)
+                    if key not in (keyboard.Key.shift, keyboard.Key.shift_l, keyboard.Key.shift_r, keyboard.Key.space):
+                        if key not in self.pressed_keys:
+                            self.pressed_keys.add(key)
+                            self._on_key_state_changed()
+            except (AttributeError, ValueError):
                 pass
         
         def on_release(key):
             """키가 떼어졌을 때 호출"""
             try:
+                # Shift+Space (IME 전환) 감지: 모든 키 상태 초기화
+                if key == keyboard.Key.space or key == keyboard.Key.shift or key == keyboard.Key.shift_l or key == keyboard.Key.shift_r:
+                    # IME 전환 후 키 상태 초기화 (먹통 방지)
+                    self.pressed_key_chars.clear()
+                    self.pressed_keys.clear()
+                    self.j_key_pressed = False
+                    self.get_logger().debug("[KEY DEBUG] IME 전환 감지: 키 상태 초기화")
+                
                 # j 키 해제
-                if hasattr(key, 'char') and key.char == 'j':
-                    if self.j_key_pressed:
-                        self.j_key_pressed = False
-                    return
+                if hasattr(key, 'char') and key.char is not None:
+                    char_lower = key.char.lower() if hasattr(key.char, 'lower') else key.char
+                    if char_lower == 'j':
+                        if self.j_key_pressed:
+                            self.j_key_pressed = False
+                            self.get_logger().debug("[KEY DEBUG] j 키 해제")
+                        return
                 
                 # 일반 키
+                # 한글 입력 방지: ASCII 문자만 처리
                 if hasattr(key, 'char') and key.char is not None:
-                    if key.char in self.pressed_key_chars:
-                        self.pressed_key_chars.remove(key.char)
+                    # ASCII 문자이고 출력 가능한 문자만 처리 (한글 제외)
+                    # 'f' 키의 경우 대소문자 모두 처리
+                    char_lower = key.char.lower() if hasattr(key.char, 'lower') else key.char
+                    if char_lower.isascii() and char_lower.isprintable() and len(str(char_lower)) == 1:
+                        if char_lower in self.pressed_key_chars:
+                            self.pressed_key_chars.remove(char_lower)
+                            self.get_logger().debug(f"[KEY DEBUG] 키 해제 감지: '{char_lower}'")
                 else:
                     # 특수 키
                     if key in self.pressed_keys:
@@ -117,13 +150,16 @@ class JoystickControlNode(Node):
                     self.get_logger().info("ESC 키 눌림 - 종료합니다.")
                     self.running = False
                     return False  # 리스너 종료
-            except AttributeError:
+            except (AttributeError, ValueError):
                 pass
         
         # 키보드 리스너 시작 (별도 스레드)
+        # suppress=False: 키 입력을 다른 애플리케이션으로도 전달 (기본값)
+        # 한글 IME와의 호환성을 위해 suppress=False 유지
         self.keyboard_listener = keyboard.Listener(
             on_press=on_press,
-            on_release=on_release
+            on_release=on_release,
+            suppress=False  # 키 입력을 다른 애플리케이션으로도 전달
         )
         self.keyboard_listener.start()
     
@@ -145,6 +181,7 @@ class JoystickControlNode(Node):
         
         # 조합 키 처리 (첫 번째 키만 처리, 여러 키가 동시에 눌린 경우)
         key = combined_keys[0]
+        self.get_logger().debug(f"[KEY DEBUG] j+{key} 키 조합 감지, combined_keys={combined_keys}")
         self._handle_key_command(key)
     
     def _handle_key_command(self, key: str):
@@ -155,9 +192,11 @@ class JoystickControlNode(Node):
         if key in self.last_key_action_time:
             elapsed = current_time - self.last_key_action_time[key]
             if elapsed < self.key_debounce_time:
+                self.get_logger().debug(f"[KEY DEBUG] j+{key} 디바운싱 무시 (elapsed={elapsed:.3f}s)")
                 return  # 디바운스 시간 내 재입력 무시
         
         self.last_key_action_time[key] = current_time
+        self.get_logger().info(f"[KEY] j+{key} 키 명령 처리 시작")
         
         # 키 명령 처리
         if key == 'c':
@@ -174,6 +213,8 @@ class JoystickControlNode(Node):
             self._handle_idle_state()
         elif key == 'g':
             self._handle_hello_state()
+        elif key == 'f':
+            self._handle_stop()
         else:
             self.get_logger().debug(f"알 수 없는 키 명령: j+{key}")
     
@@ -255,10 +296,31 @@ class JoystickControlNode(Node):
                     current_index = i
                     break
         
+        self.get_logger().info(f"[JOYSTICK LEFT] 현재 타겟 ID: {self.current_target_id}, 인덱스: {current_index}, 총 객체 수: {len(self.tracked_objects_sorted)}")
+        
+        # 타겟을 찾지 못한 경우 (current_index == -1): 가장 왼쪽 타겟 선택
+        if current_index == -1:
+            # 타겟이 없으면 가장 왼쪽 타겟 선택
+            new_target_id = self.tracked_objects_sorted[0]['track_id']
+            self.get_logger().info(f"[JOYSTICK LEFT] 타겟을 찾지 못함, 가장 왼쪽 타겟 선택: {new_target_id}")
+            if self.current_state == TrackingState.IDLE:
+                command = {
+                    'type': 'set_state',
+                    'state': 'tracking',
+                    'target_id': new_target_id
+                }
+            else:
+                command = {
+                    'type': 'set_target',
+                    'target_id': new_target_id
+                }
+            self._publish_command(command)
+            return
+        
         # 왼쪽으로 이동 (인덱스 감소)
         if current_index <= 0:
-            # 가장 왼쪽이거나 타겟이 없으면 무시
-            self.get_logger().info("[JOYSTICK] 이미 가장 왼쪽에 있거나 타겟이 없습니다.")
+            # 가장 왼쪽에 있으면 무시
+            self.get_logger().info(f"[JOYSTICK LEFT] 이미 가장 왼쪽에 있음 (인덱스: {current_index})")
             return
         
         # 이전 타겟 선택 (왼쪽으로)
@@ -274,7 +336,7 @@ class JoystickControlNode(Node):
             }
         else:
             # 그 외 상태는 ID만 변경
-            self.get_logger().info(f"[JOYSTICK] 타겟 ID 변경: {new_target_id}")
+            self.get_logger().info(f"[JOYSTICK] 타겟 ID 변경 (왼쪽으로): {self.current_target_id} -> {new_target_id}")
             command = {
                 'type': 'set_target',
                 'target_id': new_target_id
@@ -296,10 +358,31 @@ class JoystickControlNode(Node):
                     current_index = i
                     break
         
+        self.get_logger().info(f"[JOYSTICK RIGHT] 현재 타겟 ID: {self.current_target_id}, 인덱스: {current_index}, 총 객체 수: {len(self.tracked_objects_sorted)}")
+        
+        # 타겟을 찾지 못한 경우 (current_index == -1): 가장 왼쪽 타겟 선택
+        if current_index == -1:
+            # 타겟이 없으면 가장 왼쪽 타겟 선택
+            new_target_id = self.tracked_objects_sorted[0]['track_id']
+            self.get_logger().info(f"[JOYSTICK RIGHT] 타겟을 찾지 못함, 가장 왼쪽 타겟 선택: {new_target_id}")
+            if self.current_state == TrackingState.IDLE:
+                command = {
+                    'type': 'set_state',
+                    'state': 'tracking',
+                    'target_id': new_target_id
+                }
+            else:
+                command = {
+                    'type': 'set_target',
+                    'target_id': new_target_id
+                }
+            self._publish_command(command)
+            return
+        
         # 오른쪽으로 이동 (인덱스 증가)
         if current_index >= len(self.tracked_objects_sorted) - 1:
-            # 가장 오른쪽이거나 타겟이 없으면 무시
-            self.get_logger().info("[JOYSTICK] 이미 가장 오른쪽에 있거나 타겟이 없습니다.")
+            # 가장 오른쪽에 있으면 무시
+            self.get_logger().info(f"[JOYSTICK RIGHT] 이미 가장 오른쪽에 있음 (인덱스: {current_index})")
             return
         
         # 다음 타겟 선택 (오른쪽으로)
@@ -315,7 +398,7 @@ class JoystickControlNode(Node):
             }
         else:
             # 그 외 상태는 ID만 변경
-            self.get_logger().info(f"[JOYSTICK] 타겟 ID 변경: {new_target_id}")
+            self.get_logger().info(f"[JOYSTICK] 타겟 ID 변경 (오른쪽으로): {self.current_target_id} -> {new_target_id}")
             command = {
                 'type': 'set_target',
                 'target_id': new_target_id
@@ -349,6 +432,14 @@ class JoystickControlNode(Node):
             'type': 'set_state',
             'state': 'hello',
             'target_id': self.current_target_id  # 현재 타겟 ID 유지
+        }
+        self._publish_command(command)
+    
+    def _handle_stop(self):
+        """j+f: Stop 명령"""
+        self.get_logger().info("[JOYSTICK] Stop 명령")
+        command = {
+            'type': 'stop'
         }
         self._publish_command(command)
     
