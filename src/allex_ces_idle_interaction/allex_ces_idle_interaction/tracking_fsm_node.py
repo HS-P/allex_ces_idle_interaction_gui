@@ -17,6 +17,7 @@ from cv_bridge import CvBridge
 from typing import List, Optional, Dict, Tuple
 from collections import namedtuple
 from enum import Enum
+import random
 
 cv2.setNumThreads(0)  # OpenCV의 멀티스레딩 비활성화
 
@@ -204,7 +205,7 @@ class TrackingFSMNode(Node):
         
         # SEARCHING 상태 진입 시간 (최초 진입 후 5초 동안은 사람 탐색 안 함)
         self.searching_start_time: Optional[float] = None  # SEARCHING 상태 최초 진입 시간
-        self.searching_cooldown_duration = 8.0  # SEARCHING 최초 진입 후 대기 시간 (초)
+        self.searching_cooldown_duration = 5.0  # SEARCHING 최초 진입 후 대기 시간 (초)
         
         # 성능 모니터링
         self.frame_count = 0
@@ -386,6 +387,7 @@ class TrackingFSMNode(Node):
                         # SEARCHING 진입 시간 기록 (최초 진입 시에만)
                         if self.searching_start_time is None:
                             self.searching_start_time = current_time
+                            self.searching_cooldown_duration = random.uniform(2.0,4.0)
                             self.get_logger().info(f"SEARCHING 상태 최초 진입: {self.searching_cooldown_duration}초 동안 사람 탐색 안 함")
                     # Manual Mode에서는 LOST 상태 유지 (lost_frames만 증가)
                 case _:
@@ -555,6 +557,7 @@ class TrackingFSMNode(Node):
                     # SEARCHING 진입 시간 기록 (최초 진입 시에만)
                     if self.searching_start_time is None:
                         self.searching_start_time = current_time
+                        self.searching_cooldown_duration = random.uniform(2.0,4.0)
                         self.get_logger().info(f"SEARCHING 상태 최초 진입: {self.searching_cooldown_duration}초 동안 사람 탐색 안 함")
                     
                     # 최초 진입 후 5초 동안은 사람 탐색 안 함
@@ -728,6 +731,7 @@ class TrackingFSMNode(Node):
                                             # SEARCHING 진입 시간 기록 (최초 진입 시에만)
                                             if self.searching_start_time is None:
                                                 self.searching_start_time = current_time_check
+                                                self.searching_cooldown_duration = random.uniform(3.0,6.0)
                                                 self.get_logger().info(f"SEARCHING 상태 최초 진입: {self.searching_cooldown_duration}초 동안 사람 탐색 안 함")
                                             self.get_logger().info(
                                                 f"HELLO 완료: 루틴 종료 → SEARCHING 상태로 전환 "
@@ -768,6 +772,7 @@ class TrackingFSMNode(Node):
                                         # SEARCHING 진입 시간 기록 (최초 진입 시에만)
                                         if self.searching_start_time is None:
                                             self.searching_start_time = current_time_check
+                                            self.searching_cooldown_duration = random.uniform(3.0,6.0)
                                             self.get_logger().info(f"SEARCHING 상태 최초 진입: {self.searching_cooldown_duration}초 동안 사람 탐색 안 함")
                                         self.get_logger().info(
                                             f"HELLO 완료: 루틴 비어있음 → SEARCHING 상태로 전환 "
@@ -870,6 +875,7 @@ class TrackingFSMNode(Node):
                                             # SEARCHING 진입 시간 기록 (최초 진입 시에만)
                                             if self.searching_start_time is None:
                                                 self.searching_start_time = current_time_check
+                                                self.searching_cooldown_duration = random.uniform(3.0,6.0)
                                                 self.get_logger().info(f"SEARCHING 상태 최초 진입: {self.searching_cooldown_duration}초 동안 사람 탐색 안 함")
                                             self.get_logger().info(
                                                 f"HANDSHAKE 완료: 루틴 종료 → SEARCHING 상태로 전환 "
@@ -918,6 +924,7 @@ class TrackingFSMNode(Node):
                                             # SEARCHING 진입 시간 기록 (최초 진입 시에만)
                                             if self.searching_start_time is None:
                                                 self.searching_start_time = current_time_check
+                                                self.searching_cooldown_duration = random.uniform(3.0,6.0)
                                                 self.get_logger().info(f"SEARCHING 상태 최초 진입: {self.searching_cooldown_duration}초 동안 사람 탐색 안 함")
                                             self.get_logger().info(
                                                 f"HANDSHAKE 완료: 루틴 비어있음 → SEARCHING 상태로 전환 "
@@ -1201,11 +1208,14 @@ class TrackingFSMNode(Node):
                 
                 if target_depth is not None:
                     if target_depth <= 1.5:  # 1.5m 이내면 HANDSHAKE
-                        target_state_str = 'handshake'
-                        self.get_logger().info(
-                            f"Depth 기반 분기: track_id={target_track_id}, "
-                            f"depth={target_depth:.3f}m ({target_depth*1000:.1f}mm, ≤1.5m) → HANDSHAKE"
-                        )
+                        if random.random() < 0.5:
+                            target_state_str = 'handshake'
+                            self.get_logger().info(
+                                f"Depth 기반 분기: track_id={target_track_id}, "
+                                f"depth={target_depth:.3f}m ({target_depth*1000:.1f}mm, ≤1.5m) → HANDSHAKE"
+                            )
+                        else:
+                            target_state_str = 'hello'
                     else:
                         self.get_logger().info(
                             f"Depth 기반 분기: track_id={target_track_id}, "

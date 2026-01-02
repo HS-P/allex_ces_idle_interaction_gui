@@ -240,10 +240,11 @@ class GazeControllerNode(Node):
         # 실행 상태 플래그
         self.is_running = False
         
-        # HELLO 전환 조건 변수 (현재 위치에서 ±2도 이내로 2초 유지)
-        self.hello_position_threshold_deg = 2.5  # 기준 위치에서 ±2도 이내
+        # HELLO 전환 조건 변수 (타겟 선택 후 정지 상태에서 목 변화량이 ±2.5도 이내로 1.75초 유지)
+        self.hello_position_threshold_deg = 2.5  # 목 변화량 기준 (±2.5도)
         self.hello_stable_duration = 1.75  # 조건 유지 시간 (초)
         self.hello_stable_start_time = None  # 조건 만족 시작 시간
+        self.hello_reference_yaw = None  # 타겟 선택 시점의 목 각도 (변화량 계산 기준)
         # 상태 추적 분리 (HELLO 체크와 LOST 진입 감지 분리)
         self.prev_state_for_hello = None  # HELLO 전환 체크용 (TRACKING -> 다른 상태 전환 감지)
         self.prev_state_for_lost = None  # LOST 진입 감지용
@@ -1734,9 +1735,10 @@ class GazeControllerNode(Node):
     def _reset_hello_check(self):
         """HELLO 전환 체크 상태 초기화"""
         self.hello_stable_start_time = None
+        self.hello_reference_yaw = None
     
     def _check_hello_transition(self, target_track_id, current_state, target_selected_time):
-        """HELLO 상태 전환 조건 체크 (타겟 선택 후 정지 상태에서 ±2도 이내로 1.45초 유지)
+        """HELLO 상태 전환 조건 체크 (타겟 선택 후 정지 상태에서 목 변화량이 ±2.5도 이내로 1.75초 유지)
         
         Args:
             target_track_id: 현재 타겟 track_id
@@ -1756,17 +1758,24 @@ class GazeControllerNode(Node):
                 self._reset_hello_check()
             return
         
-        # 기준 위치에서 현재 위치까지의 차이 계산
-        is_stable = abs(math.degrees(self.current_yaw_rad)) <= self.hello_position_threshold_deg
+        # 타겟 선택 시점의 목 각도를 기준으로 설정 (최초 한 번만)
+        if self.hello_reference_yaw is None:
+            self.hello_reference_yaw = self.current_yaw_rad
+            self.get_logger().debug(
+                f"HELLO 체크 기준 위치 설정: {math.degrees(self.hello_reference_yaw):.2f}도"
+            )
         
-        # 조건: 2도 이내로 들어왔을 때부터 시간 측정 시작
+        # 기준 위치에서 현재 위치까지의 변화량 계산
+        yaw_change_deg = math.degrees(self.current_yaw_rad - self.hello_reference_yaw)
+        is_stable = abs(yaw_change_deg) <= self.hello_position_threshold_deg
+        
+        # 조건: 변화량이 ±2.5도 이내일 때부터 시간 측정 시작
         if is_stable:
-            # 2도 이내로 들어온 시점부터 타이머 시작
+            # 변화량이 ±2.5도 이내로 들어온 시점부터 타이머 시작
             if self.hello_stable_start_time is None:
                 self.hello_stable_start_time = current_time
                 self.get_logger().debug(
-                    f"HELLO 체크 시작: 2도 이내 진입, 시간 측정 시작 "
-                    f"현재 위치={math.degrees(self.current_yaw_rad):.2f}도"
+                    f"HELLO 체크 시작: 목 변화량 {yaw_change_deg:.2f}도 (기준: {math.degrees(self.hello_reference_yaw):.2f}도), 시간 측정 시작"
                 )
             
             elapsed_time = current_time - self.hello_stable_start_time
@@ -1776,10 +1785,10 @@ class GazeControllerNode(Node):
                 current_yaw_deg = math.degrees(self.current_yaw_rad)
                 self.get_logger().info(
                     f"HELLO 체크: 경과={elapsed_time:.1f}초/{self.hello_stable_duration}초, "
-                    f"현재 위치={current_yaw_deg:.2f}도 (2도 이내)"
+                    f"목 변화량={yaw_change_deg:.2f}도 (기준: {math.degrees(self.hello_reference_yaw):.2f}도, 현재: {current_yaw_deg:.2f}도)"
                 )
             
-            # 2초 유지되면 Depth 값에 따라 HELLO 또는 HANDSHAKE로 전환
+            # 1.75초 유지되면 Depth 값에 따라 HELLO 또는 HANDSHAKE로 전환
             if elapsed_time >= self.hello_stable_duration:
                 # 로그용 값 저장
                 current_yaw_deg = math.degrees(self.current_yaw_rad)
@@ -1800,18 +1809,19 @@ class GazeControllerNode(Node):
                 
                 # track_id 저장은 tracking_fsm_node에서 처리 (HELLO/HANDSHAKE 완료 후)
                 self.get_logger().info(
-                    f"HELLO 전환 준비 완료: 현재 위치={current_yaw_deg:.1f}도에서 "
+                    f"HELLO 전환 준비 완료: 목 변화량={yaw_change_deg:.2f}도 (기준: {math.degrees(self.hello_reference_yaw):.2f}도, 현재: {current_yaw_deg:.2f}도) "
                     f"±{self.hello_position_threshold_deg}도 이내로 {elapsed_time:.1f}초 유지, "
                     f"track_id={target_track_id}에 대한 depth 기반 분기 판단 요청 전송"
                 )
                 self._reset_hello_check()
         else:
-            # 2도 이내에서 벗어나면 타이머 리셋
+            # 변화량이 ±2.5도 이내에서 벗어나면 타이머 리셋
             if self.hello_stable_start_time is not None:
                 self.hello_stable_start_time = None
+                self.hello_reference_yaw = self.current_yaw_rad  # 기준 위치를 현재 위치로 재설정
                 self.get_logger().debug(
-                    f"HELLO 체크 리셋: 2도 이내에서 벗어남 "
-                    f"현재 위치={math.degrees(self.current_yaw_rad):.2f}도"
+                    f"HELLO 체크 리셋: 목 변화량 {yaw_change_deg:.2f}도로 ±2.5도 이내에서 벗어남, "
+                    f"기준 위치를 현재 위치({math.degrees(self.current_yaw_rad):.2f}도)로 재설정"
                 )
     
     def get_current_angles(self) -> Tuple[float, float]:

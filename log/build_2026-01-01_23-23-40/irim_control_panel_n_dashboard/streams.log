@@ -1,0 +1,19 @@
+[0.716s] Invoking command in '/home/dgx_allex_one/allex_ces_idle_interaction_gui/build/irim_control_panel_n_dashboard': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/dgx_allex_one/allex_ces_idle_interaction_gui/build/irim_control_panel_n_dashboard/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/dgx_allex_one/allex_ces_idle_interaction_gui/install/irim_control_panel_n_dashboard/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/dgx_allex_one/allex_ces_idle_interaction_gui/build/irim_control_panel_n_dashboard/build --no-deps symlink_data
+[0.858s] running develop
+[0.943s] running egg_info
+[0.952s] writing irim_control_panel_n_dashboard.egg-info/PKG-INFO
+[0.952s] writing dependency_links to irim_control_panel_n_dashboard.egg-info/dependency_links.txt
+[0.952s] writing entry points to irim_control_panel_n_dashboard.egg-info/entry_points.txt
+[0.952s] writing requirements to irim_control_panel_n_dashboard.egg-info/requires.txt
+[0.952s] writing top-level names to irim_control_panel_n_dashboard.egg-info/top_level.txt
+[0.969s] reading manifest file 'irim_control_panel_n_dashboard.egg-info/SOURCES.txt'
+[0.970s] writing manifest file 'irim_control_panel_n_dashboard.egg-info/SOURCES.txt'
+[1.005s] running build_ext
+[1.005s] Creating /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/irim_control_panel_n_dashboard/lib/python3.12/site-packages/irim-control-panel-n-dashboard.egg-link (link to .)
+[1.006s] Installing control_panel_main script to /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/irim_control_panel_n_dashboard/lib/irim_control_panel_n_dashboard
+[1.006s] Installing foot_sw script to /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/irim_control_panel_n_dashboard/lib/irim_control_panel_n_dashboard
+[1.006s] Installing joint_cmd_sliders script to /home/dgx_allex_one/allex_ces_idle_interaction_gui/install/irim_control_panel_n_dashboard/lib/irim_control_panel_n_dashboard
+[1.006s] 
+[1.006s] Installed /home/dgx_allex_one/allex_ces_idle_interaction_gui/build/irim_control_panel_n_dashboard
+[1.006s] running symlink_data
+[1.037s] Invoked command in '/home/dgx_allex_one/allex_ces_idle_interaction_gui/build/irim_control_panel_n_dashboard' returned '0': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/dgx_allex_one/allex_ces_idle_interaction_gui/build/irim_control_panel_n_dashboard/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/dgx_allex_one/allex_ces_idle_interaction_gui/install/irim_control_panel_n_dashboard/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/dgx_allex_one/allex_ces_idle_interaction_gui/build/irim_control_panel_n_dashboard/build --no-deps symlink_data

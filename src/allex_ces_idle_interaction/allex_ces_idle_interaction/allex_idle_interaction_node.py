@@ -490,7 +490,7 @@ class AllexIdleInteractionNode(Node):
                     status_str = {0: "Ready", 3: "RUN", 5: "STOP"}.get(self.robot_status, f"Unknown({self.robot_status})")
                     self.get_logger().info(f"[ROBOT STATUS] 상태 변경: {old_robot} -> {self.robot_status} ({status_str})")
                     # READY 상태 대기 중이면 TELEOP OFF 수행
-                    if self.waiting_for_ready_for_teleop_off and self.robot_status == 0:
+                    if self.waiting_for_ready_for_teleop_off and self._is_ready_state():
                         self.get_logger().info("[TELEOP STOP] READY 상태 도달: TELEOP OFF 명령 발행")
                         if self.teleop_status == 1:
                             self._publish_hmi_command("theOne_neck,theOne_waist::SCENARIO::TELEOP")
@@ -512,6 +512,22 @@ class AllexIdleInteractionNode(Node):
         msg.data = command
         self.hmi_command_publisher.publish(msg)
         self.get_logger().info(f"[HMI] 명령 발행: {command}")
+
+    def _is_ready_state(self) -> bool:
+        """
+        현재 상태가 READY로 판단되는지 반환
+        Interpretation fixed: READY if robot_status in {0,1,2} regardless of TELEOP.
+        """
+        try:
+            return self.robot_status in (0, 1, 2)
+        except Exception:
+            return False
+
+    def _is_running_state(self) -> bool:
+        return self.robot_status == 3
+
+    def _is_stop_state(self) -> bool:
+        return self.robot_status == 5
     
     def _handle_teleop_for_run(self):
         """
@@ -531,83 +547,86 @@ class AllexIdleInteractionNode(Node):
         
         self.get_logger().info("[TELEOP RUN] TELEOP 제어 시작")
         self.teleop_control_in_progress = True
+
+        # 디버그: 현재 상태 요약 출력
+        try:
+            self.get_logger().debug(
+                f"[TELEOP RUN DEBUG] teleop_status={self.teleop_status}, robot_status={self.robot_status}, "
+                f"ready={self._is_ready_state()}, running={self._is_running_state()}, stop={self._is_stop_state()}"
+            )
+        except Exception:
+            pass
         
-        # TELEOP 상태 확인
-        if self.teleop_status is None:
-            self.get_logger().warn("[TELEOP RUN] TELEOP 상태를 알 수 없음. 일단 TELEOP ON 명령 발행 후 RUN")
-            # 상태가 확인될 때까지 대기하지 않고 일단 TELEOP 명령 발행
-            self._publish_hmi_command("theOne_neck,theOne_waist::SCENARIO::TELEOP")
-            time.sleep(0.3)
-            self._publish_hmi_command("theOne_neck,theOne_waist::STATUS::RUN")
-            self.teleop_control_in_progress = False
-            return
-        
-        # TELEOP이 이미 켜져 있으면 READY 상태 확인
+        # TELEOP 상태 확인 및 분기
+        # Case A: TELEOP ON
         if self.teleop_status == 1:
-            # READY 상태 확인
-            if self.robot_status == 0:  # Ready
-                self.get_logger().info("[TELEOP RUN] TELEOP ON + Ready 상태: RUN 명령 발행")
-                # RUN 명령 발행
+            # If robot_status unknown, try safe READY->RUN
+            if self.robot_status is None:
+                self.get_logger().warn("[TELEOP RUN] TELEOP ON but robot_status unknown: attempting READY->RUN")
+                self._publish_hmi_command("theOne_neck,theOne_waist::STATUS::READY")
+                time.sleep(0.2)
                 self._publish_hmi_command("theOne_neck,theOne_waist::STATUS::RUN")
                 self.teleop_control_in_progress = False
                 return
-            elif self.robot_status == 3:  # RUN
-                self.get_logger().info("[TELEOP RUN] TELEOP ON + RUN 상태: 이미 동작 중이므로 아무것도 하지 않음 (예외 처리)")
+
+            # RUNNING -> PASS
+            if self._is_running_state():
+                self.get_logger().info("[TELEOP RUN] TELEOP ON + RUNNING: already running, nothing to do")
                 self.teleop_control_in_progress = False
                 return
-            elif self.robot_status == 5:  # STOP
-                self.get_logger().info("[TELEOP RUN] TELEOP ON + STOP 상태: STOP -> READY -> RUN 진행")
-                # STOP -> READY
-                self._publish_hmi_command("theOne_neck,theOne_waist::STATUS::STOP")
-                time.sleep(0.2)
+
+            # STOP -> READY -> RUN (per spec: send READY then RUN)
+            if self._is_stop_state():
+                self.get_logger().info("[TELEOP RUN] TELEOP ON + STOP: send READY then RUN")
                 self._publish_hmi_command("theOne_neck,theOne_waist::STATUS::READY")
                 time.sleep(0.5)
-                # RUN
                 self._publish_hmi_command("theOne_neck,theOne_waist::STATUS::RUN")
                 self.teleop_control_in_progress = False
                 return
-        
-        # TELEOP이 꺼져 있는 경우
+
+            # READY -> RUN
+            if self._is_ready_state():
+                self.get_logger().info("[TELEOP RUN] TELEOP ON + READY: send RUN")
+                self._publish_hmi_command("theOne_neck,theOne_waist::STATUS::RUN")
+                self.teleop_control_in_progress = False
+                return
+
+        # Case B: TELEOP OFF
         if self.teleop_status == 0:
-            # READY 상태가 아니면 STOP -> READY 먼저 수행
-            if self.robot_status == 5:  # STOP
-                self.get_logger().info("[TELEOP RUN] STOP 상태입니다. STOP -> READY -> TELEOP -> RUN 진행")
-                # STOP -> READY
+            # RUNNING: STOP -> READY -> TELEOP ON -> RUN
+            if self._is_running_state():
+                self.get_logger().info("[TELEOP RUN] TELEOP OFF + RUNNING: STOP -> READY -> TELEOP ON -> RUN")
                 self._publish_hmi_command("theOne_neck,theOne_waist::STATUS::STOP")
                 time.sleep(0.2)
                 self._publish_hmi_command("theOne_neck,theOne_waist::STATUS::READY")
                 time.sleep(0.5)
-                # TELEOP ON
                 self._publish_hmi_command("theOne_neck,theOne_waist::SCENARIO::TELEOP")
                 time.sleep(0.3)
-                # RUN
                 self._publish_hmi_command("theOne_neck,theOne_waist::STATUS::RUN")
                 self.teleop_control_in_progress = False
                 return
-            elif self.robot_status == 3:  # RUN
-                self.get_logger().info("[TELEOP RUN] TELEOP이 꺼져 있고 RUN 상태입니다. STOP -> READY -> TELEOP -> RUN 진행")
-                # STOP -> READY
-                self._publish_hmi_command("theOne_neck,theOne_waist::STATUS::STOP")
-                time.sleep(0.2)
+
+            # STOP: READY -> TELEOP ON -> RUN
+            if self._is_stop_state():
+                self.get_logger().info("[TELEOP RUN] TELEOP OFF + STOP: READY -> TELEOP ON -> RUN")
                 self._publish_hmi_command("theOne_neck,theOne_waist::STATUS::READY")
-                time.sleep(0.5)
-                # TELEOP ON
+                time.sleep(0.2)
                 self._publish_hmi_command("theOne_neck,theOne_waist::SCENARIO::TELEOP")
                 time.sleep(0.3)
-                # RUN
                 self._publish_hmi_command("theOne_neck,theOne_waist::STATUS::RUN")
                 self.teleop_control_in_progress = False
                 return
-            elif self.robot_status == 0:  # Ready
-                self.get_logger().info("[TELEOP RUN] READY 상태입니다. TELEOP ON -> RUN 진행")
-                # TELEOP ON
+
+            # READY: TELEOP ON -> RUN
+            if self._is_ready_state():
+                self.get_logger().info("[TELEOP RUN] TELEOP OFF + READY: TELEOP ON -> RUN")
                 self._publish_hmi_command("theOne_neck,theOne_waist::SCENARIO::TELEOP")
                 time.sleep(0.3)
-                # RUN
                 self._publish_hmi_command("theOne_neck,theOne_waist::STATUS::RUN")
                 self.teleop_control_in_progress = False
                 return
-        
+
+        # Fallback: ensure flag cleared
         self.teleop_control_in_progress = False
     
     def _handle_teleop_for_stop(self):
@@ -629,56 +648,55 @@ class AllexIdleInteractionNode(Node):
         self.get_logger().info("[TELEOP STOP] TELEOP 제어 시작 (TELEOP은 READY에서만 꺼질 수 있음)")
         self.teleop_control_in_progress = True
         
-        # TELEOP 상태 확인: 이미 꺼져 있으면 종료
+        # TELEOP 상태 확인
+        # Case A: already OFF -> nothing to do
         if self.teleop_status == 0:
-            self.get_logger().info("[TELEOP STOP] TELEOP이 이미 꺼져 있습니다.")
+            self.get_logger().info("[TELEOP STOP] TELEOP is already OFF")
             self.teleop_control_in_progress = False
             return
-        
-        # TELEOP이 켜져 있으면 꺼야 함
+
+        # Case B: TELEOP ON -> must turn off but only in READY
         if self.teleop_status == 1:
-            # ROBOT STATUS 확인
+            # If robot_status unknown: make READY then wait for READY feedback
             if self.robot_status is None:
-                self.get_logger().warn("[TELEOP STOP] ROBOT STATUS를 알 수 없음. STOP -> READY 후 TELEOP OFF 진행")
-                # STOP -> READY 명령 발행
+                self.get_logger().warn("[TELEOP STOP] robot_status unknown: issuing READY and waiting")
+                # Ensure robot is READY: send STOP then READY to be safe
                 self._publish_hmi_command("theOne_neck,theOne_waist::STATUS::STOP")
                 time.sleep(0.2)
                 self._publish_hmi_command("theOne_neck,theOne_waist::STATUS::READY")
-                # READY 상태에서 TELEOP OFF 대기 플래그 설정
                 self.waiting_for_ready_for_teleop_off = True
                 return
-            
-            # 이미 READY 상태이면 TELEOP OFF 수행
-            if self.robot_status == 0:  # Ready
-                self.get_logger().info("[TELEOP STOP] READY 상태: TELEOP OFF 명령 발행")
+
+            # If already READY -> toggle TELEOP (SCENARIO::TELEOP) to turn off
+            if self._is_ready_state():
+                self.get_logger().info("[TELEOP STOP] READY: toggling TELEOP OFF")
                 self._publish_hmi_command("theOne_neck,theOne_waist::SCENARIO::TELEOP")
-                self.waiting_for_teleop_off = True  # TELEOP OFF 피드백 대기
+                self.waiting_for_teleop_off = True
                 return
-            
-            # RUN 또는 STOP 상태인 경우: 먼저 READY 상태로 전환
-            if self.robot_status in (3, 5):  # RUN or STOP
+
+            # If RUNNING or STOP -> make READY first, then wait to toggle TELEOP
+            if self._is_running_state() or self._is_stop_state():
                 status_str = {3: "RUN", 5: "STOP"}.get(self.robot_status)
-                self.get_logger().info(f"[TELEOP STOP] {status_str} 상태: STOP -> READY 전환 후 TELEOP OFF (TELEOP은 READY에서만 꺼질 수 있음)")
-                # STOP -> READY 명령 발행 (피드백 대기)
+                self.get_logger().info(f"[TELEOP STOP] {status_str}: converting to READY then perform TELEOP OFF")
+                # bring to READY
                 self._publish_hmi_command("theOne_neck,theOne_waist::STATUS::STOP")
                 time.sleep(0.2)
                 self._publish_hmi_command("theOne_neck,theOne_waist::STATUS::READY")
-                # READY 상태에서 TELEOP OFF 대기 플래그 설정
+                # wait for READY feedback to actually toggle TELEOP
                 self.waiting_for_ready_for_teleop_off = True
                 return
-        
-        # TELEOP 상태를 알 수 없는 경우
+
+        # If TELEOP unknown: make READY then wait
         if self.teleop_status is None:
-            self.get_logger().warn("[TELEOP STOP] TELEOP 상태를 알 수 없음. 일단 STOP -> READY 후 TELEOP OFF 진행")
-            # STOP -> READY 명령 발행
-            if self.robot_status in (3, 5):
+            self.get_logger().warn("[TELEOP STOP] TELEOP unknown: ensure READY then toggle")
+            if self._is_running_state() or self._is_stop_state():
                 self._publish_hmi_command("theOne_neck,theOne_waist::STATUS::STOP")
                 time.sleep(0.2)
             self._publish_hmi_command("theOne_neck,theOne_waist::STATUS::READY")
             self.waiting_for_ready_for_teleop_off = True
             return
-        
-        # 모든 케이스 처리 완료
+
+        # Fallback: clear flag
         self.teleop_control_in_progress = False
     
     def _routine_status_callback(self, msg: String):
@@ -689,7 +707,7 @@ class AllexIdleInteractionNode(Node):
             # data[1]의 값이 4면 READY, 5면 RUN
             if self.neck_articulation_status == 4 and self.is_running:  # READY (값 4)이고 RUN 중일 때만
                 # ROBOT STATUS도 확인: READY 상태일 때만 RUN으로 전환
-                if self.robot_status == 0:  # Ready
+                if self._is_ready_state():
                     self.get_logger().info("Neck articulation이 READY 상태입니다. RUN으로 전환합니다. (RUN 중이므로)")
                     status_run_command = "theOne_neck,theOne_waist::STATUS::RUN"
                     self.routine_controller.publish_command(status_run_command)
